@@ -14,7 +14,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const reservations = await query('SELECT COUNT(*) FROM reservations');
   const revenue = await query("SELECT COALESCE(SUM(amount),0) as total FROM payments WHERE status = 'paid'");
   const pending = await query("SELECT COUNT(*) FROM reservations WHERE status = 'pending'");
-  const complaints = await query("SELECT COUNT(*) FROM complaints WHERE status IN ('open','in_progress')");
+  const complaints = await query("SELECT COUNT(*) FROM complaints WHERE status IN ('open','in_progress') AND is_chat = false");
 
   res.json({
     success: true,
@@ -69,11 +69,12 @@ router.put('/cars/:id/approve', asyncHandler(async (req, res, next) => {
   res.json({ success: true, data: result.rows[0] });
 }));
 
-// Get all complaints
+// Get all complaints (only disputes)
 router.get('/complaints', asyncHandler(async (req, res) => {
   const result = await query(`
     SELECT c.*, u1.name as complainant_name, u2.name as against_name
     FROM complaints c JOIN users u1 ON c.complainant_id = u1.id JOIN users u2 ON c.against_id = u2.id
+    WHERE c.is_chat = false
     ORDER BY CASE c.priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 ELSE 4 END, c.created_at DESC
   `);
   res.json({ success: true, data: result.rows });

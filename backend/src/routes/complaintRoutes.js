@@ -5,7 +5,7 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 const { uploadComplaintAttachment } = require('../middleware/upload');
 
-// Create complaint or chat
+// Create complaint or chat (One Thread Per Reservation)
 router.post('/', protect, asyncHandler(async (req, res, next) => {
   const { reservation_id, against_id: provided_against_id, type, title, description, is_chat } = req.body;
   if (!reservation_id || !title || !description || !type) return next(new AppError('جميع الحقول مطلوبة', 400));
@@ -27,16 +27,42 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
 
   if (!against_id) return next(new AppError('لا يمكن تحديد الطرف الآخر', 400));
 
+  const existing = await query('SELECT * FROM complaints WHERE reservation_id = $1', [reservation_id]);
+  
+  if (existing.rows.length > 0) {
+    const comp = existing.rows[0];
+    // If escalating a chat to a dispute
+    if (is_chat === false && comp.is_chat === true) {
+      const updated = await query(
+        `UPDATE complaints SET is_chat = false, type = $1, title = $2, description = $3, status = 'open' WHERE id = $4 RETURNING *`,
+        [type, title, description, comp.id]
+      );
+      await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1`, [reservation_id]);
+      
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${against_id}`).emit('notification', {
+          type: 'dispute_opened',
+          complaint_id: comp.id,
+          message: `تم تصعيد المحادثة إلى نزاع للحجز #${reservation_id}`
+        });
+      }
+      return res.status(200).json({ success: true, data: updated.rows[0] });
+    }
+    // Return existing thread
+    return res.status(200).json({ success: true, data: comp });
+  }
+
+  // Insert new thread
   const result = await query(
-    `INSERT INTO complaints (reservation_id, complainant_id, against_id, type, title, description) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [reservation_id, req.user.id, against_id, type, title, description]
+    `INSERT INTO complaints (reservation_id, complainant_id, against_id, type, title, description, is_chat) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [reservation_id, req.user.id, against_id, type, title, description, is_chat !== undefined ? is_chat : true]
   );
 
-  // If it's a real dispute (not a chat), mark reservation as disputed
-  if (!is_chat) {
+  // If created directly as a dispute
+  if (is_chat === false) {
     await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1`, [reservation_id]);
 
-    // Send real-time notification to the other party via socket
     const io = req.app.get('io');
     if (io) {
       io.to(`user_${against_id}`).emit('notification', {
@@ -134,12 +160,17 @@ router.post('/:id/message', protect, uploadComplaintAttachment, asyncHandler(asy
   if (io) {
     io.to(`complaint_${id}`).emit('receive_message', newMessageObj);
     // Notify the other party (if not the sender) that a new message arrived
-    const otherPartyId = complaint.rows[0].complainant_id === req.user.id ? complaint.rows[0].against_id : complaint.rows[0].complainant_id;
-    io.to(`user_${otherPartyId}`).emit('notification', {
-      type: 'new_message',
-      complaint_id: id,
-      message: `رسالة جديدة في المحادثة: ${complaint.rows[0].title}`
-    });
+    if (req.user.role === 'admin') {
+      io.to(`user_${complaint.rows[0].complainant_id}`).emit('notification', { type: 'new_message', complaint_id: id, message: `رسالة جديدة من الإدارة في النزاع` });
+      io.to(`user_${complaint.rows[0].against_id}`).emit('notification', { type: 'new_message', complaint_id: id, message: `رسالة جديدة من الإدارة في النزاع` });
+    } else {
+      const otherPartyId = complaint.rows[0].complainant_id === req.user.id ? complaint.rows[0].against_id : complaint.rows[0].complainant_id;
+      io.to(`user_${otherPartyId}`).emit('notification', {
+        type: 'new_message',
+        complaint_id: id,
+        message: `رسالة جديدة في المحادثة: ${complaint.rows[0].title}`
+      });
+    }
   }
 
   res.status(201).json({ success: true, data: newMessageObj });

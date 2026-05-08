@@ -151,7 +151,7 @@ export default function MyReservations() {
   const canCancel = (status) => ['pending', 'approved'].includes(status);
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
-  const canMessage = (status) => ['active', 'completed', 'approved', 'pending'].includes(status);
+  const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'disputed'].includes(status);
   // Dispute allowed only for active or completed (not if already disputed)
   const canDispute = (status) => ['active', 'completed'].includes(status);
 
