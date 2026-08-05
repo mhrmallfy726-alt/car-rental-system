@@ -47,13 +47,17 @@ const uploadCarImages = multer({
 
 const uploadDocuments = multer({
   storage: localStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: documentFilter,
 }).fields([
   { name: 'id_card', maxCount: 2 },
   { name: 'driver_license', maxCount: 2 },
-]);
 
+  // ملفات المورد
+  { name: 'avatar', maxCount: 1 },
+  { name: 'commercial_register', maxCount: 1 },
+  { name: 'owner_id', maxCount: 1 },
+]);
 const uploadAvatar = multer({
   storage: localStorage,
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB

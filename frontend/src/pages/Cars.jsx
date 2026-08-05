@@ -4,7 +4,7 @@ import { carsAPI } from '../services/api';
 import { Search, Filter, Star, User, Settings, CheckCircle, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-
+// import SearchFilter from "../components/SearchFilter";
 export default function Cars() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,61 +151,11 @@ export default function Cars() {
         <div className="container">
           <h1 className="mb-24" style={{ fontSize: '2.2rem', fontWeight: 900 }}>اعثر على سيارتك المثالية</h1>
 
-          <form onSubmit={handleSearchSubmit}>
-            <div className="card p-16" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                <div className="form-group mb-0">
-                  <label className="text-xs font-bold mb-4 block opacity-80">موقع الاستلام</label>
-                  <div style={{ position: 'relative' }}>
-                    <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: 'var(--primary)' }} />
-                    <input
-                      type="text"
-                      placeholder="المدينة أو المنطقة"
-                      className="form-input"
-                      style={{ paddingRight: '40px', border: 'none' }}
-                      value={filters.search}
-                      onChange={e => handleFilterChange('search', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group mb-0">
-                  <label className="text-xs font-bold mb-4 block opacity-80">تاريخ الاستلام</label>
-                  <div style={{ position: 'relative' }}>
-                    <Calendar size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: 'var(--primary)' }} />
-                    <input
-                      type="date"
-                      className="form-input"
-                      style={{ paddingRight: '40px', border: 'none' }}
-                      value={filters.startDate}
-                      onChange={e => handleFilterChange('startDate', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group mb-0">
-                  <label className="text-xs font-bold mb-4 block opacity-80">تاريخ التسليم</label>
-                  <div style={{ position: 'relative' }}>
-                    <Calendar size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: 'var(--primary)' }} />
-                    <input
-                      type="date"
-                      className="form-input"
-                      style={{ paddingRight: '40px', border: 'none' }}
-                      value={filters.endDate}
-                      onChange={e => handleFilterChange('endDate', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex align-end">
-                  <button type="submit" className="btn btn-warning w-full" style={{ height: '48px', fontWeight: 900 }}>
-                    <Search size={20} /> بحث
-                  </button>
-                </div>
-              </div>
-              {dateError && <div style={{ color: '#ffc107', marginTop: '12px', fontSize: '0.8rem' }}>{dateError}</div>}
-            </div>
-          </form>
+          {/* <SearchFilter
+  searchParams={searchParams}
+  setSearchParams={setSearchParams}
+  handleSearch={handleSearch}
+/> */}
         </div>
       </section>
 

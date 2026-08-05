@@ -21,7 +21,26 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   if (carResult.rows.length === 0) return next(new AppError('السيارة غير متاحة', 400));
 
   const car = carResult.rows[0];
-
+  if (req.files?.avatar) {
+    await query(
+      "UPDATE users SET avatar=$1 WHERE id=$2",
+      [req.files.avatar[0].filename, user.id]
+    );
+  }
+  
+  if (req.files?.commercial_register) {
+    await query(
+      "UPDATE users SET commercial_register=$1 WHERE id=$2",
+      [req.files.commercial_register[0].filename, user.id]
+    );
+  }
+  
+  if (req.files?.owner_id) {
+    await query(
+      "UPDATE users SET owner_id=$1 WHERE id=$2",
+      [req.files.owner_id[0].filename, user.id]
+    );
+  }
   // Check date conflict
   const conflictCheck = await query(`
     SELECT id FROM reservations 

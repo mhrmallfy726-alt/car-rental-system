@@ -5,7 +5,11 @@ const { uploadDocuments, uploadAvatar } = require('../middleware/upload');
 
 const router = express.Router();
 
-router.post('/register', register);
+router.post(
+    '/register',
+    uploadDocuments,
+    register
+  );
 router.post('/login', login);
 router.get('/me', protect, getMe);
 router.post('/upload-documents', protect, uploadDocuments, uploadDocs);

@@ -1,3 +1,8 @@
+const {
+  getSupplierRequests,
+  approveSupplier,
+  rejectSupplier
+} = require('../controllers/adminController');
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
@@ -90,4 +95,9 @@ router.get('/reservations', asyncHandler(async (req, res) => {
   res.json({ success: true, data: result.rows });
 }));
 
+router.get('/supplier-requests', getSupplierRequests);
+
+router.put('/supplier-requests/:id/approve', approveSupplier);
+
+router.put('/supplier-requests/:id/reject', rejectSupplier);
 module.exports = router;

@@ -128,6 +128,20 @@ export const adminAPI = {
   resolveComplaint: (id, data) => api.put(`/complaints/${id}/resolve`, data),
   // جلب مستخدم واحد (اختياري)
   getUser: (id) => api.get(`/admin/users/${id}`),
+  getAdvertisements: () => api.get('/advertisements/admin/all'),
+createAdvertisement: (data) => api.post('/advertisements', data),
+updateAdvertisement: (id, data) => api.put(`/advertisements/${id}`, data),
+deleteAdvertisement: (id) => api.delete(`/advertisements/${id}`),
+getSuppliers: (params) => api.get('/advertisements/suppliers', { params }),
+getSupplierCars: (id) => api.get(`/advertisements/suppliers/${id}/cars`),
+  // طلبات الموردين
+  getSupplierRequests: () => api.get("/admin/supplier-requests"),
+
+  approveSupplier: (id) =>
+    api.put(`/admin/supplier-requests/${id}/approve`),
+
+  rejectSupplier: (id, reason) =>
+    api.put(`/admin/supplier-requests/${id}/reject`, { reason }),
 };
 
 export default api;

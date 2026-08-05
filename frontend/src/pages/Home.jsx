@@ -4,28 +4,24 @@ import { carsAPI } from '../services/api';
 import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Flame, Car, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
+import SearchFilter from '../components/SearchFilter';
 
 export default function Home() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useState({
     location: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    minPrice: '',
+    maxPrice: '',
+  
+    latitude: '',
+    longitude: '',
+    radius: 10,
   });
   const [deals, setDeals] = useState([]);
   const { user, isAuthenticated, isCustomer } = useAuthStore();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
-
-  useEffect(() => {
-    // Fetch all cars and filter those with discount > 0 for the deals section
-    carsAPI.getAll().then(res => {
-      const discounted = res.data.data.filter(car => car.discount_percentage > 0).slice(0, 4);
-      setDeals(discounted);
-    }).catch(err => console.error(err));
-    
-    fetchFavorites();
-  }, [user]);
-
   const fetchFavorites = async () => {
     if (isAuthenticated() && isCustomer()) {
       try {
@@ -36,6 +32,17 @@ export default function Home() {
       }
     }
   };
+  useEffect(() => {
+    // Fetch all cars and filter those with discount > 0 for the deals section
+    carsAPI.getAll().then(res => {
+      const discounted = res.data.data.filter(car => car.discount_percentage > 0).slice(0, 4);
+      setDeals(discounted);
+    }).catch(err => console.error(err));
+    
+    fetchFavorites();
+  }, [user]);
+
+
 
   const toggleFavorite = async (e, carId) => {
     e.preventDefault();
@@ -101,53 +108,11 @@ export default function Home() {
 
       {/* Search Widget - مُحسن بتراكب جزئي */}
       <div className="container" style={{ position: 'relative', marginTop: '-50px', zIndex: 5 }}>
-        <form onSubmit={handleSearch} className="hero-search-container fade-in" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '20px' }}>
-          <div className="search-grid">
-            <div className="input-wrapper">
-              <label>موقع الاستلام</label>
-              <div style={{ position: 'relative' }}>
-                <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
-                <input
-                  type="text"
-                  className="custom-input"
-                  style={{ paddingRight: '40px' }}
-                  placeholder="المدينة أو المطار..."
-                  required
-                  value={searchParams.location}
-                  onChange={e => setSearchParams({ ...searchParams, location: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="input-wrapper">
-              <label>تاريخ الاستلام</label>
-              <input
-                type="date"
-                className="custom-input"
-                required
-                value={searchParams.startDate}
-                onChange={e => setSearchParams({ ...searchParams, startDate: e.target.value })}
-              />
-            </div>
-
-            <div className="input-wrapper">
-              <label>تاريخ التسليم</label>
-              <input
-                type="date"
-                className="custom-input"
-                required
-                value={searchParams.endDate}
-                onChange={e => setSearchParams({ ...searchParams, endDate: e.target.value })}
-              />
-            </div>
-
-            <div className="input-wrapper" style={{ justifyContent: 'flex-end' }}>
-              <button type="submit" className="btn btn-primary btn-full" style={{ height: '50px', fontSize: '1.1rem' }}>
-                <Search size={20} /> ابحث الآن
-              </button>
-            </div>
-          </div>
-        </form>
+      <SearchFilter
+  searchParams={searchParams}
+  setSearchParams={setSearchParams}
+  handleSearch={handleSearch}
+/>
       </div>
 
       {/* Trust Elements - ألوان موحدة */}

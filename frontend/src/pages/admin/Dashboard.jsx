@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Users, Car, Calendar, DollarSign, LayoutDashboard, ShieldAlert, Settings, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
-
+// import { format } from 'date-fns';
+import { Building2 } from "lucide-react";
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [reservations, setReservations] = useState([]);
@@ -13,7 +13,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, []);  
 
   const fetchData = async () => {
     try {
@@ -75,6 +75,12 @@ export default function AdminDashboard() {
           </Link>
           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
+          </Link>
+          <Link to="/admin/advertisements" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <ShieldAlert size={20} /> الإعلانات
+          </Link>
+          <Link to="/admin/supplier-requests" style={{   display: "flex",   alignItems: "center",gap: "10px",   padding: "12px 16px",   borderRadius: "10px",   textDecoration: "none",  color: "#374151",fontWeight: 500, }}>
+             <Building2 size={20} />  طلبات الموردين
           </Link>
           <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Settings size={20} /> الإعدادات

@@ -17,17 +17,21 @@ const complaintRoutes = require('./src/routes/complaintRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const handoverRoutes = require('./src/routes/handoverRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const employeeRoutes = require('./src/routes/employeeRoutes');
 const { initCronJobs } = require('./src/utils/cronJobs');
-
+// const employeeRoutes = require('./routes/employees');
+const path = require("path");
+// const express = require("express");
 const app = express();
 const server = http.createServer(app);
-
+//تحقق من الايميل
+const testEmailRoutes = require('./src/routes/testEmailRoutes');
 // ========================
 // Socket.io Setup
 // ========================
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', process.env.FRONTEND_URL].filter(Boolean),
+    origin: ['http://localhost:3000', 'http://localhost:3000', 'http://localhost:5173', process.env.FRONTEND_URL].filter(Boolean),
     methods: ['GET', 'POST'],
   },
 });
@@ -60,7 +64,7 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', process.env.FRONTEND_URL].filter(Boolean),
+  origin: ['http://localhost:3000', 'http://localhost:3000', 'http://localhost:5173', process.env.FRONTEND_URL].filter(Boolean),
   credentials: true,
 }));
 
@@ -86,7 +90,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-
+// ========================
+// تحقق من الايميل
+// ========================
+app.use("/api/auth", testEmailRoutes);
 // ========================
 // Static Files
 // ========================
@@ -97,14 +104,19 @@ app.use('/uploads', express.static('uploads'));
 // ========================
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
+app.use('/api/employee', employeeRoutes);
 app.use('/api/reservations', reservationRoutes);
-app.use('/api/payments', paymentRoutes);
+// app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/handover', handoverRoutes);
 app.use('/api/admin', adminRoutes);
-
+app.use('/api/employees', employeeRoutes);
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
 // ========================
 // Health Check
 // ========================

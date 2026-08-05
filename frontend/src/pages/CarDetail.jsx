@@ -247,14 +247,24 @@ export default function CarDetail() {
             )}
 
             <form onSubmit={handleBook} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div className="input-wrapper">
-                <label>موقع الاستلام المفضل</label>
-                <div style={{ position: 'relative' }}>
-                  <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
-                  <input type="text" className="custom-input" style={{ paddingRight: '40px' }} placeholder="مثال: مطار صنعاء"
-                    value={bookingData.pickup_location} onChange={e => setBookingData({ ...bookingData, pickup_location: e.target.value })} required />
-                </div>
-              </div>
+            <div className="input-wrapper">
+    <label>موقع الاستلام</label>
+    <div style={{ position: 'relative' }}>
+      <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
+      <LocationSearch
+value={searchParams.location}
+onChange={(location) => {
+setSearchParams((prev) => ({
+...prev,
+location: location.name,
+latitude: location.latitude,
+longitude: location.longitude,
+radius: 10,
+}));
+}}
+/>             </div>
+  </div>
+
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 <div className="input-wrapper">

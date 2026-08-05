@@ -67,6 +67,9 @@ export default function AdminSettings() {
           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
           </Link>
+          <Link to="/admin/advertisements" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <ShieldAlert size={20} />  الإحصائيات
+          </Link>
           <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
             <SettingsIcon size={20} /> الإعدادات
           </Link>

@@ -6,6 +6,7 @@ import { io } from 'socket.io-client';
 import { notificationsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import logo from '../assets/LOGO.PNG';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -110,13 +111,14 @@ export default function Navbar() {
       }}>
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', textDecoration: 'none' }}>
-          <Car size={32} />
-          <span style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-1px' }}>لبيتكم</span>
+        <img src={logo} alt="RC Logo" style={{ width:'50px', height:'50px',   objectFit:'contain'}}/>
+          <span style={{ fontSize: '1.5rem', fontWeight: 2000, letterSpacing: '1px' }}>RC</span>
         </Link>
 
         {/* Desktop Links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }} className="hide-tablet">
           <Link to="/" className={`navbar-link ${location.pathname === '/' ? 'active' : ''}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>الرئيسية</Link>
+          <Link to="/landing" className={`navbar-link ${location.pathname === '/landing' ? 'active' : ''}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>المنصة</Link>
           <Link to="/cars" className={`navbar-link ${location.pathname === '/cars' ? 'active' : ''}`} style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>استئجار سيارة</Link>
           <Link to="/about" className="navbar-link" style={{ color: 'white', fontWeight: 600, textDecoration: 'none' }}>عن المنصة</Link>
         </div>
@@ -232,6 +234,7 @@ export default function Navbar() {
           display: 'flex', flexDirection: 'column', gap: '1.5rem'
         }}>
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold', textDecoration: 'none' }}>الرئيسية</Link>
+          <Link to="/landing" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold', textDecoration: 'none' }}>المنصة</Link>
           <Link to="/cars" onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'white', fontSize: '1.2rem', fontWeight: 'bold', textDecoration: 'none' }}>السيارات</Link>
 
           {isAuthenticated() ? (

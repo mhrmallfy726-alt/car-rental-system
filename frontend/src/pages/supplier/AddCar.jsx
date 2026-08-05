@@ -109,7 +109,7 @@ export default function AddCar() {
 
   return (
     <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* Sidebar محسّن للهواتف */}
+      {/* Sidebar */}
       <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
         <div style={{ padding: '0 16px' }}>
           <Link to="/supplier/dashboard" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none', marginBottom: '4px' }}>

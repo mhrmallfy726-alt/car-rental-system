@@ -305,6 +305,26 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     user_agent TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+CREATE TABLE email_verifications (
+    id SERIAL PRIMARY KEY,
+
+    email VARCHAR(255) NOT NULL,
+
+    otp VARCHAR(6) NOT NULL,
+
+    expires_at TIMESTAMP NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- جدول التحقق من رمز المرسل للبريد
+-- CREATE TABLE email_verifications (
+--     id SERIAL PRIMARY KEY,
+--     email VARCHAR(255) NOT NULL,
+--     otp VARCHAR(6) NOT NULL,
+--     attempts INTEGER DEFAULT 0,
+--     expires_at TIMESTAMP NOT NULL,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
 -- =====================================================
 -- INDEXES (لتحسين الأداء)

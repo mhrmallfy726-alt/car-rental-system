@@ -3,9 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { carsAPI, reservationsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit } from 'lucide-react';
-import { format } from 'date-fns';
+import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit,Users} from 'lucide-react';
 
+import { format } from 'date-fns';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -110,6 +110,12 @@ export default function SupplierDashboard() {
           <Link to="/supplier/reservations" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Calendar size={20} /> الحجوزات
           </Link>
+          <Link to="/supplier/EmployeeForm" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <Users size={20} /> الموضفين
+          </Link>
+          <Link to="/supplier/EmployeeList" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <Users size={20} />  قائمه الموضفين 
+          </Link>
           <Link to="/supplier/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Settings size={20} /> الإعدادات
           </Link>
@@ -166,7 +172,7 @@ export default function SupplierDashboard() {
               <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px' }}>
                   <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Star size={18} style={{ color: '#ffc107' }} /> العروض الترويجية</h3>
-                  <Link to="/supplier/cars" style={{ color: '#0a58ca', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة العروض ({stats.activeDeals})</Link>
+                  <Link to="../admin/Advertisements" style={{ color: '#0a58ca', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة العروض ({stats.activeDeals})</Link>
                 </div>
                 <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', border: '1px dashed #ffc107', marginBottom: '16px' }}>
                   <p style={{ fontWeight: 'bold', marginBottom: '8px', color: '#0a58ca' }}>نصيحة للمورد:</p>

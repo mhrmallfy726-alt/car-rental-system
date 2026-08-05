@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
-
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Cars from './pages/Cars';
@@ -11,7 +11,7 @@ import CarDetail from './pages/CarDetail';
 import Profile from './pages/Profile';
 import UserSettings from './pages/UserSettings';
 import ComplaintChat from './pages/ComplaintChat';
-
+import VendorJoin from './pages/VendorJoin';
 // Customer
 import MyReservations from './pages/customer/MyReservations';
 import Checkout from './pages/customer/Checkout';
@@ -23,7 +23,15 @@ import AddCar from './pages/supplier/AddCar';
 import SupplierReservations from './pages/supplier/Reservations';
 import SupplierSettings from './pages/supplier/Settings';
 import EditCar from './pages/supplier/EditCar';
-import SupplierReservationDetail from './pages/supplier/ReservationDetail';
+import SupplierReservationDetail from './pages/supplier/Reservations';
+//import React from 'react';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
+// import EmployeesList from './pages/supplier/EmployeeList';
+import EmployeeList from './pages/supplier/EmployeesList';
+import EmployeeForm from './pages/supplier/EmployeeForm';
+import EmployeeDetail from './pages/supplier/EmployeeDetail';
+// import Login from './pages/SUPPLIER/Login';
+//import { AuthProvider, useAuth } from './store/auth';
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard';
@@ -31,6 +39,9 @@ import AdminUsers from './pages/admin/Users';
 import AdminComplaints from './pages/admin/Complaints';
 import AdminCars from './pages/admin/AdminCars';
 import AdminSettings from './pages/admin/AdminSettings';
+import Adminadvertisements from './pages/admin/advertisements';
+import SupplierRequests from "./pages/admin/SupplierRequests";
+
 
 // Guards
 const PrivateRoute = ({ children, roles }) => {
@@ -42,7 +53,8 @@ const PrivateRoute = ({ children, roles }) => {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    
+    <>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -55,15 +67,20 @@ export default function App() {
           duration: 4000,
         }}
       />
+      
       <Navbar />
+      
       <Routes>
+
         {/* Public */}
         <Route path="/" element={<Home />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/Vendor-Join" element={<VendorJoin />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/cars/:id" element={<CarDetail />} />
-        
+      
         {/* Profile & Chat (Any authenticated user) */}
         <Route path="/profile" element={
           <PrivateRoute><Profile /></PrivateRoute>
@@ -102,10 +119,12 @@ export default function App() {
         <Route path="/supplier/reservations/:id" element={
           <PrivateRoute roles={['supplier']}><SupplierReservationDetail /></PrivateRoute>
         } />
+       
         <Route path="/supplier/settings" element={
           <PrivateRoute roles={['supplier']}><SupplierSettings /></PrivateRoute>
-        } />
-
+        } />       
+        <Route path="/supplier/login" element={<Login />} />
+         
         {/* Admin */}
         <Route path="/admin/dashboard" element={
           <PrivateRoute roles={['admin']}><AdminDashboard /></PrivateRoute>
@@ -116,15 +135,32 @@ export default function App() {
         <Route path="/admin/complaints" element={
           <PrivateRoute roles={['admin']}><AdminComplaints /></PrivateRoute>
         } />
+        <Route path="/admin/advertisements" element={
+          <PrivateRoute roles={['admin']}><Adminadvertisements /></PrivateRoute>
+        } />
         <Route path="/admin/cars" element={
           <PrivateRoute roles={['admin']}><AdminCars /></PrivateRoute>
         } />
         <Route path="/admin/settings" element={
           <PrivateRoute roles={['admin']}><AdminSettings /></PrivateRoute>
         } />
-
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/admin/supplier-requests" element={
+            <PrivateRoute roles={['admin']}><SupplierRequests /> </PrivateRoute>
+        }/>
+         <Route path="pages/supplier/employees/:id" element={<PrivateRoute roles={['supplier']}><EmployeeDetail /></PrivateRoute>} />
+  <Route path="/supplier/EmployeeForm" element={
+          <PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>
+        } />
+          <Route path="/supplier/EmployeeList" element={
+          <PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace  />} />
       </Routes>
-    </BrowserRouter>
+    </>
+  
   );
+  
+
+
+
 }
