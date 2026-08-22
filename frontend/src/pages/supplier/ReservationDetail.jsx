@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { API, handoverAPI, authAPI } from '../../services/api';
-import useAuthStore from "../store/authStore";
+import { reservationsAPI, handoverAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { 
   Calendar, Car, User, DollarSign, MapPin, 
@@ -25,14 +24,14 @@ export default function SupplierReservationDetail() {
   const fetchData = async () => {
     try {
       const [resvRes, logsRes] = await Promise.all([
-        API.getOne(id),
+        reservationsAPI.getOne(id),
         handoverAPI.getLogs(id)
       ]);
       setReservation(resvRes.data.data);
       setHandoverLogs(logsRes.data.data || []);
     } catch (error) {
       toast.error('فشل جلب تفاصيل الحجز');
-      navigate('/supplier/');
+      navigate('/supplier/reservations');
     } finally {
       setLoading(false);
     }
@@ -40,10 +39,10 @@ export default function SupplierReservationDetail() {
 
   const handleAction = async (action) => {
     try {
-      if (action === 'approve') await API.approve(id);
+      if (action === 'approve') await reservationsAPI.approve(id);
       if (action === 'reject') {
         const reason = window.prompt('سبب الرفض (اختياري):');
-        await API.reject(id, { supplier_notes: reason || 'مرفوض من قبل المورد' });
+        await reservationsAPI.reject(id, { supplier_notes: reason || 'مرفوض من قبل المورد' });
       }
       toast.success('تم تحديث حالة الحجز بنجاح');
       fetchData();
@@ -63,7 +62,7 @@ export default function SupplierReservationDetail() {
           <Link to="/supplier/dashboard" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none', marginBottom: '4px' }}>
             <LayoutDashboard size={20} /> لوحة التحكم
           </Link>
-          <Link to="/supplier/" className="sidebar-item active" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
+                        <Link to="/supplier/reservations" className="sidebar-item active" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
             <Calendar size={20} /> الحجوزات
           </Link>
         </div>
@@ -75,9 +74,9 @@ export default function SupplierReservationDetail() {
           <button onClick={() => navigate(-1)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><ArrowLeft size={20} /></button>
           <h1 style={{ fontSize: '1.5rem', margin: 0 }}>تفاصيل الحجز #{reservation.id.split('-')[0]}</h1>
           <span style={{
-            background: reservation.status === 'pending_payment' ? '#ffc107' : reservation.status === 'pending' ? '#17a2b8' : reservation.status === 'active' ? '#28a745' : reservation.status === 'completed' ? '#0a58ca' : reservation.status === 'rejected' ? '#dc3545' : '#6c757d',
+            background: reservation.status === 'pending' ? '#ffc107' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? '#17a2b8' : reservation.status === 'active' ? '#28a745' : reservation.status === 'returned' ? '#8b5cf6' : reservation.status === 'completed' ? '#0a58ca' : reservation.status === 'rejected' ? '#dc3545' : '#6c757d',
             color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: 'auto'
-          }}>{reservation.status === 'pending_payment' ? 'بانتظار الدفع' : reservation.status === 'pending' ? 'مدفوع - بانتظار الموافقة' : reservation.status === 'approved' ? 'موافق عليه' : reservation.status === 'active' ? 'نشط' : reservation.status === 'completed' ? 'مكتمل' : reservation.status === 'rejected' ? 'مرفوض - تم الاسترداد' : reservation.status}</span>
+          }}>{reservation.status === 'pending' ? 'قيد المراجعة' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? 'بانتظار استلام العميل' : reservation.status === 'active' ? 'السيارة مع العميل' : reservation.status === 'returned' ? 'تم استلام السيارة' : reservation.status === 'completed' ? 'مكتمل' : reservation.status === 'rejected' ? 'مرفوض' : reservation.status}</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
@@ -89,11 +88,11 @@ export default function SupplierReservationDetail() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '4px' }}>تاريخ الاستلام</p>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><Calendar size={16} /> <span style={{ fontWeight: 'bold' }}>{format(new Date(reservation.start_date), 'dd MMMM yyyy')}</span></div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><Calendar size={16} /> <span style={{ fontWeight: 'bold' }}>{format(new Date(reservation.start_date), 'dd MMMM yyyy')} · {reservation.pickup_time || '09:00'}</span></div>
                 </div>
                 <div>
                   <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '4px' }}>تاريخ التسليم</p>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><Calendar size={16} /> <span style={{ fontWeight: 'bold' }}>{format(new Date(reservation.end_date), 'dd MMMM yyyy')}</span></div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><Calendar size={16} /> <span style={{ fontWeight: 'bold' }}>{format(new Date(reservation.end_date), 'dd MMMM yyyy')} · {reservation.return_time || '18:00'}</span></div>
                 </div>
                 <div>
                   <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '4px' }}>المدة</p>
@@ -152,7 +151,7 @@ export default function SupplierReservationDetail() {
                   <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>{reservation.customer_email}</div>
                 </div>
               </div>
-              <button onClick={() => navigate(`/supplier/`)} style={{ width: '100%', background: '#f8f9fa', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={() => navigate(`/supplier/reservations`)} style={{ width: '100%', background: '#f8f9fa', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <MessageSquare size={16} /> مراسلة العميل
               </button>
             </div>

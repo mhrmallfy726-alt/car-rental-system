@@ -20,7 +20,102 @@ const ensureSupplierScope = (reqSupplierId, reqUser) => {
 };
 
 // حماية الراوتات: جميعها تتطلب تسجيل دخول ودور supplier أو admin
+// Public routes for employees (Login and First Login Password Change)
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ success: false, message: 'البريد الإلكتروني وكلمة المرور مطلوبان' });
+
+    const result = await query('SELECT * FROM employees WHERE email = $1', [email]);
+    if (result.rows.length === 0) return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+
+    const employee = result.rows[0];
+    if (employee.status !== 'active') return res.status(403).json({ success: false, message: 'حساب الموظف موقوف حالياً' });
+
+    const bcrypt = require('bcryptjs');
+    const isMatch = await bcrypt.compare(password, employee.password);
+    if (!isMatch) return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+
+    // Update employee status to online and active
+    await query('UPDATE employees SET is_online = TRUE, last_active_at = NOW() WHERE id = $1', [employee.id]);
+
+    const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'fallback_secret';
+    const token = jwt.sign({ id: employee.id, role: 'employee', supplier_id: employee.supplier_id }, secret, { expiresIn: '7d' });
+
+    res.json({
+      success: true,
+      token,
+      employee: {
+        id: employee.id,
+        full_name: employee.full_name,
+        email: employee.email,
+        phone_number: employee.phone_number,
+        role: employee.role,
+        supplier_id: employee.supplier_id,
+        must_change_password: employee.must_change_password,
+        is_online: true,
+        is_accepting_orders: employee.is_accepting_orders,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+  }
+});
+
+// Protected employee routes
 router.use(protect);
+
+// PUT /api/employees/change-password (Employee self password change on first login)
+router.put('/change-password', async (req, res) => {
+  try {
+    if (req.user.role !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const { current_password, new_password, confirm_password } = req.body;
+    if (!new_password || !confirm_password) return res.status(400).json({ success: false, message: 'يرجى إدخال وتأكيد كلمة المرور الجديدة' });
+    if (new_password.length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
+    if (new_password !== confirm_password) return res.status(400).json({ success: false, message: 'كلمات المرور الجديدة غير متطابقة' });
+
+    const found = await query('SELECT * FROM employees WHERE id = $1', [req.user.id]);
+    if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
+    const emp = found.rows[0];
+
+    if (current_password && !emp.must_change_password) {
+      const bcrypt = require('bcryptjs');
+      const isMatch = await bcrypt.compare(current_password, emp.password);
+      if (!isMatch) return res.status(401).json({ success: false, message: 'كلمة المرور الحالية غير صحيحة' });
+    }
+
+    const hashed = await hashPassword(new_password);
+    const updated = await query(
+      'UPDATE employees SET password = $1, must_change_password = FALSE, updated_at = NOW() WHERE id = $2 RETURNING id, full_name, email, role, must_change_password',
+      [hashed, req.user.id]
+    );
+
+    res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح', data: updated.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+  }
+});
+
+// PUT /api/employees/status (Employee toggles accepting orders)
+router.put('/status', async (req, res) => {
+  try {
+    if (req.user.role !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const { is_accepting_orders } = req.body;
+    const updated = await query(
+      'UPDATE employees SET is_accepting_orders = $1, is_online = TRUE, last_active_at = NOW() WHERE id = $2 RETURNING id, is_online, is_accepting_orders',
+      [!!is_accepting_orders, req.user.id]
+    );
+    res.json({ success: true, data: updated.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+  }
+});
+
+// Supplier / Admin routes below
 router.use(authorize('supplier', 'admin'));
 
 // GET /api/employees?supplier_id=...
@@ -34,7 +129,7 @@ router.get('/', async (req, res) => {
     }
 
     const result = await query(
-      'SELECT id, full_name, phone_number, email, role, status, supplier_id, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
+      'SELECT id, full_name, phone_number, email, role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
       [supplier_id]
     );
     res.json({ success: true, data: result.rows });
@@ -57,7 +152,7 @@ router.get('/permissions/list', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const result = await query('SELECT id, full_name, phone_number, email, role, status, supplier_id, created_at FROM employees WHERE id = $1', [id]);
+    const result = await query('SELECT id, full_name, phone_number, email, role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE id = $1', [id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
 
     const emp = result.rows[0];
@@ -103,6 +198,8 @@ router.post('/', async (req, res) => {
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
   }
 });
+
+
 
 // PUT /api/employees/:id
 router.put('/:id', async (req, res) => {

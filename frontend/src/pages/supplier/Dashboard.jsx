@@ -113,6 +113,9 @@ export default function SupplierDashboard() {
           <Link to="/supplier/EmployeeForm" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Users size={20} /> الموضفين
           </Link>
+          <Link to="/supplier/AdvertisementRequest" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <Users size={20} /> طلابات الاعلانات
+          </Link>
           <Link to="/supplier/EmployeeList" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Users size={20} />  قائمه الموضفين 
           </Link>

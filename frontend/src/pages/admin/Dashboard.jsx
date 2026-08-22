@@ -33,10 +33,57 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-
+  const reviewRequest = async (request, action) => {
+    let note = '';
+  
+    if (action === 'reject') {
+      note = window.prompt('اكتب سبب رفض الطلب:') || '';
+  
+      if (!note.trim()) {
+        toast.error('يجب كتابة سبب الرفض');
+        return;
+      }
+    }
+  
+    try {
+      setLoading(true);
+  
+      if (action === 'approve') {
+        await adminAPI.approveAdvertisement(request.id);
+      } else if (action === 'reject') {
+        await adminAPI.rejectAdvertisement(request.id, {
+          note: note.trim(),
+          reason: note.trim(),
+        });
+      }
+  
+      toast.success(
+        action === 'approve'
+          ? 'تم اعتماد الطلب ونشر الإعلان'
+          : 'تم رفض الطلب'
+      );
+  
+      await loadData();
+    } catch (error) {
+      console.error('Review request error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+  
+      toast.error(
+        error.response?.data?.message ||
+        'تعذر تحديث الطلب'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   // دالة للحصول على حالة badge
   const getStatusBadge = (status) => {
     const isActive = status === 'active';
+    
     return (
       <span style={{
         background: isActive ? '#28a745' : '#6c757d',
@@ -76,7 +123,7 @@ export default function AdminDashboard() {
           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
           </Link>
-          <Link to="/admin/advertisements" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/advertisementCenter" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الإعلانات
           </Link>
           <Link to="/admin/supplier-requests" style={{   display: "flex",   alignItems: "center",gap: "10px",   padding: "12px 16px",   borderRadius: "10px",   textDecoration: "none",  color: "#374151",fontWeight: 500, }}>

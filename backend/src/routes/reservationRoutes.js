@@ -10,10 +10,16 @@ const { query, getClient } = require('../config/database');
 // @access  Customer
 // ========================
 router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, next) => {
-  const { car_id, start_date, end_date, pickup_location, dropoff_location, customer_notes } = req.body;
+  const { car_id, start_date, end_date, pickup_time = '09:00', return_time = '18:00', pickup_location, dropoff_location, customer_notes } = req.body;
 
-  if (!car_id || !start_date || !end_date) {
-    return next(new AppError('الرجاء تحديد السيارة وتواريخ الحجز', 400));
+  if (!car_id || !start_date || !end_date || !pickup_time || !return_time) {
+    return next(new AppError('الرجاء تحديد السيارة وتواريخ وأوقات الحجز', 400));
+  }
+
+  const pickupAt = new Date(`${start_date}T${pickup_time}:00`);
+  const returnAt = new Date(`${end_date}T${return_time}:00`);
+  if (Number.isNaN(pickupAt.getTime()) || Number.isNaN(returnAt.getTime()) || returnAt <= pickupAt) {
+    return next(new AppError('وقت الإرجاع يجب أن يكون بعد وقت الاستلام', 400));
   }
 
   // Get car info
@@ -21,46 +27,28 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   if (carResult.rows.length === 0) return next(new AppError('السيارة غير متاحة', 400));
 
   const car = carResult.rows[0];
-  if (req.files?.avatar) {
-    await query(
-      "UPDATE users SET avatar=$1 WHERE id=$2",
-      [req.files.avatar[0].filename, user.id]
-    );
-  }
-  
-  if (req.files?.commercial_register) {
-    await query(
-      "UPDATE users SET commercial_register=$1 WHERE id=$2",
-      [req.files.commercial_register[0].filename, user.id]
-    );
-  }
-  
-  if (req.files?.owner_id) {
-    await query(
-      "UPDATE users SET owner_id=$1 WHERE id=$2",
-      [req.files.owner_id[0].filename, user.id]
-    );
-  }
-  // Check date conflict
+  // Check exact date/time conflict. Old reservations without pickup_at/return_at fall back to their dates.
+
   const conflictCheck = await query(`
-    SELECT id FROM reservations 
-    WHERE car_id = $1 AND status IN ('pending','approved','active')
-    AND (start_date <= $3 AND end_date >= $2)
-  `, [car_id, start_date, end_date]);
+    SELECT id FROM reservations
+    WHERE car_id = $1 AND status IN ('pending','approved','awaiting_pickup','active','returned')
+    AND COALESCE(pickup_at, start_date::timestamp) < $5::timestamp
+    AND COALESCE(return_at, end_date::timestamp + interval '23 hours 59 minutes') > $2::timestamp
+  `, [car_id, pickupAt.toISOString(), returnAt.toISOString()]);
 
   if (conflictCheck.rows.length > 0) return next(new AppError('السيارة محجوزة في هذه الفترة', 400));
 
-  const startD = new Date(start_date);
-  const endD = new Date(end_date);
-  const total_days = Math.ceil((endD - startD) / (1000 * 60 * 60 * 24));
-  if (total_days <= 0) return next(new AppError('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 400));
+  const startD = new Date(`${start_date}T00:00:00`);
+  const endD = new Date(`${end_date}T00:00:00`);
+  const total_days = Math.max(1, Math.ceil((endD - startD) / (1000 * 60 * 60 * 24)));
+  if (returnAt <= pickupAt) return next(new AppError('وقت الإرجاع يجب أن يكون بعد وقت الاستلام', 400));
 
   const total_price = total_days * car.price_per_day;
 
   const result = await query(`
-    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *
-  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes]);
+    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, handover_state)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *
+  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, 'not_started']);
 
   // Create notification for supplier
   await query(`
@@ -114,7 +102,7 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن الموافقة على هذا الحجز', 400));
 
-  const result = await query(`UPDATE reservations SET status = 'approved', approved_at = NOW() WHERE id = $1 RETURNING *`, [id]);
+  const result = await query(`UPDATE reservations SET status = 'awaiting_pickup', handover_state = 'awaiting_pickup', approved_at = NOW() WHERE id = $1 RETURNING *`, [id]);
 
   // Notify customer
   await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
@@ -179,11 +167,14 @@ router.put('/:id/complete', protect, authorize('supplier'), asyncHandler(async (
   const { id } = req.params;
   const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, req.user.id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
-  if (reservation.rows[0].status !== 'active') return next(new AppError('الحجز ليس نشطاً', 400));
+  if (!['returned', 'active'].includes(reservation.rows[0].status)) return next(new AppError('لا يمكن إغلاق الحجز قبل استلام السيارة', 400));
+  if (reservation.rows[0].status === 'active' && reservation.rows[0].handover_state !== 'returned') {
+    return next(new AppError('يجب توثيق استرجاع السيارة أولاً', 400));
+  }
 
-  const result = await query(`UPDATE reservations SET status = 'completed', completed_at = NOW() WHERE id = $1 RETURNING *`, [id]);
+  const result = await query(`UPDATE reservations SET status = 'completed', handover_state = 'closed', completed_at = NOW() WHERE id = $1 RETURNING *`, [id]);
 
-  // Update car total_trips
+  // Update car only after the return is documented and the reservation is closed.
   await query('UPDATE cars SET total_trips = total_trips + 1, status = $1 WHERE id = $2', ['available', reservation.rows[0].car_id]);
 
   res.json({ success: true, data: result.rows[0] });

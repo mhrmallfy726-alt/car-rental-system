@@ -186,7 +186,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
-import logo from '../../assets/logo.png';
+import logo from '../../assets/LOGO.png';
 import { Car, Mail, Lock, ChevronLeft } from 'lucide-react';
 import { setAccessToken } from "../../../src/API/axios"; // عدّل المسار حسب مكان الملف
 
@@ -231,6 +231,11 @@ export default function Login() {
   
       toast.success("تم تسجيل الدخول بنجاح");
   
+      if (res.user.account_type === 'employee') {
+        navigate('/employee/dashboard');
+        return;
+      }
+
       switch (res.user.role) {
         case "admin":
           navigate("/admin/dashboard");

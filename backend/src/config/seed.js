@@ -65,9 +65,9 @@ async function seed() {
     // Suppliers
     const supplierRes = await client.query(`
       INSERT INTO users (name, email, password, role, phone, is_verified, email_verified, brand_logo, brand_description, bank_name, iban) VALUES
-      ('شركة النخبة لتأجير السيارات', 'elite@supplier.com', '${hash}', 'supplier', '01234567', true, true, 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=100&h=100&q=80', 'نحن نقدم أفضل السيارات الفاخرة والحديثة في اليمن مع خدمة عملاء متميزة على مدار الساعة.', 'بنك التضامن الإسلامي', 'YE123456789012345678901234'),
-      ('مكتب الراحة لخدمات السيارات', 'raha@supplier.com', '${hash}', 'supplier', '01445566', true, true, 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=100&h=100&q=80', 'خيارات اقتصادية وعائلية تناسب ميزانيتك. راحتكم هي هدفنا الأساسي.', 'بنك الكريمي الإسلامي', 'YE098765432109876543210987'),
-      ('المحضار لتجارة وتأجير السيارات', 'almihdar@supplier.com', '${hash}', 'supplier', '05334422', true, true, 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=100&h=100&q=80', 'خبرة طويلة في سوق السيارات اليمني. نوفر سيارات دفع رباعي قوية للمناطق الجبلية.', 'بنك اليمن والكويت', 'YE112233445566778899001122')
+      ('شركة النخبة لتأجير السيارات', 'elite@supplier.com', '${hash}', 'supplier', '01234567', true, true, 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=&h=&q=80', 'نحن نقدم أفضل السيارات الفاخرة والحديثة في اليمن مع خدمة عملاء متميزة على مدار الساعة.', 'بنك التضامن الإسلامي', 'YE123456789012345678901234'),
+      ('مكتب الراحة لخدمات السيارات', 'raha@supplier.com', '${hash}', 'supplier', '01445566', true, true, 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=&h=&q=80', 'خيارات اقتصادية وعائلية تناسب ميزانيتك. راحتكم هي هدفنا الأساسي.', 'بنك الكريمي الإسلامي', 'YE098765432109876543210987'),
+      ('المحضار لتجارة وتأجير السيارات', 'almihdar@supplier.com', '${hash}', 'supplier', '05334422', true, true, 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=&h=&q=80', 'خبرة طويلة في سوق السيارات اليمني. نوفر سيارات دفع رباعي قوية للمناطق الجبلية.', 'بنك اليمن والكويت', 'YE112233445566778899001122')
       RETURNING id, name
     `);
     const suppliers = supplierRes.rows;
@@ -76,7 +76,7 @@ async function seed() {
     const customerRes = await client.query(`
       INSERT INTO users (name, email, password, role, phone, is_verified, email_verified, avatar) VALUES
       ('صالح عبدالكريم القاضي', 'saleh@customer.com', '${hash}', 'customer', '770001112', true, true, 'https://i.pravatar.cc/150?u=saleh'),
-      ('أروى محمد باوزير', 'arwa@customer.com', '${hash}', 'customer', '710002223', true, true, 'https://i.pravatar.cc/150?u=arwa'),
+      ('أروى محمد باوزير', 'arwa@customer.com', '${hash}', 'customer', '702223', true, true, 'https://i.pravatar.cc/150?u=arwa'),
       ('سامر هاني الصبري', 'samer@customer.com', '${hash}', 'customer', '730003334', true, true, 'https://i.pravatar.cc/150?u=samer'),
       ('منى حسن الشايف', 'mona@customer.com', '${hash}', 'customer', '700004445', false, true, 'https://i.pravatar.cc/150?u=mona')
       RETURNING id, name
@@ -88,7 +88,7 @@ async function seed() {
     const carsToInsert = [
       {
         supplier_id: suppliers[0].id, cat: 'Luxury', loc: 'صنعاء', make: 'Mercedes-Benz', model: 'S-Class', year: 2023, color: 'أسود الملكي',
-        plate: '1-10020', seats: 5, price: 250, desc: 'أفخم سيارة سيدان في العالم، مثالية لرجال الأعمال والمناسبات الخاصة.',
+        plate: '1-20', seats: 5, price: 250, desc: 'أفخم سيارة سيدان في العالم، مثالية لرجال الأعمال والمناسبات الخاصة.',
         imgs: [
           'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=1200&q=80',
           'https://images.unsplash.com/photo-1617531653332-bd46c24f2068?auto=format&fit=crop&w=1200&q=80'
@@ -168,7 +168,7 @@ async function seed() {
     await client.query(`
       INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, total_days, price_per_day, total_price, status, pickup_location, dropoff_location, approved_at, completed_at)
       VALUES 
-      ($1, $2, $3, '2026-04-01', '2026-04-05', 4, 250, 1000, 'completed', 'صنعاء - المطار', 'صنعاء - المطار', NOW() - INTERVAL '35 days', NOW() - INTERVAL '30 days'),
+      ($1, $2, $3, '2026-04-01', '2026-04-05', 4, 250, 0, 'completed', 'صنعاء - المطار', 'صنعاء - المطار', NOW() - INTERVAL '35 days', NOW() - INTERVAL '30 days'),
       ($4, $5, $6, '2026-04-10', '2026-04-15', 5, 45, 225, 'completed', 'عدن - المعلا', 'عدن - المعلا', NOW() - INTERVAL '25 days', NOW() - INTERVAL '20 days')
     `, [customers[0].id, cars[0].id, cars[0].supplier_id, customers[1].id, cars[2].id, cars[2].supplier_id]);
 

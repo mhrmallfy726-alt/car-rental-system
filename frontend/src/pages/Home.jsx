@@ -1,10 +1,105 @@
+// import { useEffect, useState } from 'react';
+// import { Link, useNavigate } from 'react-router-dom';
+// import { carsAPI } from '../services/api';
+// import useAuthStore from '../store/authStore';
+// import { CalendarDays, CarFront, CheckCircle2, ChevronLeft, Clock3, CreditCard, Heart, MapPin, Menu, ShieldCheck, Sparkles, Star, Users, X } from 'lucide-react';
+// import toast from 'react-hot-toast';
+// import heroCar from '../assets/marketing/hero-3d-marketplace.webp';
+// import sanaa from '../assets/marketing/LOGO.png';
+
+// const demoCars = [
+//   { id: 'demo-1', make: 'تويوتا', model: 'كامري 2024', category: 'سيدان', price_per_day: 45, seats: 5, transmission: 'automatic', primary_image: heroCar, average_rating: 4.9 },
+//   { id: 'demo-2', make: 'هيونداي', model: 'توسان 2023', category: 'دفع رباعي', price_per_day: 55, seats: 5, transmission: 'automatic', primary_image: sanaa, average_rating: 4.8 },
+//   { id: 'demo-3', make: 'تويوتا', model: 'برادو 2022', category: 'عائلية', price_per_day: 75, seats: 7, transmission: 'automatic', primary_image: heroCar, average_rating: 4.9 },
+// ];
+
+// export default function Home() {
+//   const navigate = useNavigate();
+//   const { isAuthenticated } = useAuthStore();
+//   const [cars, setCars] = useState([]);
+//   const [menuOpen, setMenuOpen] = useState(false);
+//   const [search, setSearch] = useState({ location: 'صنعاء', startDate: '', endDate: '', pickupTime: '09:00', returnTime: '18:00' });
+
+//   useEffect(() => {
+//     carsAPI.getAll().then((res) => setCars((res.data.data || []).slice(0, 6))).catch(() => setCars([]));
+//   }, []);
+
+//   const featuredCars = cars.length ? cars.slice(0, 3) : demoCars;
+//   const imageUrl = (car) => {
+//     if (!car?.primary_image) return heroCar;
+//     if (car.primary_image.startsWith('http') || car.primary_image.startsWith('data:') || car.primary_image.includes('/src/')) return car.primary_image;
+//     return `http://localhost:5000/${car.primary_image}`;
+//   };
+
+//   const submitSearch = (event) => {
+//     event.preventDefault();
+//     if (search.startDate && search.endDate) {
+//       const pickup = new Date(`${search.startDate}T${search.pickupTime}`);
+//       const returned = new Date(`${search.endDate}T${search.returnTime}`);
+//       if (returned <= pickup) {
+//         toast.error('وقت الإرجاع يجب أن يكون بعد وقت الاستلام');
+//         return;
+//       }
+//     }
+//     navigate(`/cars?${new URLSearchParams(search).toString()}`);
+//   };
+
+//   return (
+//     <div className="marketing-page" dir="rtl">
+//       <section className="marketing-hero">
+//         <div className="hero-overlay" />
+//         <div className="hero-nav container">
+//           <Link className="brand-mark" to="/">سَفَر <span>SAFAR</span></Link>
+//           <button className="mobile-menu-btn" onClick={() => setMenuOpen(!menuOpen)} aria-label="القائمة">{menuOpen ? <X /> : <Menu />}</button>
+//           <nav className={menuOpen ? 'hero-links open' : 'hero-links'}>
+//             <Link to="/cars">استكشف السيارات</Link>
+//             <a href="#how-it-works">كيف تعمل؟</a>
+//             <a href="#trust">لماذا سفر؟</a>
+//             <Link to="/Vendor-Join">أضف سياراتك</Link>
+//             <Link className="nav-login" to={isAuthenticated() ? '/profile' : '/login'}>{isAuthenticated() ? 'حسابي' : 'تسجيل الدخول'}</Link>
+//           </nav>
+//         </div>
+//         <div className="hero-content container">
+//           <div className="hero-copy">
+//             <span className="eyebrow"><Sparkles size={16} /> رحلتك تبدأ من هنا</span>
+//             <h1>استأجر سيارتك<br /><span>بثقة وراحة.</span></h1>
+//             <p>سيارات موثوقة من موردين معتمدين في اليمن، بأسعار واضحة وحجز أسهل من أي وقت.</p>
+//             <div className="hero-proof"><span><CheckCircle2 size={17} /> موردون موثقون</span><span><ShieldCheck size={17} /> دفع آمن</span><span><Clock3 size={17} /> دعم سريع</span></div>
+//           </div>
+//           <div className="hero-car-card"><img src={heroCar} alt="سيارة للإيجار" /><div className="hero-car-caption"><span>سيارات مختارة بعناية</span><strong>جاهز للانطلاق؟</strong></div></div>
+//         </div>
+//         <form className="search-panel container" onSubmit={submitSearch}>
+//           <div className="search-field"><MapPin size={20} /><label>موقع الاستلام<input value={search.location} onChange={e => setSearch({ ...search, location: e.target.value })} placeholder="صنعاء، عدن..." /></label></div>
+//           <div className="search-field"><CalendarDays size={20} /><label>تاريخ الاستلام<input type="date" value={search.startDate} onChange={e => setSearch({ ...search, startDate: e.target.value })} /></label></div>
+//           <div className="search-field"><CalendarDays size={20} /><label>تاريخ التسليم<input type="date" value={search.endDate} onChange={e => setSearch({ ...search, endDate: e.target.value })} /></label></div>
+//           <div className="search-field"><Clock3 size={20} /><label>وقت الاستلام<input type="time" value={search.pickupTime} onChange={e => setSearch({ ...search, pickupTime: e.target.value })} /></label></div>
+//           <div className="search-field"><Clock3 size={20} /><label>وقت الإرجاع<input type="time" value={search.returnTime} onChange={e => setSearch({ ...search, returnTime: e.target.value })} /></label></div>
+//           <button className="primary-button search-button" type="submit">ابحث عن سيارة <ChevronLeft size={19} /></button>
+//         </form>
+//       </section>
+
+//       <section className="trust-strip" id="trust"><div className="container trust-grid"><div><ShieldCheck /><span><strong>حجز آمن وواضح</strong><small>بدون رسوم مخفية</small></span></div><div><CreditCard /><span><strong>ادفع بالطريقة التي تناسبك</strong><small>خيارات دفع مرنة</small></span></div><div><Users /><span><strong>موردون موثوقون</strong><small>نراجع كل شريك بعناية</small></span></div><div><Clock3 /><span><strong>دعم يرد عليك</strong><small>نحن قريبون منك دائماً</small></span></div></div></section>
+
+//       <section className="section container"><div className="section-heading"><div><span className="section-kicker">اختيارات المسافرين</span><h2>سيارات جاهزة لمشوارك</h2><p>اختر من عروضنا المميزة واستلم سيارتك في الوقت والمكان المناسبين.</p></div><Link to="/cars" className="text-link">شاهد كل السيارات <ChevronLeft size={18} /></Link></div><div className="featured-grid">{featuredCars.map((car) => <Link className="car-showcase-card" to={car.id?.toString().startsWith('demo') ? '/cars' : `/cars/${car.id}`} key={car.id}><div className="car-image-wrap"><img src={imageUrl(car)} alt={`${car.make} ${car.model}`} /><span className="car-badge">الأكثر طلباً</span><button className="heart-button" onClick={(e) => { e.preventDefault(); toast('سجّل دخولك لحفظ السيارة'); }}><Heart size={18} /></button></div><div className="car-card-body"><div className="car-title-row"><div><h3>{car.make} {car.model}</h3><span>{car.category || 'سيارة مميزة'}</span></div><div className="rating"><Star size={15} fill="currentColor" /> {car.average_rating || '4.8'}</div></div><div className="car-meta"><span><Users size={15} /> {car.seats || 5} ركاب</span><span><Sparkles size={15} /> أوتوماتيك</span><strong>${car.price_per_day || 45}<small>/اليوم</small></strong></div></div></Link>)}</div></section>
+
+//       <section className="categories-section"><div className="container"><div className="section-heading"><div><span className="section-kicker">اختر ما يناسبك</span><h2>كل مشوار له سيارة</h2></div></div><div className="category-grid"><Link to="/cars?category=اقتصادية" className="category-card economy"><span>للمشاوير اليومية</span><strong>اقتصادية</strong><ChevronLeft /></Link><Link to="/cars?category=سيدان" className="category-card sedan"><span>راحة وأناقة</span><strong>سيدان</strong><ChevronLeft /></Link><Link to="/cars?category=دفع رباعي" className="category-card suv"><span>للطريق المفتوح</span><strong>دفع رباعي</strong><ChevronLeft /></Link><Link to="/cars?category=عائلية" className="category-card family"><span>تسع الجميع</span><strong>عائلية</strong><ChevronLeft /></Link></div></div></section>
+
+//       <section className="steps-section container" id="how-it-works"><div className="steps-intro"><span className="section-kicker">بكل بساطة</span><h2>من البحث إلى الطريق<br /><em>في ثلاث خطوات.</em></h2><p>لا تضيع وقتك بين الاتصالات والانتظار. كل ما تحتاجه في مكان واحد.</p><Link to="/cars" className="primary-button">ابدأ البحث الآن <ChevronLeft size={18} /></Link></div><div className="steps-list"><div className="step-item"><span>01</span><div><CarFront /><h3>اختر سيارتك</h3><p>ابحث وقارن بين السيارات حسب الموقع والسعر والمواصفات.</p></div></div><div className="step-item"><span>02</span><div><CalendarDays /><h3>احجز في دقائق</h3><p>حدد تاريخك وبيانات الاستلام، وستصلك التفاصيل فوراً.</p></div></div><div className="step-item"><span>03</span><div><CheckCircle2 /><h3>استلم وانطلق</h3><p>استلم سيارتك من المورد الموثوق وابدأ رحلتك براحة.</p></div></div></div></section>
+
+//       <section className="supplier-cta"><div className="container supplier-cta-inner"><div><span className="section-kicker">لديك سيارات؟</span><h2>حوّل سياراتك إلى<br /><em>مصدر دخل مستمر.</em></h2><p>انضم إلى شبكة الموردين في سفر، وأدر سياراتك وحجوزاتك من لوحة واحدة.</p><Link to="/Vendor-Join" className="light-button">انضم كمورد <ChevronLeft size={18} /></Link></div><div className="supplier-stat"><strong>+200</strong><span>سيارة قيد الحجز</span><strong>24/7</strong><span>دعم للموردين</span></div></div></section>
+
+//       <footer className="marketing-footer"><div className="container footer-grid"><div><Link className="brand-mark light" to="/">سَفَر <span>SAFAR</span></Link><p>طريقك الأسهل لاستئجار سيارة في اليمن.</p></div><div><strong>اكتشف</strong><Link to="/cars">السيارات</Link><Link to="/login">تسجيل الدخول</Link></div><div><strong>للموردين</strong><Link to="/Vendor-Join">انضم كمورد</Link><Link to="/supplier/dashboard">لوحة المورد</Link></div><div><strong>تواصل معنا</strong><span>صنعاء، اليمن</span><span>support@safar.ye</span></div></div><div className="container footer-bottom">© 2026 سفر. كل الحقوق محفوظة.</div></footer>
+//     </div>
+//   );
+// }
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { carsAPI } from '../services/api';
+import { carsAPI,advertisementsAPI  } from '../services/api';
 import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Flame, Car, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import SearchFilter from '../components/SearchFilter';
+// import ActiveAdvertisements from '../components/ActiveAdvertisements';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,16 +107,49 @@ export default function Home() {
     location: '',
     startDate: '',
     endDate: '',
+    pickupTime: '09:00',
+    returnTime: '18:00',
     minPrice: '',
     maxPrice: '',
-  
     latitude: '',
     longitude: '',
     radius: 10,
   });
+  
+
+
   const [deals, setDeals] = useState([]);
   const { user, isAuthenticated, isCustomer } = useAuthStore();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [activeAds, setActiveAds] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+  
+    const loadActiveAdvertisements = async () => {
+      try {
+        const response =
+          await advertisementsAPI.getActiveAdvertisements({
+            placement: 'homepage',
+          });
+  
+        if (!cancelled) {
+          setActiveAds(response.data?.data || []);
+        }
+      } catch (error) {
+        console.error(
+          'Homepage advertisements error:',
+          error.response?.data || error.message
+        );
+      }
+    };
+  
+    loadActiveAdvertisements();
+  
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const fetchFavorites = async () => {
     if (isAuthenticated() && isCustomer()) {
       try {
@@ -84,7 +212,8 @@ export default function Home() {
   const handleCategoryClick = (category) => {
     navigate(`/cars?category=${encodeURIComponent(category)}`);
   };
-
+ 
+  
   return (
     <div className="home-wrapper">
       {/* Hero Section */}
@@ -143,6 +272,48 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* <ActiveAdvertisements placement="cars" /> */}
+      {activeAds.length > 0 && (
+  <section className="active-ads-section">
+    {activeAds.map((ad) => (
+      <article
+        key={ad.id}
+        className={`active-ad-card ad-type-${ad.ad_type || 'default'}`}
+      >
+        <span className="active-ad-type">
+          {getAdvertisementTypeLabel(ad.ad_type)}
+        </span>
+
+        <h2>{ad.title}</h2>
+
+        {ad.description && (
+          <p>{ad.description}</p>
+        )}
+
+        <div className="active-ad-details">
+          {ad.ad_type && (
+            <span>
+              النوع: {getAdvertisementTypeLabel(ad.ad_type)}
+            </span>
+          )}
+
+          {ad.placement && (
+            <span>
+              الموضع: {ad.placement}
+            </span>
+          )}
+
+          {Number(ad.price || 0) > 0 && (
+            <strong>
+              {Number(ad.price).toLocaleString()} ر.س
+            </strong>
+          )}
+        </div>
+      </article>
+    ))}
+  </section>
+)}
+
 
       {/* Today's Deals - بدون إيموجي نار */}
       {deals.length > 0 && (

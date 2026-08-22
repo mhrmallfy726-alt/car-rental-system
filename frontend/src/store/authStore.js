@@ -127,6 +127,7 @@ const useAuthStore = create(
       isAdmin: () => get().user?.role === 'admin',
       isSupplier: () => get().user?.role === 'supplier',
       isCustomer: () => get().user?.role === 'customer',
+       isE: () => get().user?.role === 'employee',
     }),
     {
       name: 'car-rental-auth',

@@ -4,7 +4,6 @@ import { MapPin, Search } from "lucide-react";
 
 
 export default function SearchFilter({
-    
   searchParams,
   setSearchParams,
   handleSearch,
@@ -51,6 +50,28 @@ radius: 10,
       required
       value={searchParams.endDate}
       onChange={e => setSearchParams({ ...searchParams, endDate: e.target.value })}
+    />
+  </div>
+
+  <div className="input-wrapper">
+    <label>وقت الاستلام</label>
+    <input
+      type="time"
+      className="custom-input time-input"
+      required
+      value={searchParams.pickupTime || '09:00'}
+      onChange={e => setSearchParams({ ...searchParams, pickupTime: e.target.value })}
+    />
+  </div>
+
+  <div className="input-wrapper">
+    <label>وقت الإرجاع</label>
+    <input
+      type="time"
+      className="custom-input time-input"
+      required
+      value={searchParams.returnTime || '18:00'}
+      onChange={e => setSearchParams({ ...searchParams, returnTime: e.target.value })}
     />
   </div>
   <div className="input-wrapper">

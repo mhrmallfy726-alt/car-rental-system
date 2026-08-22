@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { carsAPI } from '../services/api';
+import { carsAPI,advertisementsAPI  } from '../services/api';
 import { Search, Filter, Star, User, Settings, CheckCircle, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
+// import ActiveAdvertisements from '../components/ActiveAdvertisements';
+
 // import SearchFilter from "../components/SearchFilter";
 export default function Cars() {
   const [cars, setCars] = useState([]);
@@ -23,7 +25,9 @@ export default function Cars() {
     fuel_type: '',
     sort_by: initialParams.get('sort_by') || 'newest',
     startDate: initialParams.get('startDate') || '',
-    endDate: initialParams.get('endDate') || ''
+    endDate: initialParams.get('endDate') || '',
+    pickup_time: initialParams.get('pickupTime') || initialParams.get('pickup_time') || '09:00',
+    return_time: initialParams.get('returnTime') || initialParams.get('return_time') || '18:00'
   });
 
   const [showFilters, setShowFilters] = useState(false);
@@ -39,14 +43,16 @@ export default function Cars() {
   // التحقق من صحة التواريخ قبل كل عملية جلب
   const validateDates = useCallback(() => {
     if (filters.startDate && filters.endDate) {
-      if (new Date(filters.startDate) > new Date(filters.endDate)) {
-        setDateError('تاريخ التسليم يجب أن يكون بعد تاريخ الاستلام');
+      const pickup = new Date(`${filters.startDate}T${filters.pickup_time || '09:00'}`);
+      const returned = new Date(`${filters.endDate}T${filters.return_time || '18:00'}`);
+      if (returned <= pickup) {
+        setDateError('وقت الإرجاع يجب أن يكون بعد وقت الاستلام');
         return false;
       }
     }
     setDateError('');
     return true;
-  }, [filters.startDate, filters.endDate]);
+  }, [filters.startDate, filters.endDate, filters.pickup_time, filters.return_time]);
 
   const fetchCars = useCallback(async () => {
     if (!validateDates()) return;
@@ -82,7 +88,7 @@ export default function Cars() {
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({ ...prev, [name]: value }));
     // عند تغيير التواريخ، امسح الخطأ فوراً
-    if (name === 'startDate' || name === 'endDate') {
+    if (name === 'startDate' || name === 'endDate' || name === 'pickup_time' || name === 'return_time') {
       setDateError('');
     }
   };
@@ -97,7 +103,9 @@ export default function Cars() {
       fuel_type: '',
       sort_by: 'newest',
       startDate: '',
-      endDate: ''
+      endDate: '',
+      pickup_time: '09:00',
+      return_time: '18:00'
     });
     setDateError('');
   };
@@ -131,6 +139,10 @@ export default function Cars() {
     } catch (error) {
       toast.error('فشل تحديث المفضلة');
     }
+    await advertisementsAPI.getActiveAdvertisements({
+      placement: 'cars',
+    });
+    
   };
 
   useEffect(() => {
@@ -142,6 +154,44 @@ export default function Cars() {
     e.preventDefault();
     fetchCars();
   };
+   // نوع
+  const getAdvertisementTypeLabel = (type) => {
+    const labels = {
+      featured: 'إعلان مميز',
+      discount: 'خصم',
+      urgent: 'إعلان عاجل',
+      main: 'إعلان رئيسي',
+    };
+  
+    return labels[type] || 'إعلان';
+  };
+  
+  const [activeAds, setActiveAds] = useState([]);
+
+  useEffect(() => {
+    const loadAdvertisements = async () => {
+      try {
+        const response =
+          await advertisementsAPI.getActiveAdvertisements({
+            placement: 'cars',
+          });
+  
+        console.log(
+          'Cars advertisements:',
+          response.data
+        );
+  
+        setActiveAds(response.data?.data || []);
+      } catch (error) {
+        console.error(
+          'Cars advertisements error:',
+          error.response?.data || error.message
+        );
+      }
+    };
+  
+    loadAdvertisements();
+  }, []);
 
   return (
     <div className="page" style={{ background: '#f8f9fa', minHeight: '100vh', paddingTop: '72px' }}>
@@ -156,9 +206,37 @@ export default function Cars() {
   setSearchParams={setSearchParams}
   handleSearch={handleSearch}
 /> */}
+
+
+
         </div>
       </section>
+      {activeAds.length > 0 && (
+  <section className="active-ads-section">
+    {activeAds.map((ad) => (
+      <article
+        key={ad.id}
+        className="active-ad-card"
+      >
+        <span>
+  {getAdvertisementTypeLabel(ad.ad_type)}
+</span>
 
+        <h2>{ad.title}</h2>
+
+        {ad.description && (
+          <p>{ad.description}</p>
+        )}
+
+        {Number(ad.price || 0) > 0 && (
+          <strong>
+            {Number(ad.price).toLocaleString()} ر.س
+          </strong>
+        )}
+      </article>
+    ))}
+  </section>
+)}
       <div className="container py-40">
         <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }} className="cars-layout">
 
@@ -378,6 +456,7 @@ export default function Cars() {
           className="show-tablet"
         />
       )}
+{/* <ActiveAdvertisements placement="cars" /> */}
 
       <style dangerouslySetInnerHTML={{
         __html: `

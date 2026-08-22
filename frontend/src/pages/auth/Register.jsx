@@ -380,13 +380,12 @@ export default function Register() {
 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Role Selection */}
           <div>
-            <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem' }}>أنا أسجل بصفتي:</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <ChevronLeft size={16} /> العودة للرئيسية
+            <div style={{ display: 'grid', gap: '16px' }}>
               <div 
                 onClick={() => setFormData({...formData, role: 'customer'})}
                 style={{ 
                   padding: '16px',
-                  borderRadius: '12px',
                   cursor: 'pointer',
                   textAlign: 'center',
                   display: 'flex',
@@ -394,14 +393,34 @@ export default function Register() {
                   alignItems: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
-                  border: formData.role === 'customer' ? '2px solid #0a58ca' : '1px solid #ced4da',
-                  background: formData.role === 'customer' ? 'rgba(10, 88, 202, 0.08)' : 'f8f9fa#'
+                  border: formData.role === 'customer' ? '0px solid #0a58ca' : '0px solid #ced4da',
+                  background: formData.role === 'customer' ? 'rgba(0, 0, 0, 0)' : 'f8f9fa#'
                 }}
               >
+                       
+           
+                       <img src={logo} alt="RC Logo" style={{ width:'500px', height:'175px',objectFit:'contain'}}/>
                 <ShieldCheck size={24} color={formData.role === 'customer' ? '#0a58ca' : '#6c757d'} />
                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'customer' ? '#0a58ca' : '#1a1a1a' }}>مستأجر سيارة</span>
+                    {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+         
+{/* 
+            <span style={{ 
+fontSize: "2.5rem",
+letterSpacing: "5px",
+fontStyle: "italic",
+textTransform: "uppercase",
+}}>RENTALCAR</span> */}
+          </div>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
+           
+          </h1>
+          
+        </div>
               </div>
-              <Link to="/vendor-join"
+              {/* <Link to="/vendor-join"
   style={{ textDecoration: "none", color: "inherit" }}
 >
               <div 
@@ -436,7 +455,7 @@ export default function Register() {
 
           
              
- </Link>
+ </Link> */}
 </div> 
           </div>
 
@@ -621,7 +640,7 @@ export default function Register() {
 
 )}
         {/* زر الرجوع */}
-        <Link to="/" style={{
+        {/* <Link to="/" style={{
           display: 'inline-flex',
           alignItems: 'center',
           gap: '6px',
@@ -635,12 +654,12 @@ export default function Register() {
           width: 'fit-content'
         }}>
           <ChevronLeft size={16} /> العودة للرئيسية
-        </Link>
+        </Link> */}
 
         {/* الشعار والعنوان */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <img src={logo} alt="RC Logo" style={{ width:'20%', height:'70px',objectFit:'contain'}}/>
+          {/* <img src={logo} alt="RC Logo" style={{ width:'20%', height:'70px',objectFit:'contain'}}/> */}
 
             {/* <Car size={40} style={{ color: '#0a58ca' }} /> */}
             {/* <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0a58ca', letterSpacing: '-1px' }}>RENTALCAR</span> */}

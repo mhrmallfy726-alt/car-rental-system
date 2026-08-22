@@ -137,6 +137,8 @@ export default function MyReservations() {
     const map = {
       pending: { label: 'قيد المراجعة', bg: '#ffc107', color: '#1a1a1a' },
       approved: { label: 'بانتظار الدفع', bg: '#17a2b8', color: 'white' },
+      awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
+      returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
       active: { label: 'نشط', bg: '#28a745', color: 'white' },
       completed: { label: 'مكتمل', bg: '#0a58ca', color: 'white' },
       cancelled: { label: 'ملغي', bg: '#dc3545', color: 'white' },
@@ -147,8 +149,8 @@ export default function MyReservations() {
     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
   };
 
-  const canPay = (status) => status === 'approved';
-  const canCancel = (status) => ['pending', 'approved'].includes(status);
+  const canPay = (status) => ['approved', 'awaiting_pickup'].includes(status);
+  const canCancel = (status) => ['pending', 'approved', 'awaiting_pickup'].includes(status);
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
   const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'disputed'].includes(status);
@@ -194,13 +196,19 @@ export default function MyReservations() {
                   </p>
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', fontSize: '0.8rem', color: '#6c757d' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> من: {format(new Date(res.start_date), 'yyyy-MM-dd')}</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> إلى: {format(new Date(res.end_date), 'yyyy-MM-dd')}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> الاستلام: {format(new Date(res.start_date), 'yyyy-MM-dd')} {res.pickup_time || '09:00'}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> الإرجاع: {format(new Date(res.end_date), 'yyyy-MM-dd')} {res.return_time || '18:00'}</span>
                     <span style={{ fontWeight: 'bold' }}>المجموع: ${res.total_price}</span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '140px' }}>
+                  {res.handover_state === 'with_customer' && (
+                    <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>السيارة معك الآن</span>
+                  )}
+                  {res.handover_state === 'returned' && res.status === 'returned' && (
+                    <span style={{ background: '#ede7f6', color: '#5e35b1', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>ﺗﻢ اﺳﺘﻼم اﻟﺴﻴﺎرة، واﻟﺤﺠﺰ ﺑﺎﻧﺘﻈﺎر اﻹﻏﻼق</span>
+                  )}
                   {canPay(res.status) && (
                     <Link to={`/checkout/${res.id}`} style={{ background: '#28a745', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
                       <CreditCard size={16} /> ادفع الآن

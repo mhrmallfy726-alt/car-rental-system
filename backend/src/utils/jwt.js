@@ -1,21 +1,31 @@
 const jwt = require('jsonwebtoken');
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
+const generateToken = (id, claims = {}) => {
+  return jwt.sign(
+    { id, ...claims },
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+  );
 };
 
-const sendTokenResponse = (user, statusCode, res) => {
-  const token = generateToken(user.id);
+const sendTokenResponse = (account, statusCode, res, claims = {}) => {
+  const accountType = claims.account_type || 'user';
+  const token = generateToken(account.id, {
+    account_type: accountType,
+    ...claims,
+  });
 
-  // Remove password from output
-  user.password = undefined;
+  const safeAccount = { ...account };
+  delete safeAccount.password;
+  delete safeAccount.password_digest;
 
   res.status(statusCode).json({
     success: true,
     token,
-    user,
+    user: {
+      ...safeAccount,
+      account_type: accountType,
+    },
   });
 };
 

@@ -127,10 +127,12 @@ export default function AdminCars() {
             </button>
           ))}
         </div>
-
-        {/* جدول السيارات مع تمرير أفقي */}
+           {/* جدول السيارات مع تمرير أفقي */}
+        {/* {cars.map(car => ( */}
+                  {/* <Link key={car.id} to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit', background: 'white', borderRadius: '12px', overflow: 'hidden', display: 'flex', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover-up"> */}
         <div style={{ overflowX: 'auto', background: 'white', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+            
             <thead style={{ background: '#f8f9fa' }}>
               <tr>
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>صورة</th>
@@ -138,7 +140,7 @@ export default function AdminCars() {
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>المورد</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السعر/يوم</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الحالة</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>إجراءات</th>
+                {/* <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>إجراءات</th> */}
               </tr>
             </thead>
             <tbody>
@@ -191,8 +193,13 @@ export default function AdminCars() {
               )}
             </tbody>
           </table>
+         
         </div>
+        {/* </Link> */}
+         {/* ))} */}
       </div>
+      
+
 
       <style>{`
         .spinner {

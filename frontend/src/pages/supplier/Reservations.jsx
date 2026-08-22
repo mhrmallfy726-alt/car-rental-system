@@ -197,9 +197,9 @@ export default function SupplierReservations() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '8px' }}>
                     <h3 style={{ fontWeight: 'bold' }}>{res.make} {res.model} <span style={{ color: '#6c757d', fontWeight: 'normal' }}>({res.customer_name})</span></h3>
                     <span className={`badge`} style={{
-                      background: res.status === 'pending' ? '#ffc107' : res.status === 'active' ? '#28a745' : res.status === 'completed' ? '#0a58ca' : res.status === 'disputed' ? '#dc3545' : '#6c757d',
+                      background: res.status === 'pending' ? '#ffc107' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#17a2b8' : res.status === 'active' ? '#28a745' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#0a58ca' : res.status === 'disputed' ? '#dc3545' : '#6c757d',
                       color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
-                    }}>{res.status === 'pending' ? 'قيد الانتظار' : res.status === 'approved' ? 'موافق عليه' : res.status === 'active' ? 'قيد التنفيذ' : res.status === 'completed' ? 'مكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
+                    }}>{res.status === 'pending' ? 'قيد الانتظار' : ['approved', 'awaiting_pickup'].includes(res.status) ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: '#6c757d', marginBottom: '8px' }}>
@@ -217,13 +217,14 @@ export default function SupplierReservations() {
                       <button onClick={() => handleAction(res.id, 'reject')} className="btn btn-danger" style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> رفض</button>
                     </>
                   )}
-                  {res.status === 'approved' && (
+                  {['approved', 'awaiting_pickup'].includes(res.status) && (
                     <button onClick={() => openHandover(res.id, 'before')} className="btn btn-secondary" style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق التسليم (قبل)</button>
                   )}
                   {res.status === 'active' && (
-                    <>
-                      <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#ffc107', color: '#1a1a1a', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>
-                    </>
+                    <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#ffc107', color: '#1a1a1a', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>
+                  )}
+                  {res.status === 'returned' && (
+                    <button onClick={() => handleAction(res.id, 'complete')} className="btn btn-success" style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> إغلاق الحجز وإتاحة السيارة</button>
                   )}
                    <Link to={`/supplier/reservations/${res.id}`} className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', textDecoration: 'none', fontSize: '0.9rem' }}>
                     <Eye size={16} /> عرض التفاصيل والإجراءات
@@ -231,7 +232,7 @@ export default function SupplierReservations() {
                   <button onClick={() => startChat(res.id)} className="btn btn-outline" style={{ background: 'transparent', border: '1px solid #0a58ca', color: '#0a58ca', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                     <MessageSquare size={16} /> مراسلة العميل (محادثة)
                   </button>
-                  {res.status !== 'disputed' && ['active', 'completed', 'approved'].includes(res.status) && (
+                  {res.status !== 'disputed' && ['active', 'returned', 'completed', 'approved', 'awaiting_pickup'].includes(res.status) && (
                     <button onClick={() => openDisputeModal(res)} className="btn btn-outline-danger" style={{ background: 'transparent', border: '1px solid #dc3545', color: '#dc3545', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', marginTop: '4px' }}>
                       <AlertTriangle size={16} /> تقديم شكوى / نزاع
                     </button>

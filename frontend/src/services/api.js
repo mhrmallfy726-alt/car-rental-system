@@ -128,12 +128,35 @@ export const adminAPI = {
   resolveComplaint: (id, data) => api.put(`/complaints/${id}/resolve`, data),
   // جلب مستخدم واحد (اختياري)
   getUser: (id) => api.get(`/admin/users/${id}`),
-  getAdvertisements: () => api.get('/advertisements/admin/all'),
-createAdvertisement: (data) => api.post('/advertisements', data),
-updateAdvertisement: (id, data) => api.put(`/advertisements/${id}`, data),
-deleteAdvertisement: (id) => api.delete(`/advertisements/${id}`),
-getSuppliers: (params) => api.get('/advertisements/suppliers', { params }),
-getSupplierCars: (id) => api.get(`/advertisements/suppliers/${id}/cars`),
+
+  
+  getAdvertisements: () =>
+  api.get('/advertisementController/admin/all'),
+
+  getAdvertisementRequests: () =>
+  api.get('/advertisementController/admin/requests'),
+
+  getAdvertisementStats: () =>
+  api.get('/advertisementController/admin/stats'),
+
+  getSuppliers: (params) =>
+  api.get('/advertisementController/suppliers', { params }),
+
+  getSupplierCars: (id) =>
+  api.get(`/advertisementController/suppliers/${id}/cars`),
+
+  approveAdvertisement: (id) =>
+  api.put(
+    `/advertisementController/admin/requests/${id}/approve`
+  ),
+
+  rejectAdvertisement: (id, data) =>
+  api.put(
+    `/advertisementController/admin/requests/${id}/reject`,
+    data
+  ),
+  // getAdvertisementRequests: () => api.get('/advertisementController/admin/requests'),
+
   // طلبات الموردين
   getSupplierRequests: () => api.get("/admin/supplier-requests"),
 
@@ -143,5 +166,27 @@ getSupplierCars: (id) => api.get(`/advertisements/suppliers/${id}/cars`),
   rejectSupplier: (id, reason) =>
     api.put(`/admin/supplier-requests/${id}/reject`, { reason }),
 };
+export const advertisementsAPI = {
+  getActiveAdvertisements: (params = {}) =>
+  api.get(
+    '/advertisementController/active',
+    { params }
+  ),
+  recordImpression: (id) =>
+  api.post(
+    `/advertisementController/${id}/impression`
+  ),
 
-export default api;
+recordClick: (id) =>
+  api.post(
+    `/advertisementController/${id}/click`
+  ),
+  getMyRequests: () =>
+    api.get('/advertisementController/requests/mine'),
+
+  createRequest: (data) =>
+    api.post('/advertisementController/requests', data),
+};
+
+
+export default api;  

@@ -566,7 +566,53 @@ const login = asyncHandler(async (req, res, next) => {
   if (!email || !password) {
     return next(new AppError('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 400));
   }
+ // الموظف له جدول مستقل، لذلك نفحص employees أولاً.
+ const employeeResult = await query(
+  `SELECT id, supplier_id, full_name, phone_number, email,
+          password, role, status, created_at
+   FROM employees
+   WHERE LOWER(email) = LOWER($1)
+   LIMIT 1`,
+  [email]
+);
+const employee = employeeResult.rows[0];
 
+if (employee) {
+  if (employee.status !== 'active') {
+    return next(new AppError('حساب الموظف غير فعال. تواصل مع المورد', 403));
+  }
+
+  const employeePasswordMatches = await bcrypt.compare(
+    password,
+    employee.password
+  );
+
+  if (!employeePasswordMatches) {
+    return next(new AppError('بيانات الدخول غير صحيحة', 401));
+  }
+
+  return sendTokenResponse(
+    {
+      id: String(employee.id),
+      name: employee.full_name,
+      full_name: employee.full_name,
+      email: employee.email,
+      phone: employee.phone_number,
+      phone_number: employee.phone_number,
+      role: employee.role,
+      status: employee.status,
+      supplier_id: String(employee.supplier_id),
+      employee_id: String(employee.id),
+    },
+    200,
+    res,
+    {
+      account_type: 'employee',
+      employee_id: String(employee.id),
+      supplier_id: String(employee.supplier_id),
+    }
+  );
+}
   const result = await query('SELECT * FROM users WHERE email = $1', [email]);
   const user = result.rows[0];
 

@@ -19,6 +19,7 @@ const handoverRoutes = require('./src/routes/handoverRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
 const { initCronJobs } = require('./src/utils/cronJobs');
+const advertisementRoutes = require('./src/routes/advertisementRoutes');
 // const employeeRoutes = require('./routes/employees');
 const path = require("path");
 // const express = require("express");
@@ -113,10 +114,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/handover', handoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/employees', employeeRoutes);
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "uploads"))
-);
+app.use("/uploads",  express.static(path.join(__dirname, "uploads")));
+app.use( '/api/advertisementController', advertisementRoutes);
 // ========================
 // Health Check
 // ========================

@@ -6,7 +6,7 @@ import {
   Sparkles, Building2, DollarSign, BarChart3, Globe, Award,
   Phone, Mail, Search
 } from 'lucide-react';
-
+// import MarketingChoice from './marketing/MarketingChoice';
 export default function Landing() {
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState({});
@@ -132,7 +132,7 @@ export default function Landing() {
               </p>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                <Link
+                {/* <Link
                   to="/cars"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '10px',
@@ -147,10 +147,10 @@ export default function Landing() {
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,128,9,0.35)'; }}
                 >
                   استكشف السيارات <ArrowLeft size={20} />
-                </Link>
+                </Link> */}
 
                 <Link
-                  to="/register"
+                  to="/MarketingChoice"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '10px',
                     background: 'rgba(255,255,255,0.1)',
@@ -164,7 +164,7 @@ export default function Landing() {
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
                 >
-                  سجّل كمورد <Building2 size={20} />
+                  ابدا رحلتك <Building2 size={20} />
                 </Link>
               </div>
 
@@ -297,7 +297,7 @@ export default function Landing() {
             <div style={{ textAlign: 'center', marginBottom: '60px' }}>
           
               <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#1a1a1a' }}>
-                احجز سيارتك في دقائق
+                احجز سيارتك في لحظات
               </h2>
               <p style={{ color: '#6b6b6b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
                 تجربة حجز سلسة ومريحة مع ضمان أفضل الأسعار والخدمات
@@ -443,7 +443,7 @@ export default function Landing() {
 
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
               <Link
-                to="/register"
+                to="./marketing/MarketingChoice"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
                   background: 'linear-gradient(135deg, #febb02, #f5a623)',
@@ -664,7 +664,7 @@ export default function Landing() {
               تصفح السيارات <ArrowLeft size={20} />
             </Link>
             <Link
-              to="/register"
+              to="/MarketingChoice"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                 background: 'rgba(255,255,255,0.15)',
