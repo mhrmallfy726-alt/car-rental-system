@@ -1,4 +1,5 @@
 const { query, getClient } = require('../config/database');
+const { assertCurrency } = require('./currencyService');
 
 const DEFAULT_CURRENCY = 'YER';
 
@@ -10,6 +11,7 @@ const createAdvertisementCharge = async (client, {
   title,
 }) => {
   const numericAmount = Number(amount || 0);
+  const paymentCurrency = assertCurrency(currency);
   if (!advertisementId || !supplierId || numericAmount < 0) {
     throw new Error('بيانات دفع الإعلان غير صالحة');
   }
@@ -40,7 +42,7 @@ const createAdvertisementCharge = async (client, {
       supplierId,
       supplierId,
       numericAmount,
-      currency,
+      paymentCurrency,
       providerReference,
       JSON.stringify({
         simulated: true,
@@ -62,7 +64,7 @@ const createAdvertisementCharge = async (client, {
       advertisementId,
       supplierId,
       numericAmount,
-      currency,
+      paymentCurrency,
       `خصم محاكى لترويج الإعلان: ${title || advertisementId}`,
       JSON.stringify({ simulated: true }),
     ],
@@ -82,15 +84,12 @@ const getSettings = async () => {
 };
 
 const updateSettings = async (adminId, data = {}) => {
-  const currency = data.currency || DEFAULT_CURRENCY;
+  const currency = assertCurrency(data.currency || DEFAULT_CURRENCY);
   const commissionRate = Number(data.commission_rate ?? 10);
   const settlementMode = data.settlement_mode === 'automatic'
     ? 'automatic'
     : 'manual';
 
-  if (!['YER'].includes(currency)) {
-    throw new Error('العملة الحالية المدعومة هي الريال اليمني YER');
-  }
   if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) {
     throw new Error('نسبة العمولة يجب أن تكون بين 0 و100');
   }
@@ -151,8 +150,9 @@ const getDashboard = async () => {
   };
 };
 
-const createPayout = async (adminId, supplierId, amount, notes = '') => {
+const createPayout = async (adminId, supplierId, amount, notes = '', currency = null) => {
   const numericAmount = Number(amount);
+  const payoutCurrency = assertCurrency(currency || DEFAULT_CURRENCY);
   if (!supplierId || !Number.isFinite(numericAmount) || numericAmount <= 0) {
     throw new Error('بيانات التسوية غير صالحة');
   }
@@ -166,7 +166,7 @@ const createPayout = async (adminId, supplierId, amount, notes = '') => {
        processed_by, processed_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, CASE WHEN $5 = 'paid' THEN NOW() ELSE NULL END)
      RETURNING *`,
-    [supplierId, numericAmount, settings.currency, mode, status, notes || null, mode === 'automatic' ? adminId : null],
+    [supplierId, numericAmount, payoutCurrency, mode, status, notes || null, mode === 'automatic' ? adminId : null],
   );
 
   if (status === 'paid') {

@@ -64,6 +64,7 @@ export const reservationsAPI = {
 
 // ── Payments ──────────────────────────────────
 export const paymentsAPI = {
+  getCurrencies: () => api.get('/payments/currencies'),
   checkout: (data) => api.post('/payments/checkout', data),
   getHistory: () => api.get('/payments/history'),
   getSavedCards: () => api.get('/payments/cards'),

@@ -4,6 +4,12 @@ const { protect } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 const financeService = require('../services/financeService');
+const { listCurrencies, assertCurrency, convertFromYER } = require('../services/currencyService');
+
+// GET /api/payments/currencies
+router.get('/currencies', protect, asyncHandler(async (req, res) => {
+  res.json({ success: true, data: listCurrencies(), default_currency: 'YER' });
+}));
 
 // GET /api/payments/cards
 router.get('/cards', protect, asyncHandler(async (req, res) => {
@@ -34,6 +40,12 @@ router.post('/cards', protect, asyncHandler(async (req, res, next) => {
 
 router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const { reservation_id, payment_method, saved_card_id } = req.body;
+  let currency;
+  try {
+    currency = assertCurrency(req.body.currency || 'YER');
+  } catch (error) {
+    return next(new AppError(error.message, 400));
+  }
   const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND customer_id = $2', [reservation_id, req.user.id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
@@ -44,21 +56,23 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     if (card.rows.length === 0) return next(new AppError('البطاقة غير صالحة', 400));
   }
 
-  const totalAmount = Number(r.total_price || 0);
+  const baseAmountYER = Number(r.total_price || 0);
+  const totalAmount = convertFromYER(baseAmountYER, currency);
   const payment = await query(
     `INSERT INTO payments
       (reservation_id, customer_id, payer_id, supplier_id, amount,
        currency, payment_method, status, provider_reference, metadata, paid_at)
-     VALUES ($1, $2, $2, $3, $4, 'YER', $5, 'paid', $6, $7::jsonb, NOW())
+     VALUES ($1, $2, $2, $3, $4, $5, $6, 'paid', $7, $8::jsonb, NOW())
      RETURNING *`,
     [
       reservation_id,
       req.user.id,
       r.supplier_id,
       totalAmount,
+      currency,
       payment_method || 'card',
       `SIM-RES-${reservation_id}-${Date.now()}`,
-      JSON.stringify({ simulated: true, event: 'reservation_checkout' }),
+      JSON.stringify({ simulated: true, event: 'reservation_checkout', base_amount: baseAmountYER, base_currency: 'YER', exchange_rate_to_YER: totalAmount ? Number((baseAmountYER / totalAmount).toFixed(6)) : 0 }),
     ]
   );
 
@@ -70,14 +84,15 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     `INSERT INTO ledger_entries
       (payment_id, reservation_id, supplier_id, entry_type, direction,
        amount, currency, description, metadata)
-     VALUES ($1, $2, $3, 'charge', 'credit', $4, 'YER', $5, $6::jsonb),
-            ($1, $2, $3, 'platform_fee', 'credit', $7, 'YER', $8, $6::jsonb),
-            ($1, $2, $3, 'supplier_payable', 'credit', $9, 'YER', $10, $6::jsonb)`,
+     VALUES ($1, $2, $3, 'charge', 'credit', $4, $5, $6, $7::jsonb),
+            ($1, $2, $3, 'platform_fee', 'credit', $8, $5, $9, $7::jsonb),
+            ($1, $2, $3, 'supplier_payable', 'credit', $10, $5, $11, $7::jsonb)`,
     [
       payment.rows[0].id,
       reservation_id,
       r.supplier_id,
       totalAmount,
+      currency,
       'تحصيل حجز محاكى',
       JSON.stringify({ simulated: true, commission_rate: financeSettings.commission_rate }),
       commission,
@@ -93,6 +108,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
       r.supplier_id,
       supplierPayable,
       `تسوية تلقائية محاكاة للحجز ${reservation_id}`,
+      currency,
     );
   }
 

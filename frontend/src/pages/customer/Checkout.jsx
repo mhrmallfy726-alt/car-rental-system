@@ -4,6 +4,7 @@ import { reservationsAPI, paymentsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { ShieldCheck, CreditCard, CheckCircle, Plus, ArrowRight, X } from 'lucide-react';
 import { getCarImage } from '../../utils/imageUtils';
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convertFromYER, formatCurrency, getCurrency } from '../../utils/currency';
 
 // دوال مساعدة للتحقق من صحة البطاقة
 const validateCardNumber = (num) => {
@@ -45,6 +46,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [showNewCard, setShowNewCard] = useState(false);
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
 
   const [cardData, setCardData] = useState({
     card_holder_name: '',
@@ -89,6 +91,9 @@ export default function Checkout() {
     }
   };
 
+  const selectedTotal = reservation ? convertFromYER(reservation.total_price, currency) : 0;
+  const selectedDailyPrice = reservation ? convertFromYER(reservation.price_per_day, currency) : 0;
+
   const handleCardInputChange = (field, value) => {
     setCardData(prev => ({ ...prev, [field]: value }));
     // Clear error for that field
@@ -123,7 +128,8 @@ export default function Checkout() {
       await paymentsAPI.checkout({
         reservation_id: reservationId,
         payment_method: 'card',
-        saved_card_id: finalCardId
+        saved_card_id: finalCardId,
+        currency,
       });
 
       toast.success('تم الدفع بنجاح! الحجز الآن نشط.');
@@ -175,7 +181,15 @@ export default function Checkout() {
               <CreditCard size={20} style={{ color: '#0a58ca' }} /> تفاصيل الدفع
             </h2>
 
-            {/* البطاقات المحفوظة */}
+              <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '12px', background: '#f8fbfc', border: '1px solid #dcebee' }}>
+                <label htmlFor="payment-currency" style={{ display: 'block', fontWeight: '800', marginBottom: '8px', color: '#173a52' }}>عملة الدفع</label>
+                <select id="payment-currency" value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #cbdde3', borderRadius: '10px', background: '#fff', font: 'inherit', fontWeight: '700' }}>
+                  {SUPPORTED_CURRENCIES.map((item) => <option key={item.code} value={item.code}>{item.name} ({item.code} — {item.symbol})</option>)}
+                </select>
+                <small style={{ display: 'block', marginTop: '8px', color: '#70828d' }}>الأسعار الأساسية بالريال اليمني. سعر التحويل المحاكى: 1 {getCurrency(currency).code} = {getCurrency(currency).rateToYER.toLocaleString()} ر.ي.</small>
+              </div>
+
+              {/* البطاقات المحفوظة */}
             {savedCards.length > 0 && !showNewCard && (
               <div style={{ marginBottom: '24px' }}>
                 <p style={{ color: '#6c757d', marginBottom: '16px' }}>اختر بطاقة الدفع:</p>
@@ -271,17 +285,17 @@ export default function Checkout() {
             <div style={{ borderBottom: '1px solid #dee2e6', paddingBottom: '16px', marginBottom: '16px', fontSize: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span>التكلفة اليومية</span>
-                <span>${reservation.price_per_day}</span>
+                <span>{formatCurrency(selectedDailyPrice, currency)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span>الضريبة (0%)</span>
-                <span>$0.00</span>
+                <span>{formatCurrency(0, currency)}</span>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
               <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>الإجمالي</span>
-              <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#0a58ca' }}>${reservation.total_price}</span>
+              <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#0a58ca' }}>{formatCurrency(selectedTotal, currency)}</span>
             </div>
 
             <button
