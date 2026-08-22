@@ -6,7 +6,7 @@ import {
   Upload, CheckCircle, AlertCircle, Eye, EyeOff, ChevronLeft,
   Image as ImageIcon, FileCheck, Clock, DollarSign
 } from 'lucide-react';
-import logo from '../assets/logo.png';
+import logo from '../assets/LOGO.png';
 // import { setAccessToken, clearAccessToken } from '../api/axios';
 import axios from "axios";
 export default function Join() {

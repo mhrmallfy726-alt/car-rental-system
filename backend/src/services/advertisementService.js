@@ -159,6 +159,8 @@ const advertisementService  = {
       description = null,
       ad_type = 'featured',
       placement = 'cars',
+      image_url = null,
+      link_url = null,
       price = 0,
       duration = 7,
       start_date = null,
@@ -179,6 +181,8 @@ const advertisementService  = {
           description,
           ad_type,
           placement,
+          image_url,
+          link_url,
           price,
           duration,
           start_date,
@@ -190,8 +194,8 @@ const advertisementService  = {
           payment_status
         )
        VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-         $11, $12, $13, $14, $15)
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+         $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [
         supplier_id,
@@ -200,6 +204,8 @@ const advertisementService  = {
         description,
         ad_type,
         placement,
+        image_url,
+        link_url,
         Number(price || 0),
         Number(duration || 7),
         start_date || null,
@@ -222,6 +228,8 @@ const advertisementService  = {
       'description',
       'ad_type',
       'placement',
+      'image_url',
+      'link_url',
       'price',
       'duration',
       'start_date',
@@ -324,6 +332,7 @@ const advertisementService  = {
     const car = await query('SELECT id FROM cars WHERE id = $1 AND supplier_id = $2', [data.car_id, supplierId]);
     if (!car.rows.length) throw new Error('السيارة غير موجودة ضمن سيارات المورد');
     const placement = data.placement || 'cars';
+    const image_url = data.image_url || null;
 
     const result = await query(
       `INSERT INTO advertisement_requests
@@ -334,12 +343,13 @@ const advertisementService  = {
           description,
           ad_type,
           placement,
+          image_url,
           requested_budget,
           duration_days,
           start_date,
           end_date
         )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         supplierId,
@@ -348,6 +358,7 @@ const advertisementService  = {
         data.description || null,
         data.ad_type || 'featured',
         placement,
+        image_url,
         Number(data.requested_budget || 0),
         Number(data.duration_days || 7),
         data.start_date || null,
@@ -413,6 +424,7 @@ const advertisementService  = {
             description,
             ad_type,
             placement,
+            image_url,
             price,
             duration,
             start_date,
@@ -430,18 +442,19 @@ const advertisementService  = {
             $4,
             $5,
             $6,
-            $7::numeric,
-            $8::int,
-            COALESCE($9::date, CURRENT_DATE),
+            $7,
+            $8::numeric,
+            $9::int,
+            COALESCE($10::date, CURRENT_DATE),
             COALESCE(
-              $10::date,
+              $11::date,
               (
-                COALESCE($9::date, CURRENT_DATE)
-                + (($8::int - 1) * INTERVAL '1 day')
+                COALESCE($10::date, CURRENT_DATE)
+                + (($9::int - 1) * INTERVAL '1 day')
               )::date
             ),
             'active',
-            $11::boolean,
+            $12::boolean,
             false,
             'pending'
           )
@@ -453,6 +466,7 @@ const advertisementService  = {
           request.description,
           request.ad_type,
           request.placement || 'cars',
+          request.image_url || null,
           Number(request.requested_budget || 0),
           Number(request.duration_days || 7),
           request.start_date || null,

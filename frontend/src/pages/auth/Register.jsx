@@ -273,7 +273,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
 
-import logo from '../../assets/logo.png';
+import logo from '../../assets/LOGO.png';
 import { Car, Mail, Lock, User, Phone, ChevronLeft, ShieldCheck, Briefcase,KeyRound } from 'lucide-react';
 
 export default function Register() {

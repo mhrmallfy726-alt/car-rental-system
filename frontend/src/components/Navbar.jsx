@@ -6,7 +6,7 @@ import { io } from 'socket.io-client';
 import { notificationsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
-import logo from '../assets/LOGO.PNG';
+import logo from '../assets/LOGO.png';
 
 const navItems = [
   { to: '/', label: 'الرئيسية' },

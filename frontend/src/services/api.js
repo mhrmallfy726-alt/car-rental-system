@@ -145,6 +145,19 @@ export const adminAPI = {
   getSupplierCars: (id) =>
   api.get(`/advertisementController/suppliers/${id}/cars`),
 
+  createAdvertisement: (formData) =>
+  api.post('/advertisementController', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+
+  updateAdvertisement: (id, formData) =>
+  api.put(`/advertisementController/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+
+  deleteAdvertisement: (id) =>
+  api.delete(`/advertisementController/${id}`),
+
   approveAdvertisement: (id) =>
   api.put(
     `/advertisementController/admin/requests/${id}/approve`
@@ -184,8 +197,10 @@ recordClick: (id) =>
   getMyRequests: () =>
     api.get('/advertisementController/requests/mine'),
 
-  createRequest: (data) =>
-    api.post('/advertisementController/requests', data),
+  createRequest: (formData) =>
+    api.post('/advertisementController/requests', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 };
 
 

@@ -1,5 +1,6 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
 // ========================
@@ -70,6 +71,23 @@ const uploadHandoverImages = multer({
   fileFilter: imageFilter,
 }).array('images', 20);
 
+const advertisementUploadDir = path.join(__dirname, '../../uploads/advertisements');
+fs.mkdirSync(advertisementUploadDir, { recursive: true });
+
+const advertisementStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, advertisementUploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+
+const uploadAdvertisementImage = multer({
+  storage: advertisementStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: imageFilter,
+}).single('image');
+
 const uploadComplaintAttachment = multer({
   storage: localStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -82,4 +100,5 @@ module.exports = {
   uploadAvatar,
   uploadHandoverImages,
   uploadComplaintAttachment,
+  uploadAdvertisementImage,
 };

@@ -94,12 +94,12 @@
 // }
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { carsAPI,advertisementsAPI  } from '../services/api';
+import { carsAPI } from '../services/api';
 import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Flame, Car, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import SearchFilter from '../components/SearchFilter';
-// import ActiveAdvertisements from '../components/ActiveAdvertisements';
+import AdvertisementBanner from '../components/AdvertisementBanner';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -121,35 +121,6 @@ export default function Home() {
   const [deals, setDeals] = useState([]);
   const { user, isAuthenticated, isCustomer } = useAuthStore();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
-  const [activeAds, setActiveAds] = useState([]);
-
-  useEffect(() => {
-    let cancelled = false;
-  
-    const loadActiveAdvertisements = async () => {
-      try {
-        const response =
-          await advertisementsAPI.getActiveAdvertisements({
-            placement: 'homepage',
-          });
-  
-        if (!cancelled) {
-          setActiveAds(response.data?.data || []);
-        }
-      } catch (error) {
-        console.error(
-          'Homepage advertisements error:',
-          error.response?.data || error.message
-        );
-      }
-    };
-  
-    loadActiveAdvertisements();
-  
-    return () => {
-      cancelled = true;
-    };
-  }, []);
   const fetchFavorites = async () => {
     if (isAuthenticated() && isCustomer()) {
       try {
@@ -272,47 +243,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* <ActiveAdvertisements placement="cars" /> */}
-      {activeAds.length > 0 && (
-  <section className="active-ads-section">
-    {activeAds.map((ad) => (
-      <article
-        key={ad.id}
-        className={`active-ad-card ad-type-${ad.ad_type || 'default'}`}
-      >
-        <span className="active-ad-type">
-          {getAdvertisementTypeLabel(ad.ad_type)}
-        </span>
-
-        <h2>{ad.title}</h2>
-
-        {ad.description && (
-          <p>{ad.description}</p>
-        )}
-
-        <div className="active-ad-details">
-          {ad.ad_type && (
-            <span>
-              النوع: {getAdvertisementTypeLabel(ad.ad_type)}
-            </span>
-          )}
-
-          {ad.placement && (
-            <span>
-              الموضع: {ad.placement}
-            </span>
-          )}
-
-          {Number(ad.price || 0) > 0 && (
-            <strong>
-              {Number(ad.price).toLocaleString()} ر.س
-            </strong>
-          )}
-        </div>
-      </article>
-    ))}
-  </section>
-)}
+      <AdvertisementBanner placement="home" />
 
 
       {/* Today's Deals - بدون إيموجي نار */}

@@ -798,3 +798,39 @@ a {
 .ad-type-promotion {
   border-top: 4px solid #a23a3a;
 }
+
+
+/* Premium advertisement showcase */
+.advertisement-showcase { width: 100%; margin: 30px 0; }
+.advertisement-showcase-heading { margin-bottom: 18px; }
+.advertisement-eyebrow { display: inline-block; margin-bottom: 6px; color: #b18820; font-size: 12px; font-weight: 900; }
+.advertisement-showcase-heading h2 { margin: 0; color: #173a52; font-size: clamp(23px, 3vw, 32px); font-weight: 950; }
+.advertisement-showcase-heading p { margin: 7px 0 0; color: #72808a; font-size: 14px; }
+.advertisement-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.advertisement-card { position: relative; display: block; overflow: hidden; border: 1px solid rgba(23, 58, 82, .10); border-radius: 24px; color: inherit; background: #fff; box-shadow: 0 12px 30px rgba(23, 58, 82, .09); cursor: pointer; text-decoration: none; transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease; }
+.advertisement-card:hover, .advertisement-card:focus-visible { border-color: rgba(212, 175, 55, .72); box-shadow: 0 22px 48px rgba(23, 58, 82, .18); outline: none; transform: translateY(-7px); }
+.advertisement-card-media { position: relative; height: 215px; overflow: hidden; background: linear-gradient(135deg, #e8eef1, #cfdde3); }
+.advertisement-card-image { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .55s ease; }
+.advertisement-card:hover .advertisement-card-image { transform: scale(1.08); }
+.advertisement-card-placeholder { display: flex; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #527080; font-size: 13px; font-weight: 800; }
+.advertisement-card-shade { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(8, 31, 47, .62), transparent 48%, rgba(8, 31, 47, .18)); pointer-events: none; }
+.advertisement-card-topline { position: absolute; top: 15px; right: 15px; left: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.advertisement-type, .advertisement-featured-badge { display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px; border-radius: 999px; color: #173a52; background: #f5df8b; font-size: 11px; font-weight: 950; }
+.advertisement-featured-badge { color: #fff; background: rgba(23, 58, 82, .78); }
+.ad-type-discount { color: #fff; background: #23845b; }
+.ad-type-urgent { color: #fff; background: #b94747; }
+.ad-type-main { color: #fff; background: #245776; }
+.advertisement-card-arrow { position: absolute; bottom: 15px; left: 15px; display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(255, 255, 255, .42); border-radius: 50%; color: #fff; background: rgba(23, 58, 82, .68); transition: color .25s ease, background .25s ease, transform .25s ease; }
+.advertisement-card:hover .advertisement-card-arrow { color: #173a52; background: #d4af37; transform: translateX(-3px); }
+.advertisement-card-content { padding: 18px 18px 16px; }
+.advertisement-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.advertisement-card-heading h3 { margin: 0; color: #173a52; font-size: 18px; font-weight: 950; }
+.advertisement-car-name { margin: 6px 0 0; color: #87949b; font-size: 13px; }
+.advertisement-price { display: flex; flex-direction: column; align-items: end; color: #b18820; white-space: nowrap; }
+.advertisement-price strong { font-size: 18px; font-weight: 950; }
+.advertisement-price small { color: #7b878d; font-size: 11px; }
+.advertisement-card-description { display: -webkit-box; min-height: 44px; margin: 13px 0; overflow: hidden; color: #68777f; font-size: 13px; line-height: 1.75; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.advertisement-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 13px; border-top: 1px solid #edf0f1; color: #173a52; font-size: 13px; font-weight: 900; }
+.advertisement-card-footer svg { color: #d4af37; transition: transform .25s ease; }
+.advertisement-card:hover .advertisement-card-footer svg { transform: translateX(-5px); }
+@media (max-width: 640px) { .advertisement-card-media { height: 190px; } }

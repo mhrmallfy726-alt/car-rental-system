@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { carsAPI,advertisementsAPI  } from '../services/api';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { carsAPI } from '../services/api';
+import AdvertisementBanner from '../components/AdvertisementBanner';
 import { Search, Filter, Star, User, Settings, CheckCircle, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
@@ -139,10 +140,6 @@ export default function Cars() {
     } catch (error) {
       toast.error('فشل تحديث المفضلة');
     }
-    await advertisementsAPI.getActiveAdvertisements({
-      placement: 'cars',
-    });
-    
   };
 
   useEffect(() => {
@@ -154,44 +151,6 @@ export default function Cars() {
     e.preventDefault();
     fetchCars();
   };
-   // نوع
-  const getAdvertisementTypeLabel = (type) => {
-    const labels = {
-      featured: 'إعلان مميز',
-      discount: 'خصم',
-      urgent: 'إعلان عاجل',
-      main: 'إعلان رئيسي',
-    };
-  
-    return labels[type] || 'إعلان';
-  };
-  
-  const [activeAds, setActiveAds] = useState([]);
-
-  useEffect(() => {
-    const loadAdvertisements = async () => {
-      try {
-        const response =
-          await advertisementsAPI.getActiveAdvertisements({
-            placement: 'cars',
-          });
-  
-        console.log(
-          'Cars advertisements:',
-          response.data
-        );
-  
-        setActiveAds(response.data?.data || []);
-      } catch (error) {
-        console.error(
-          'Cars advertisements error:',
-          error.response?.data || error.message
-        );
-      }
-    };
-  
-    loadAdvertisements();
-  }, []);
 
   return (
     <div className="page" style={{ background: '#f8f9fa', minHeight: '100vh', paddingTop: '72px' }}>
@@ -211,32 +170,7 @@ export default function Cars() {
 
         </div>
       </section>
-      {activeAds.length > 0 && (
-  <section className="active-ads-section">
-    {activeAds.map((ad) => (
-      <article
-        key={ad.id}
-        className="active-ad-card"
-      >
-        <span>
-  {getAdvertisementTypeLabel(ad.ad_type)}
-</span>
-
-        <h2>{ad.title}</h2>
-
-        {ad.description && (
-          <p>{ad.description}</p>
-        )}
-
-        {Number(ad.price || 0) > 0 && (
-          <strong>
-            {Number(ad.price).toLocaleString()} ر.س
-          </strong>
-        )}
-      </article>
-    ))}
-  </section>
-)}
+      <AdvertisementBanner placement="cars" />
       <div className="container py-40">
         <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }} className="cars-layout">
 

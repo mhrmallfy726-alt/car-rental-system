@@ -44,7 +44,7 @@ import AdminComplaints from './pages/admin/Complaints';
 import AdminCars from './pages/admin/AdminCars';
 import AdminSettings from './pages/admin/AdminSettings';
 import Adminadvertisements from './pages/admin/advertisements';
-import Adminadvertisement from './pages/admin/advertisementCenter';
+import Adminadvertisement from './pages/admin/AdvertisementCenter';
 
 import SupplierRequests from "./pages/admin/SupplierRequests";
 import EmployeeDashboard from './pages/employee/DashboardEMP';

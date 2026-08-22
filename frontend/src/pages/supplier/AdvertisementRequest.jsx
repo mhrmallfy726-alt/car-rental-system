@@ -100,6 +100,8 @@ export default function AdvertisementRequest() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const today = getToday();
 const startDateObject = parseDate(form.start_date);
 const endDateObject = parseDate(form.end_date);
@@ -178,6 +180,26 @@ const endDateObject = parseDate(form.end_date);
 
   const updateField = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('اختر صورة JPG أو PNG أو WEBP');
+      event.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب ألا يتجاوز 5 ميجابايت');
+      event.target.value = '';
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
   const submitRequest = async (event) => {
     event.preventDefault();
     if (!form.car_id || !form.title.trim()) return toast.error('اختر السيارة وأدخل عنوان الإعلان أولاً');
@@ -212,15 +234,27 @@ const endDateObject = parseDate(form.end_date);
     }
     setSubmitting(true);
     try {
-      await advertisementsAPI.createRequest({
+      const formData = new FormData();
+
+      Object.entries({
         ...form,
         requested_budget: Number(form.requested_budget || 0),
         duration_days: Number(form.duration_days),
         start_date: form.start_date,
         end_date: form.end_date,
+      }).forEach(([key, value]) => {
+        formData.append(key, value ?? '');
       });
-       toast.success('تم إرسال طلب الإعلان للمراجعة');
+
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      await advertisementsAPI.createRequest(formData);
+      toast.success('تم إرسال طلب الإعلان للمراجعة');
       setForm(initialForm);
+      setImageFile(null);
+      setImagePreview('');
       await loadData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'تعذر إرسال الطلب');
@@ -249,6 +283,17 @@ const endDateObject = parseDate(form.end_date);
               </label>
               <label style={{ gridColumn: '1 / -1', color: navy, fontWeight: 800, fontSize: 14 }}>وصف مختصر
                 <textarea name="description" value={form.description} onChange={updateField} placeholder="وضح ما سيجده العميل في العرض" style={{ ...fieldStyle, minHeight: 100, resize: 'vertical' }} />
+              </label>
+              <label style={{ gridColumn: '1 / -1', color: navy, fontWeight: 800, fontSize: 14 }}>صورة الإعلان
+                <input
+                  name="image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  style={fieldStyle}
+                />
+                <span style={{ display: 'block', marginTop: 7, color: muted, fontSize: 12 }}>اختر صورة من الهاتف أو الكمبيوتر، بحد أقصى 5 ميجابايت.</span>
+                {imagePreview && <img src={imagePreview} alt="معاينة صورة الإعلان" style={{ display: 'block', width: '100%', maxHeight: 190, objectFit: 'cover', marginTop: 10, borderRadius: 13 }} />}
               </label>
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>نوع الإعلان
                 <select name="ad_type" value={form.ad_type} onChange={updateField} style={fieldStyle}><option value="featured">إعلان مميز</option><option value="discount">خصم</option><option value="urgent">إعلان عاجل</option><option value="main">إعلان رئيسي</option></select>

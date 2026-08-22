@@ -15,7 +15,8 @@ import {
   Settings2,
 } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
-import { carsAPI, reservationsAPI,advertisementsAPI  } from '../services/api';
+import { carsAPI, reservationsAPI } from '../services/api';
+import AdvertisementBanner from '../components/AdvertisementBanner';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
@@ -30,31 +31,6 @@ export default function CarDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [activeAds, setActiveAds] = useState([]);
-
-  useEffect(() => {
-    if (!car?.id) return;
-  
-    const loadAdvertisements = async () => {
-      try {
-        const response =
-          await advertisementsAPI.getActiveAdvertisements({
-            placement: 'car_details',
-            car_id: car.id,
-          });
-  
-        setActiveAds(response.data?.data || []);
-      } catch (error) {
-        console.error(
-          'Car details advertisements error:',
-          error.response?.data || error.message
-        );
-      }
-    };
-  
-    loadAdvertisements();
-  }, [car?.id]);
-  
 
 
   const [booking, setBooking] = useState({
@@ -241,30 +217,9 @@ export default function CarDetail() {
           Main
       ====================================================== */}
 
+      <AdvertisementBanner placement="car_detail" carId={car.id} />
+
       <main className="mx-auto grid w-[calc(100%-24px)] max-w-[1280px] items-start gap-6 sm:w-[calc(100%-40px)] lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-7">
-      {activeAds.length > 0 && (
-  <section className="active-ads-section">
-    {activeAds.map((ad) => (
-      <article
-        key={ad.id}
-        className="active-ad-card"
-      >
-        <span>إعلان مميز</span>
-        <h2>{ad.title}</h2>
-
-        {ad.description && (
-          <p>{ad.description}</p>
-        )}
-
-        {Number(ad.price || 0) > 0 && (
-          <strong>
-            {Number(ad.price).toLocaleString()} ر.س
-          </strong>
-        )}
-      </article>
-    ))}
-  </section>
-)}
         {/* ===================================================
             Gallery
         ==================================================== */}

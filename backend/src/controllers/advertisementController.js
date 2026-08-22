@@ -82,6 +82,10 @@ const handleError = (res, error, fallback = 'حدث خطأ في الإعلانا
   return res.status(error.statusCode || 500).json({ success: false, message: error.message || fallback });
 };
 
+const uploadedImagePath = (req) => (
+  req.file ? `/uploads/advertisements/${req.file.filename}` : null
+);
+
 const advertisementController = {
   getActiveAdvertisements: async (req, res) => {
     try {
@@ -145,7 +149,12 @@ const advertisementController = {
 
   createAdvertisement: async (req, res) => {
     try {
-      const newAd = await advertisementService.createAdvertisement({ ...req.body, created_by: req.user.id });
+      const image_url = uploadedImagePath(req);
+      const newAd = await advertisementService.createAdvertisement({
+        ...req.body,
+        ...(image_url ? { image_url } : {}),
+        created_by: req.user.id,
+      });
       res.status(201).json({ success: true, data: newAd });
     } catch (error) {
       handleError(res, error, 'فشل إنشاء الإعلان');
@@ -154,7 +163,11 @@ const advertisementController = {
 
   updateAdvertisement: async (req, res) => {
     try {
-      const updatedAd = await advertisementService.updateAdvertisement(req.params.id, req.body);
+      const image_url = uploadedImagePath(req);
+      const updatedAd = await advertisementService.updateAdvertisement(
+        req.params.id,
+        image_url ? { ...req.body, image_url } : req.body
+      );
       if (!updatedAd) return res.status(404).json({ success: false, message: 'الإعلان غير موجود' });
       res.json({ success: true, data: updatedAd });
     } catch (error) {
@@ -201,7 +214,11 @@ const advertisementController = {
 
   createAdvertisementRequest: async (req, res) => {
     try {
-      const request = await advertisementService.createAdvertisementRequest(req.user.id, req.body);
+      const image_url = uploadedImagePath(req);
+      const request = await advertisementService.createAdvertisementRequest(
+        req.user.id,
+        image_url ? { ...req.body, image_url } : req.body
+      );
       res.status(201).json({ success: true, data: request, message: 'تم إرسال طلب الإعلان للمراجعة' });
     } catch (error) {
       handleError(res, error, 'فشل إرسال طلب الإعلان');

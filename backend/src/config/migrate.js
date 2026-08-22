@@ -32,7 +32,7 @@ async function migrate() {
   try {
     console.log('Starting database migrations...');
 
-    const migrationsDir = path.join(__dirname, '../../migrations/002_advertisements.sql');
+    const migrationsDir = path.join(__dirname, '../../migrations');
     const files = fs.readdirSync(migrationsDir)
       .filter((file) => file.endsWith('.sql'))
       .sort();

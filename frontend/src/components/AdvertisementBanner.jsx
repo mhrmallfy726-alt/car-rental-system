@@ -1,63 +1,200 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Megaphone, Sparkles } from 'lucide-react';
+import { ArrowLeft, CarFront, Megaphone, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { advertisementsAPI } from '../services/api';
 
-const navy = '#173a52';
-const gold = '#d4af37';
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000';
 
-const resolveImageUrl = (value) => {
-  if (!value) return '';
-  if (value.startsWith('http://') || value.startsWith('https://')) return value;
-  return `http://localhost:5000/${value.replace(/^\//, '')}`;
+const typeLabels = {
+  featured: 'إعلان مميز',
+  discount: 'خصم خاص',
+  urgent: 'عرض عاجل',
+  main: 'إعلان رئيسي',
 };
 
+const typeClasses = {
+  featured: 'ad-type-featured',
+  discount: 'ad-type-discount',
+  urgent: 'ad-type-urgent',
+  main: 'ad-type-main',
+};
+
+const resolveAssetUrl = (value) => {
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value) || value.startsWith('blob:')) return value;
+  return `${API_ORIGIN}/${value.replace(/^\//, '')}`;
+};
+
+const getCarTarget = (advertisement) => {
+  if (advertisement.link_url) return advertisement.link_url;
+  if (advertisement.car_id) return `/cars/${advertisement.car_id}`;
+  return '/cars';
+};
+
+function AdvertisementCard({ advertisement, compact }) {
+  const impressionSent = useRef(false);
+  const title = advertisement.title || 'عرض مميز متاح الآن';
+  const description = advertisement.description || 'اكتشف تفاصيل العرض واحجز سيارتك بسهولة.';
+  const type = advertisement.ad_type || 'main';
+  const image = resolveAssetUrl(
+    advertisement.image_url || advertisement.car_primary_image
+  );
+  const target = getCarTarget(advertisement);
+  const carName = [advertisement.car_make, advertisement.car_model]
+    .filter(Boolean)
+    .join(' ');
+
+  useEffect(() => {
+    if (impressionSent.current || !advertisement.id) return;
+    impressionSent.current = true;
+    advertisementsAPI.recordImpression(advertisement.id).catch(() => {});
+  }, [advertisement.id]);
+
+  const handleClick = () => {
+    advertisementsAPI.recordClick(advertisement.id).catch(() => {});
+  };
+
+  const cardContent = (
+    <>
+      <div className="advertisement-card-media">
+        {image ? (
+          <img
+            src={image}
+            alt={title}
+            className="advertisement-card-image"
+            onError={(event) => {
+              event.currentTarget.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="advertisement-card-placeholder">
+            <CarFront size={compact ? 34 : 48} strokeWidth={1.4} />
+            <span>عرض سيارة</span>
+          </div>
+        )}
+
+        <div className="advertisement-card-shade" />
+
+        <div className="advertisement-card-topline">
+          <span className={`advertisement-type ${typeClasses[type] || 'ad-type-main'}`}>
+            <Megaphone size={14} />
+            {typeLabels[type] || 'إعلان'}
+          </span>
+
+          {advertisement.featured && (
+            <span className="advertisement-featured-badge">
+              <Sparkles size={13} /> مميز
+            </span>
+          )}
+        </div>
+
+        <span className="advertisement-card-arrow" aria-hidden="true">
+          <ArrowLeft size={18} />
+        </span>
+      </div>
+
+      <div className="advertisement-card-content">
+        <div className="advertisement-card-heading">
+          <div>
+            <h3>{title}</h3>
+            {carName && <p className="advertisement-car-name">{carName}</p>}
+          </div>
+
+          {Number(advertisement.price || 0) > 0 && (
+            <div className="advertisement-price">
+              <strong>{Number(advertisement.price).toLocaleString()}</strong>
+              <small>ر.س</small>
+            </div>
+          )}
+        </div>
+
+        <p className="advertisement-card-description">{description}</p>
+
+        <div className="advertisement-card-footer">
+          <span>{advertisement.car_id ? 'شاهد السيارة والتفاصيل' : 'اكتشف العرض'}</span>
+          <ArrowLeft size={18} />
+        </div>
+      </div>
+    </>
+  );
+
+  if (/^https?:\/\//i.test(target)) {
+    return (
+      <a
+        href={target}
+        target="_blank"
+        rel="noreferrer"
+        className={`advertisement-card ${compact ? 'advertisement-card-compact' : ''}`}
+        onClick={handleClick}
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      to={target}
+      className={`advertisement-card ${compact ? 'advertisement-card-compact' : ''}`}
+      onClick={handleClick}
+    >
+      {cardContent}
+    </Link>
+  );
+}
+
 export default function AdvertisementBanner({ placement = 'home', carId, compact = false }) {
-  const [advertisement, setAdvertisement] = useState(null);
+  const [advertisements, setAdvertisements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const impressionIds = useRef(new Set());
 
   useEffect(() => {
     let cancelled = false;
-    advertisementsAPI.getActive({ placement, car_id: carId }).then((response) => {
-      if (!cancelled) setAdvertisement(response.data?.data?.[0] || null);
-    }).catch(() => {
-      if (!cancelled) setAdvertisement(null);
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-    return () => { cancelled = true; };
+
+    const loadAdvertisements = async () => {
+      setLoading(true);
+      try {
+        const response = await advertisementsAPI.getActiveAdvertisements({
+          placement,
+          ...(carId ? { car_id: carId } : {}),
+        });
+
+        if (!cancelled) {
+          setAdvertisements(response.data?.data || []);
+        }
+      } catch (error) {
+        console.error('Advertisement load error:', error);
+        if (!cancelled) setAdvertisements([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadAdvertisements();
+    return () => {
+      cancelled = true;
+    };
   }, [placement, carId]);
 
-  useEffect(() => {
-    if (!advertisement?.id || impressionIds.current.has(advertisement.id)) return;
-    impressionIds.current.add(advertisement.id);
-    advertisementsAPI.recordImpression(advertisement.id).catch(() => {});
-  }, [advertisement]);
-
-  if (loading || !advertisement) return null;
-
-  const image = resolveImageUrl(advertisement.image_url || advertisement.car_primary_image);
-  const target = advertisement.link_url || (advertisement.car_id ? `/cars/${advertisement.car_id}` : '/cars');
-  const title = advertisement.title || 'عرض مميز متاح الآن';
-  const description = advertisement.description || 'اكتشف التفاصيل واحجز الخيار الأنسب لرحلتك.';
+  if (loading || advertisements.length === 0) return null;
 
   return (
-    <section dir="rtl" aria-label="إعلان ممول" style={{ width: '100%', margin: compact ? '16px 0' : '28px 0' }}>
-      <div style={{ position: 'relative', overflow: 'hidden', display: 'grid', gridTemplateColumns: compact ? '1fr' : 'minmax(0, 1.2fr) minmax(180px, 0.8fr)', alignItems: 'stretch', minHeight: compact ? 150 : 220, borderRadius: 22, background: `linear-gradient(130deg, ${navy} 0%, #245a73 58%, ${gold} 180%)`, border: `1px solid ${gold}88`, boxShadow: '0 18px 42px rgba(23,58,82,0.18)' }}>
-        <div style={{ position: 'absolute', width: 250, height: 250, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', top: -150, left: -60 }} />
-        <div style={{ position: 'relative', zIndex: 1, padding: compact ? '24px 24px 20px' : '30px 34px', color: '#fff' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#fce8a1', fontSize: 12, fontWeight: 800, marginBottom: 10 }}><Megaphone size={15} /> إعلان مميز</div>
-          <h2 style={{ margin: 0, color: '#fff', fontSize: compact ? 20 : 28, lineHeight: 1.3, fontWeight: 900 }}>{title}</h2>
-          <p style={{ margin: '9px 0 18px', color: 'rgba(255,255,255,0.76)', lineHeight: 1.7, fontSize: compact ? 13 : 15 }}>{description}</p>
-          <Link to={target} onClick={() => advertisementsAPI.recordClick(advertisement.id).catch(() => {})} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 11, color: navy, background: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 900 }}>اكتشف العرض <ArrowLeft size={16} /></Link>
+    <section className="advertisement-showcase" dir="rtl" aria-label="الإعلانات">
+      <div className="advertisement-showcase-heading">
+        <div>
+          <span className="advertisement-eyebrow">عروض مختارة لك</span>
+          <h2>اكتشف عروض السيارات</h2>
+          <p>عروض موثوقة من الموردين المعتمدين، مصممة لتناسب رحلتك.</p>
         </div>
-        {!compact && image && (
-          <div style={{ position: 'relative', minHeight: 220, padding: 12 }}>
-            <img src={image} alt="صورة الإعلان" style={{ width: '100%', height: '100%', minHeight: 196, objectFit: 'cover', borderRadius: 16, display: 'block', border: '1px solid rgba(255,255,255,0.25)' }} />
-            <div style={{ position: 'absolute', right: 24, bottom: 24, width: 34, height: 34, display: 'grid', placeItems: 'center', borderRadius: '50%', color: gold, background: '#fff', boxShadow: '0 8px 18px rgba(0,0,0,0.18)' }}><Sparkles size={17} /></div>
-          </div>
-        )}
+      </div>
+
+      <div className="advertisement-grid">
+        {advertisements.map((advertisement) => (
+          <AdvertisementCard
+            key={advertisement.id}
+            advertisement={advertisement}
+            compact={compact}
+          />
+        ))}
       </div>
     </section>
   );

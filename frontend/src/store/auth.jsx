@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
-import { setAccessToken, clearAccessToken } from '../api/axios';
-// import api from '../api/axios';
+import { setAccessToken, clearAccessToken } from '../API/axios';
+// import api from '../API/axios';
 
 // ملاحظة: هذا مخزن بسيط. أفضل حل: استخدام HttpOnly cookie للـ refresh token و endpoint للتحقق من الجلسة.
 const AuthContext = createContext();
