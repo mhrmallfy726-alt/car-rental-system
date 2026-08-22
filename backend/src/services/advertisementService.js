@@ -499,6 +499,20 @@ const advertisementService  = {
           requestId,
         ]
       );
+
+      await client.query(
+        `INSERT INTO notifications
+          (user_id, title, message, type, reference_id, reference_type)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          request.supplier_id,
+          'تم اعتماد إعلانك',
+          `تم اعتماد طلب الإعلان «${request.title}» ونشره بنجاح.`,
+          'advertisement',
+          adResult.rows[0].id,
+          'advertisement',
+        ]
+      );
   
       await client.query('COMMIT');
   
@@ -520,7 +534,25 @@ const advertisementService  = {
        RETURNING *`,
       [reviewerId, note || null, requestId],
     );
-    if (!result.rows.length) throw new Error('طلب الإعلان غير موجود أو تمت مراجعته سابقاً');
+
+    if (!result.rows.length) {
+      throw new Error('طلب الإعلان غير موجود أو تمت مراجعته سابقاً');
+    }
+
+    await query(
+      `INSERT INTO notifications
+        (user_id, title, message, type, reference_id, reference_type)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        result.rows[0].supplier_id,
+        'تم رفض طلب الإعلان',
+        `تم رفض طلب الإعلان «${result.rows[0].title}». ${note ? `السبب: ${note}` : ''}`.trim(),
+        'advertisement',
+        result.rows[0].id,
+        'advertisement_request',
+      ]
+    );
+
     return result.rows[0];
   },
 };

@@ -12,6 +12,7 @@ import CarDetail from './pages/CarDetail';
 import Profile from './pages/Profile';
 import UserSettings from './pages/UserSettings';
 import ComplaintChat from './pages/ComplaintChat';
+import NotificationDetail from './pages/NotificationDetail';
 import VendorJoin from './pages/VendorJoin';
 import MarketingChoice from './pages/marketing/MarketingChoice';
 import MarketingRole from './pages/marketing/MarketingRole';
@@ -102,6 +103,9 @@ export default function App() {
         } />
         <Route path="/complaints/:id" element={
           <PrivateRoute><ComplaintChat /></PrivateRoute>
+        } />
+        <Route path="/notifications/:id" element={
+          <PrivateRoute><NotificationDetail /></PrivateRoute>
         } />
   {/* Employee */}
        <Route path="/employee/dashboard" element={

@@ -78,6 +78,12 @@ export default function Navbar() {
     }
   };
 
+  const handleOpenNotification = async (notification) => {
+    await handleMarkRead(notification.id, notification.is_read);
+    setShowNotifications(false);
+    navigate(`/notifications/${notification.id}`);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -125,7 +131,7 @@ export default function Navbar() {
                     <Bell size={18} />
                     {unreadCount > 0 && <b className="rc-notification-count">{unreadCount > 99 ? '99+' : unreadCount}</b>}
                   </button>
-                  {showNotifications && <NotificationPanel notifications={notifications} unreadCount={unreadCount} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />}
+                  {showNotifications && <NotificationPanel notifications={notifications} unreadCount={unreadCount} onOpenNotification={handleOpenNotification} onMarkAllRead={handleMarkAllRead} />}
                 </div>
                 <Link to="/profile" className="rc-user-pill"><span className="rc-avatar">{user?.name?.charAt(0) || 'U'}</span><span className="rc-user-name">{user?.name?.split(' ')[0]}</span></Link>
                 <Link to={user?.role === 'supplier' ? '/supplier/settings' : '/settings'} className="rc-icon-button rc-desktop-only" title="الإعدادات" aria-label="الإعدادات"><Settings size={17} /></Link>
@@ -209,11 +215,11 @@ export default function Navbar() {
   );
 }
 
-function NotificationPanel({ notifications, unreadCount, onMarkRead, onMarkAllRead }) {
+function NotificationPanel({ notifications, unreadCount, onOpenNotification, onMarkAllRead }) {
   return <div className="rc-notification-panel" onClick={(event) => event.stopPropagation()}>
     <div className="rc-notification-head"><h3>الإشعارات {unreadCount > 0 ? `(${unreadCount})` : ''}</h3>{unreadCount > 0 && <button type="button" onClick={onMarkAllRead}>تحديد الكل كمقروء</button>}</div>
     <div className="rc-notification-list">
-      {notifications.length === 0 ? <div className="rc-empty-notifications">لا توجد إشعارات جديدة</div> : notifications.map((notification) => <div key={notification.id} className={`rc-notification-item ${!notification.is_read ? 'rc-notification-item-unread' : ''}`} onClick={() => onMarkRead(notification.id, notification.is_read)}><div className="rc-notification-item-copy"><h4>{notification.title}{!notification.is_read && <span className="rc-unread-dot" />}</h4><p>{notification.message}</p><small>{format(new Date(notification.created_at), 'yyyy-MM-dd HH:mm')}</small></div></div>)}
+      {notifications.length === 0 ? <div className="rc-empty-notifications">لا توجد إشعارات جديدة</div> : notifications.map((notification) => <div key={notification.id} className={`rc-notification-item ${!notification.is_read ? 'rc-notification-item-unread' : ''}`} onClick={() => onOpenNotification(notification)}><div className="rc-notification-item-copy"><h4>{notification.title}{!notification.is_read && <span className="rc-unread-dot" />}</h4><p>{notification.message}</p><small>{format(new Date(notification.created_at), 'yyyy-MM-dd HH:mm')}</small></div></div>)}
     </div>
   </div>;
 }

@@ -103,6 +103,7 @@ export const complaintsAPI = {
 // ── Notifications ─────────────────────────────
 export const notificationsAPI = {
   getAll: () => api.get('/notifications'),
+  getOne: (id) => api.get(`/notifications/${id}`),
   markRead: (id) => api.put(`/notifications/${id}/read`),
   markAllRead: () => api.put('/notifications/read-all'),
 };
