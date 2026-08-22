@@ -24,7 +24,7 @@ export default function EmployeesList() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      const response = await listEmployees(user.id);
+      const response = await listEmployees(user.supplier_id || user.id);
       setEmployees(response.data || []);
     } catch (error) {
       toast.error(error.response?.data?.message || 'تعذر تحميل فريق العمل');

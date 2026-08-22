@@ -11,9 +11,14 @@ const { app } = require('../../server');
 // ========================
 // Helpers
 // ========================
+const getAuthenticatedSupplierId = (reqUser) => {
+  if (reqUser?.role !== 'supplier') return null;
+  return String(reqUser.supplier_id || reqUser.id || '');
+};
+
 const ensureSupplierScope = (reqSupplierId, reqUser) => {
-  // عندما يكون المستخدم موردًا، تأكد أنه يتعامل فقط مع المورد الخاص به
-  if (reqUser.role === 'supplier' && reqUser.id !== String(reqSupplierId)) {
+  const authenticatedSupplierId = getAuthenticatedSupplierId(reqUser);
+  if (authenticatedSupplierId && authenticatedSupplierId !== String(reqSupplierId)) {
     return false;
   }
   return true;
@@ -122,7 +127,7 @@ router.use(authorize('supplier', 'admin'));
 router.get('/', async (req, res) => {
   try {
     const supplier_id = req.user.role === 'supplier'
-      ? String(req.user.id)
+      ? getAuthenticatedSupplierId(req.user)
       : (req.query.supplier_id ? String(req.query.supplier_id) : null);
     if (!supplier_id) return res.status(400).json({ success: false, message: 'supplier_id مطلوب للأدمن عند اختيار المورد' });
 
@@ -175,7 +180,7 @@ router.post('/', async (req, res) => {
   try {
     const { full_name, phone_number, email, password, role } = req.body;
     const supplier_id = req.user.role === 'supplier'
-      ? String(req.user.id)
+      ? getAuthenticatedSupplierId(req.user)
       : (req.body.supplier_id ? String(req.body.supplier_id) : null);
     if (!full_name || !email || !password || !supplier_id) {
       return res.status(400).json({ success: false, message: 'الاسم والبريد وكلمة المرور والمورد مطلوبة' });
