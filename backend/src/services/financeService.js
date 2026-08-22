@@ -1,0 +1,226 @@
+const { query, getClient } = require('../config/database');
+
+const DEFAULT_CURRENCY = 'YER';
+
+const createAdvertisementCharge = async (client, {
+  advertisementId,
+  supplierId,
+  amount,
+  currency = DEFAULT_CURRENCY,
+  title,
+}) => {
+  const numericAmount = Number(amount || 0);
+  if (!advertisementId || !supplierId || numericAmount < 0) {
+    throw new Error('بيانات دفع الإعلان غير صالحة');
+  }
+
+  const existing = await client.query(
+    `SELECT * FROM payments
+     WHERE advertisement_id = $1
+       AND status IN ('pending', 'paid')
+     ORDER BY created_at DESC
+     LIMIT 1
+     FOR UPDATE`,
+    [advertisementId],
+  );
+
+  if (existing.rows[0]?.status === 'paid') {
+    return existing.rows[0];
+  }
+
+  const providerReference = `SIM-AD-${advertisementId}-${Date.now()}`;
+  const payment = await client.query(
+    `INSERT INTO payments
+      (advertisement_id, payer_id, supplier_id, amount, currency,
+       payment_method, status, provider_reference, metadata, paid_at)
+     VALUES ($1, $2, $3, $4, $5, 'card', 'paid', $6, $7::jsonb, NOW())
+     RETURNING *`,
+    [
+      advertisementId,
+      supplierId,
+      supplierId,
+      numericAmount,
+      currency,
+      providerReference,
+      JSON.stringify({
+        simulated: true,
+        event: 'advertisement_approved',
+        title: title || null,
+      }),
+    ],
+  );
+
+  const paidPayment = payment.rows[0];
+  await client.query(
+    `INSERT INTO ledger_entries
+      (payment_id, advertisement_id, supplier_id, entry_type,
+       direction, amount, currency, description, metadata)
+     VALUES ($1, $2, $3, 'charge', 'credit', $4, $5, $6, $7::jsonb),
+            ($1, $2, $3, 'platform_revenue', 'credit', $4, $5, $6, $7::jsonb)`,
+    [
+      paidPayment.id,
+      advertisementId,
+      supplierId,
+      numericAmount,
+      currency,
+      `خصم محاكى لترويج الإعلان: ${title || advertisementId}`,
+      JSON.stringify({ simulated: true }),
+    ],
+  );
+
+  return paidPayment;
+};
+
+const getSettings = async () => {
+  const result = await query(
+    `SELECT id, currency, commission_rate, settlement_mode,
+            ad_charge_policy, updated_by, updated_at
+     FROM finance_settings
+     WHERE id = 1`,
+  );
+  return result.rows[0];
+};
+
+const updateSettings = async (adminId, data = {}) => {
+  const currency = data.currency || DEFAULT_CURRENCY;
+  const commissionRate = Number(data.commission_rate ?? 10);
+  const settlementMode = data.settlement_mode === 'automatic'
+    ? 'automatic'
+    : 'manual';
+
+  if (!['YER'].includes(currency)) {
+    throw new Error('العملة الحالية المدعومة هي الريال اليمني YER');
+  }
+  if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) {
+    throw new Error('نسبة العمولة يجب أن تكون بين 0 و100');
+  }
+
+  const result = await query(
+    `UPDATE finance_settings
+     SET currency = $1,
+         commission_rate = $2,
+         settlement_mode = $3,
+         updated_by = $4,
+         updated_at = NOW()
+     WHERE id = 1
+     RETURNING *`,
+    [currency, commissionRate, settlementMode, adminId],
+  );
+  return result.rows[0];
+};
+
+const getDashboard = async () => {
+  const [summary, adPayments, reservationPayments, pendingPayouts] = await Promise.all([
+    query(`SELECT
+      COALESCE(SUM(amount) FILTER (WHERE status = 'paid'), 0)::numeric AS gross_revenue,
+      COALESCE(SUM(amount) FILTER (WHERE status = 'paid' AND advertisement_id IS NOT NULL), 0)::numeric AS advertisement_revenue,
+      COALESCE(SUM(amount) FILTER (WHERE status = 'paid' AND reservation_id IS NOT NULL), 0)::numeric AS reservation_revenue,
+      COALESCE(SUM(amount) FILTER (WHERE status = 'refunded'), 0)::numeric AS refunded_amount,
+      COUNT(*) FILTER (WHERE status = 'paid')::int AS paid_transactions,
+      COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_transactions
+      FROM payments`),
+    query(`SELECT p.id, p.amount, p.currency, p.status, p.paid_at,
+                  p.provider_reference, a.title, u.name AS supplier_name
+           FROM payments p
+           LEFT JOIN advertisements a ON a.id = p.advertisement_id
+           LEFT JOIN users u ON u.id = p.supplier_id
+           WHERE p.advertisement_id IS NOT NULL
+           ORDER BY p.created_at DESC
+           LIMIT 100`),
+    query(`SELECT p.id, p.amount, p.currency, p.status, p.paid_at,
+                  p.provider_reference, c.make, c.model
+           FROM payments p
+           LEFT JOIN reservations r ON r.id = p.reservation_id
+           LEFT JOIN cars c ON c.id = r.car_id
+           WHERE p.reservation_id IS NOT NULL
+           ORDER BY p.created_at DESC
+           LIMIT 100`),
+    query(`SELECT sp.*, u.name AS supplier_name
+           FROM supplier_payouts sp
+           JOIN users u ON u.id = sp.supplier_id
+           WHERE sp.status IN ('pending', 'processing')
+           ORDER BY sp.created_at ASC
+           LIMIT 100`),
+  ]);
+
+  return {
+    summary: summary.rows[0],
+    advertisementPayments: adPayments.rows,
+    reservationPayments: reservationPayments.rows,
+    pendingPayouts: pendingPayouts.rows,
+  };
+};
+
+const createPayout = async (adminId, supplierId, amount, notes = '') => {
+  const numericAmount = Number(amount);
+  if (!supplierId || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new Error('بيانات التسوية غير صالحة');
+  }
+
+  const settings = await getSettings();
+  const mode = settings.settlement_mode;
+  const status = mode === 'automatic' ? 'paid' : 'pending';
+  const result = await query(
+    `INSERT INTO supplier_payouts
+      (supplier_id, amount, currency, mode, status, notes,
+       processed_by, processed_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, CASE WHEN $5 = 'paid' THEN NOW() ELSE NULL END)
+     RETURNING *`,
+    [supplierId, numericAmount, settings.currency, mode, status, notes || null, mode === 'automatic' ? adminId : null],
+  );
+
+  if (status === 'paid') {
+    await query(
+      `INSERT INTO ledger_entries
+        (supplier_id, entry_type, direction, amount, currency, description, metadata)
+       VALUES ($1, 'payout', 'debit', $2, $3, $4, $5::jsonb)`,
+      [supplierId, numericAmount, settings.currency, 'تسوية تلقائية للمورد', JSON.stringify({ simulated: true })],
+    );
+  }
+
+  return result.rows[0];
+};
+
+const completePayout = async (adminId, payoutId, notes = '') => {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const payout = await client.query(
+      `SELECT * FROM supplier_payouts
+       WHERE id = $1 AND status = 'pending'
+       FOR UPDATE`,
+      [payoutId],
+    );
+    if (!payout.rows.length) throw new Error('طلب التسوية غير موجود أو تمت معالجته');
+    const current = payout.rows[0];
+    const updated = await client.query(
+      `UPDATE supplier_payouts
+       SET status = 'paid', processed_by = $1, processed_at = NOW(), notes = COALESCE($2, notes)
+       WHERE id = $3
+       RETURNING *`,
+      [adminId, notes || null, payoutId],
+    );
+    await client.query(
+      `INSERT INTO ledger_entries
+        (supplier_id, entry_type, direction, amount, currency, description, metadata)
+       VALUES ($1, 'payout', 'debit', $2, $3, 'تسوية يدوية للمورد', $4::jsonb)`,
+      [current.supplier_id, current.amount, current.currency, JSON.stringify({ payout_id: payoutId, simulated: true })],
+    );
+    await client.query('COMMIT');
+    return updated.rows[0];
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+module.exports = {
+  createAdvertisementCharge,
+  getSettings,
+  updateSettings,
+  getDashboard,
+  createPayout,
+  completePayout,
+};

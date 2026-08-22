@@ -47,6 +47,7 @@ import AdminCars from './pages/admin/AdminCars';
 import AdminSettings from './pages/admin/AdminSettings';
 import Adminadvertisements from './pages/admin/advertisements';
 import Adminadvertisement from './pages/admin/AdvertisementCenter';
+import FinanceCenter from './pages/admin/FinanceCenter';
 
 import SupplierRequests from "./pages/admin/SupplierRequests";
 import EmployeeDashboard from './pages/employee/DashboardEMP';
@@ -166,6 +167,9 @@ export default function App() {
         } />
         <Route path="/admin/cars" element={
           <PrivateRoute roles={['admin']}><AdminCars /></PrivateRoute>
+        } />
+        <Route path="/admin/finance" element={
+          <PrivateRoute roles={['admin']}><FinanceCenter /></PrivateRoute>
         } />
         <Route path="/admin/settings" element={
           <PrivateRoute roles={['admin']}><AdminSettings /></PrivateRoute>

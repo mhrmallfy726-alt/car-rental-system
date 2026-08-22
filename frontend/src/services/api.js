@@ -121,6 +121,15 @@ export const handoverAPI = {
   getLogs: (reservationId) => api.get(`/handover/${reservationId}`),
 };
 
+// ── Finance ────────────────────────────────────
+export const financeAPI = {
+  getDashboard: () => api.get('/finance/dashboard'),
+  getSettings: () => api.get('/finance/settings'),
+  updateSettings: (data) => api.put('/finance/settings', data),
+  createPayout: (data) => api.post('/finance/payouts', data),
+  completePayout: (id, data = {}) => api.put(`/finance/payouts/${id}/complete`, data),
+};
+
 // ── Admin ─────────────────────────────────────
 export const adminAPI = {
   getStats: () => api.get('/admin/stats'),

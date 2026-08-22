@@ -47,6 +47,7 @@
 
 
 const { query, getClient } = require('../config/database');
+const financeService = require('./financeService');
 
 const AD_SELECT = `
   SELECT
@@ -341,6 +342,9 @@ const advertisementService  = {
     if (!car.rows.length) throw new Error('السيارة غير موجودة ضمن سيارات المورد');
     const placement = data.placement || 'cars';
     const image_url = data.image_url || null;
+    const pricePerDay = Number(data.price_per_day ?? data.requested_budget ?? 0);
+    const durationDays = Number(data.duration_days || 7);
+    const totalPrice = pricePerDay * durationDays;
 
     const result = await query(
       `INSERT INTO advertisement_requests
@@ -353,11 +357,13 @@ const advertisementService  = {
           placement,
           image_url,
           requested_budget,
+          price_per_day,
+          total_price,
           duration_days,
           start_date,
           end_date
         )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
         supplierId,
@@ -367,8 +373,10 @@ const advertisementService  = {
         data.ad_type || 'featured',
         placement,
         image_url,
-        Number(data.requested_budget || 0),
-        Number(data.duration_days || 7),
+        pricePerDay,
+        pricePerDay,
+        totalPrice,
+        durationDays,
         data.start_date || null,
         data.end_date || null,
       ]
@@ -419,8 +427,12 @@ const advertisementService  = {
         );
       }
   
-      const duration = Number(
-        request.duration_days || 7
+      const duration = Number(request.duration_days || 7);
+      const pricePerDay = Number(
+        request.price_per_day ?? request.requested_budget ?? 0
+      );
+      const totalPrice = Number(
+        request.total_price || pricePerDay * duration
       );
   
       const adResult = await client.query(
@@ -435,6 +447,8 @@ const advertisementService  = {
             image_url,
             price,
             duration,
+            price_per_day,
+            total_price,
             start_date,
             end_date,
             status,
@@ -453,16 +467,18 @@ const advertisementService  = {
             $7,
             $8::numeric,
             $9::int,
-            COALESCE($10::date, CURRENT_DATE),
+            $10::numeric,
+            $11::numeric,
+            COALESCE($12::date, CURRENT_DATE),
             COALESCE(
-              $11::date,
+              $13::date,
               (
-                COALESCE($10::date, CURRENT_DATE)
+                COALESCE($12::date, CURRENT_DATE)
                 + (($9::int - 1) * INTERVAL '1 day')
               )::date
             ),
-            'active',
-            $12::boolean,
+            'pending',
+            $14::boolean,
             false,
             'pending'
           )
@@ -475,8 +491,10 @@ const advertisementService  = {
           request.ad_type,
           request.placement || 'cars',
           request.image_url || null,
-          Number(request.requested_budget || 0),
-          Number(request.duration_days || 7),
+          totalPrice,
+          duration,
+          pricePerDay,
+          totalPrice,
           request.start_date || null,
           request.end_date || null,
           request.ad_type === 'featured',
@@ -485,6 +503,24 @@ const advertisementService  = {
       
       
   
+      const payment = await financeService.createAdvertisementCharge(client, {
+        advertisementId: adResult.rows[0].id,
+        supplierId: request.supplier_id,
+        amount: totalPrice,
+        currency: 'YER',
+        title: request.title,
+      });
+
+      await client.query(
+        `UPDATE advertisements
+         SET status = 'active',
+             payment_status = 'paid',
+             payment_id = $1,
+             paid_at = NOW()
+         WHERE id = $2`,
+        [payment.id, adResult.rows[0].id],
+      );
+
       await client.query(
         `UPDATE advertisement_requests
          SET status = $1,

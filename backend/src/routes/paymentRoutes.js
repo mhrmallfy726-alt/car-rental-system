@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
+const financeService = require('../services/financeService');
 
 // GET /api/payments/cards
 router.get('/cards', protect, asyncHandler(async (req, res) => {
@@ -43,10 +44,58 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     if (card.rows.length === 0) return next(new AppError('البطاقة غير صالحة', 400));
   }
 
+  const totalAmount = Number(r.total_price || 0);
   const payment = await query(
-    `INSERT INTO payments (reservation_id, customer_id, amount, payment_method, status, paid_at) VALUES ($1,$2,$3,$4,'paid',NOW()) RETURNING *`,
-    [reservation_id, req.user.id, r.total_price, payment_method || 'card']
+    `INSERT INTO payments
+      (reservation_id, customer_id, payer_id, supplier_id, amount,
+       currency, payment_method, status, provider_reference, metadata, paid_at)
+     VALUES ($1, $2, $2, $3, $4, 'YER', $5, 'paid', $6, $7::jsonb, NOW())
+     RETURNING *`,
+    [
+      reservation_id,
+      req.user.id,
+      r.supplier_id,
+      totalAmount,
+      payment_method || 'card',
+      `SIM-RES-${reservation_id}-${Date.now()}`,
+      JSON.stringify({ simulated: true, event: 'reservation_checkout' }),
+    ]
   );
+
+  const financeSettings = await financeService.getSettings();
+  const commission = totalAmount * Number(financeSettings.commission_rate || 0) / 100;
+  const supplierPayable = Math.max(0, totalAmount - commission);
+
+  await query(
+    `INSERT INTO ledger_entries
+      (payment_id, reservation_id, supplier_id, entry_type, direction,
+       amount, currency, description, metadata)
+     VALUES ($1, $2, $3, 'charge', 'credit', $4, 'YER', $5, $6::jsonb),
+            ($1, $2, $3, 'platform_fee', 'credit', $7, 'YER', $8, $6::jsonb),
+            ($1, $2, $3, 'supplier_payable', 'credit', $9, 'YER', $10, $6::jsonb)`,
+    [
+      payment.rows[0].id,
+      reservation_id,
+      r.supplier_id,
+      totalAmount,
+      'تحصيل حجز محاكى',
+      JSON.stringify({ simulated: true, commission_rate: financeSettings.commission_rate }),
+      commission,
+      'عمولة المنصة',
+      supplierPayable,
+      'مستحق المورد قبل التسوية',
+    ]
+  );
+
+  if (financeSettings.settlement_mode === 'automatic' && supplierPayable > 0) {
+    await financeService.createPayout(
+      req.user.id,
+      r.supplier_id,
+      supplierPayable,
+      `تسوية تلقائية محاكاة للحجز ${reservation_id}`,
+    );
+  }
+
   await query(`UPDATE reservations SET status = 'active' WHERE id = $1`, [reservation_id]);
   await query(`UPDATE cars SET status = 'reserved' WHERE id = $1`, [r.car_id]);
 
