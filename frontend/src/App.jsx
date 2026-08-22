@@ -4,6 +4,7 @@ import useAuthStore from './store/authStore';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
+import About from './pages/About';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Cars from './pages/Cars';
@@ -25,7 +26,7 @@ import AddCar from './pages/supplier/AddCar';
 import SupplierReservations from './pages/supplier/Reservations';
 import SupplierSettings from './pages/supplier/Settings';
 import EditCar from './pages/supplier/EditCar';
-import SupplierReservationDetail from './pages/supplier/Reservations';
+import SupplierReservationDetail from './pages/supplier/ReservationDetail';
 //import React from 'react';
 import { Routes, Route, Link, Navigate } from 'react-router-dom';
 // import EmployeesList from './pages/supplier/EmployeeList';
@@ -76,17 +77,20 @@ export default function App() {
       
       <Navbar />
       
+      <div className="rc-app-shell">
       <Routes>
 
         {/* Public */}
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/MarketingChoice" element={<MarketingChoice />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/Vendor-Join" element={<VendorJoin />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/cars/:id" element={<CarDetail />} />
+        <Route path="/car/:id" element={<CarDetail />} />
         <Route path="/supplier-benefits" element={<MarketingRole role="supplier" />} />
         <Route path="/renter-benefits" element={<MarketingRole role="renter" />} />
         {/* Profile & Chat (Any authenticated user) */}
@@ -150,7 +154,10 @@ export default function App() {
         <Route path="/admin/advertisements" element={
           <PrivateRoute roles={['admin']}><Adminadvertisements /></PrivateRoute>
         } />
-         <Route path="/admin/advertisementCenter" element={
+        <Route path="/admin/advertisementCenter" element={
+          <PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>
+        } />
+        <Route path="/admin/advertisement-center" element={
           <PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>
         } />
         <Route path="/admin/cars" element={
@@ -166,14 +173,21 @@ export default function App() {
   <Route path="/supplier/EmployeeForm" element={
           <PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>
         } />
-         <Route path="/supplier/AdvertisementRequest" element={
+        <Route path="/supplier/AdvertisementRequest" element={
           <PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>
         } />
-          <Route path="/supplier/EmployeeList" element={
+        <Route path="/supplier/advertisement-request" element={
+          <PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>
+        } />
+        <Route path="/supplier/EmployeeList" element={
+          <PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>
+        } />
+        <Route path="/supplier/employees" element={
           <PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>
         } />
         <Route path="*" element={<Navigate to="/" replace  />} />
       </Routes>
+      </div>
     </>
   
   );
