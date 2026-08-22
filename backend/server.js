@@ -18,6 +18,7 @@ const notificationRoutes = require('./src/routes/notificationRoutes');
 const handoverRoutes = require('./src/routes/handoverRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
+const employeeSelfRoutes = require('./src/routes/employeeSelfRoutes');
 const { initCronJobs } = require('./src/utils/cronJobs');
 const advertisementRoutes = require('./src/routes/advertisementRoutes');
 const whatsappRoutes = require('./src/routes/whatsappRoutes');
@@ -108,6 +109,7 @@ app.use('/uploads', express.static('uploads'));
 // ========================
 app.use('/api/auth', authRoutes);
 app.use('/api/cars', carRoutes);
+app.use('/api/employee-self', employeeSelfRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/payments', paymentRoutes);

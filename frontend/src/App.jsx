@@ -56,7 +56,9 @@ import EmployeeDashboard from './pages/employee/DashboardEMP';
 const PrivateRoute = ({ children, roles }) => {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace />;
+  const isEmployeeAccount = user.account_type === 'employee';
+  const roleAllowed = !roles || roles.includes(user.role) || (roles.includes('employee') && isEmployeeAccount);
+  if (!roleAllowed) return <Navigate to="/" replace />;
   return children;
 };
 

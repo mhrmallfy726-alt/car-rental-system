@@ -70,7 +70,7 @@ router.use(protect);
 // PUT /api/employees/change-password (Employee self password change on first login)
 router.put('/change-password', async (req, res) => {
   try {
-    if (req.user.role !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (req.user.account_type !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
     const { current_password, new_password, confirm_password } = req.body;
     if (!new_password || !confirm_password) return res.status(400).json({ success: false, message: 'يرجى إدخال وتأكيد كلمة المرور الجديدة' });
     if (new_password.length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
@@ -102,7 +102,7 @@ router.put('/change-password', async (req, res) => {
 // PUT /api/employees/status (Employee toggles accepting orders)
 router.put('/status', async (req, res) => {
   try {
-    if (req.user.role !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (req.user.account_type !== 'employee') return res.status(403).json({ success: false, message: 'غير مصرح' });
     const { is_accepting_orders } = req.body;
     const updated = await query(
       'UPDATE employees SET is_accepting_orders = $1, is_online = TRUE, last_active_at = NOW() WHERE id = $2 RETURNING id, is_online, is_accepting_orders',
