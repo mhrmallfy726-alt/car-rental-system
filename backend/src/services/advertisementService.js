@@ -508,7 +508,7 @@ const advertisementService  = {
           request.supplier_id,
           'تم اعتماد إعلانك',
           `تم اعتماد طلب الإعلان «${request.title}» ونشره بنجاح.`,
-          'advertisement',
+          'system',
           adResult.rows[0].id,
           'advertisement',
         ]
@@ -547,7 +547,7 @@ const advertisementService  = {
         result.rows[0].supplier_id,
         'تم رفض طلب الإعلان',
         `تم رفض طلب الإعلان «${result.rows[0].title}». ${note ? `السبب: ${note}` : ''}`.trim(),
-        'advertisement',
+        'system',
         result.rows[0].id,
         'advertisement_request',
       ]
