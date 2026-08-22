@@ -49,7 +49,7 @@ export default function EmployeesList() {
     if (!form.full_name || !form.email || !form.password) return toast.error('أكمل الاسم والبريد وكلمة المرور');
     setSaving(true);
     try {
-      await createEmployee({ ...form, supplier_id: user.id });
+      await createEmployee({ ...form });
       toast.success('تم إنشاء حساب الموظف');
       setForm(emptyForm);
       setShowCreate(false);

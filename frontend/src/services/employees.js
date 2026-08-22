@@ -12,8 +12,8 @@ import api from './api';
   // - GET /api/employees/permissions/list
 
 
-export const listEmployees = (supplier_email) => {
-  return api.get('/employees', { params: { supplier_email } }).then(r => r.data);
+export const listEmployees = (supplier_id) => {
+  return api.get('/employees', { params: { supplier_id } }).then(r => r.data);
 };
 
 export const getEmployees = () => api.get('/employees').then((response) => response.data);

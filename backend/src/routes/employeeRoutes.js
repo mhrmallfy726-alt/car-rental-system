@@ -121,8 +121,10 @@ router.use(authorize('supplier', 'admin'));
 // GET /api/employees?supplier_id=...
 router.get('/', async (req, res) => {
   try {
-    const supplier_id = req.query.supplier_id;
-    if (!supplier_id) return res.status(400).json({ success: false, message: 'supplier_id مطلوب' });
+    const supplier_id = req.user.role === 'supplier'
+      ? String(req.user.id)
+      : (req.query.supplier_id ? String(req.query.supplier_id) : null);
+    if (!supplier_id) return res.status(400).json({ success: false, message: 'supplier_id مطلوب للأدمن عند اختيار المورد' });
 
     if (!ensureSupplierScope(supplier_id, req.user)) {
       return res.status(403).json({ success: false, message: 'غير مصرح' });
@@ -171,9 +173,12 @@ router.get('/:id', async (req, res) => {
 // body: { full_name, phone_number, email, password, role, supplier_id }
 router.post('/', async (req, res) => {
   try {
-    const { full_name, phone_number, email, password, role, supplier_id } = req.body;
+    const { full_name, phone_number, email, password, role } = req.body;
+    const supplier_id = req.user.role === 'supplier'
+      ? String(req.user.id)
+      : (req.body.supplier_id ? String(req.body.supplier_id) : null);
     if (!full_name || !email || !password || !supplier_id) {
-      return res.status(400).json({ success: false, message: 'الحقول المطلوبة ناقصة' });
+      return res.status(400).json({ success: false, message: 'الاسم والبريد وكلمة المرور والمورد مطلوبة' });
     }
 
     if (!ensureSupplierScope(supplier_id, req.user)) {
