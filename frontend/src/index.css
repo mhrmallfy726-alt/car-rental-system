@@ -1270,3 +1270,194 @@ textarea:focus-visible {
     border-radius: 22px;
   }
 }
+
+/* GPS search map */
+.location-picker-shell {
+  width: 100%;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid #e5e9ed;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(23, 58, 82, .08);
+}
+
+.location-picker-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.location-picker-toolbar strong,
+.location-picker-toolbar span {
+  display: block;
+}
+
+.location-picker-toolbar strong {
+  color: #173a52;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.location-picker-toolbar span {
+  margin-top: 4px;
+  color: #7d8a91;
+  font-size: 12px;
+}
+
+.gps-location-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 13px;
+  color: #173a52;
+  background: #f3e6b4;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.gps-location-button:hover:not(:disabled) {
+  background: #d4af37;
+  transform: translateY(-2px);
+}
+
+.gps-location-button:disabled {
+  opacity: .7;
+  cursor: wait;
+}
+
+.location-map {
+  width: 100%;
+  height: 290px;
+}
+
+.location-picker-error {
+  margin: 0;
+  padding: 0 16px 14px;
+  color: #b33d3d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.spin {
+  animation: gps-spin 1s linear infinite;
+}
+
+@keyframes gps-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Search context shown on the vehicle detail page */
+.car-search-summary {
+  width: calc(100% - 24px);
+  max-width: 1280px;
+  margin: 18px auto 24px;
+  border: 1px solid rgba(212, 175, 55, .28);
+  border-radius: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fffdf6, #fff);
+  box-shadow: 0 12px 32px rgba(23, 58, 82, .08);
+}
+
+.car-search-summary-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.car-search-summary-heading span {
+  color: #b38a20;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.car-search-summary-heading h2 {
+  margin: 5px 0 0;
+  color: #173a52;
+  font-size: 21px;
+  font-weight: 950;
+}
+
+.car-search-summary-edit {
+  border: 1px solid #d4af37;
+  border-radius: 10px;
+  padding: 9px 13px;
+  color: #173a52;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: color .2s ease, background .2s ease;
+}
+
+.car-search-summary-edit:hover {
+  color: #fff;
+  background: #173a52;
+}
+
+.car-search-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.car-search-summary-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+  min-height: 68px;
+  border: 1px solid #edf0f1;
+  border-radius: 14px;
+  padding: 11px 12px;
+  background: #fff;
+}
+
+.car-search-summary-item svg {
+  grid-row: span 2;
+  color: #d4af37;
+}
+
+.car-search-summary-item span {
+  color: #8a969c;
+  font-size: 11px;
+}
+
+.car-search-summary-item strong {
+  color: #173a52;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .location-picker-toolbar,
+  .car-search-summary-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gps-location-button,
+  .car-search-summary-edit {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .car-search-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .car-search-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}

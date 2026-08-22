@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -24,7 +24,11 @@ import { getImageUrl } from '../utils/imageUtils';
 
 export default function CarDetail() {
   const { id } = useParams();
+  const routerLocation = useLocation();
   const navigate = useNavigate();
+
+  const searchQuery = new URLSearchParams(routerLocation.search);
+  const carriedSearch = routerLocation.state?.search || {};
   const { isAuthenticated, isCustomer } = useAuthStore();
 
   const [car, setCar] = useState(null);
@@ -40,18 +44,53 @@ export default function CarDetail() {
     return_time: '18:00',
     pickup_location: '',
   });
-  const [searchParams, setSearchParams] = useState({
-    location: '',
-    startDate: '',
-    endDate: '',
-    pickupTime: '09:00',
-    returnTime: '18:00',
-    minPrice: '',
-    maxPrice: '',
-    latitude: '',
-    longitude: '',
-    radius: 10,
-  });
+  const [searchParams, setSearchParams] = useState(() => ({
+    location:
+      carriedSearch.search ||
+      carriedSearch.location ||
+      searchQuery.get('location') ||
+      '',
+    startDate:
+      carriedSearch.startDate ||
+      searchQuery.get('startDate') ||
+      '',
+    endDate:
+      carriedSearch.endDate ||
+      searchQuery.get('endDate') ||
+      '',
+    pickupTime:
+      carriedSearch.pickup_time ||
+      carriedSearch.pickupTime ||
+      searchQuery.get('pickupTime') ||
+      '09:00',
+    returnTime:
+      carriedSearch.return_time ||
+      carriedSearch.returnTime ||
+      searchQuery.get('returnTime') ||
+      '18:00',
+    minPrice:
+      carriedSearch.min_price ||
+      carriedSearch.minPrice ||
+      searchQuery.get('minPrice') ||
+      '',
+    maxPrice:
+      carriedSearch.max_price ||
+      carriedSearch.maxPrice ||
+      searchQuery.get('maxPrice') ||
+      '',
+    latitude:
+      carriedSearch.latitude ||
+      searchQuery.get('latitude') ||
+      '',
+    longitude:
+      carriedSearch.longitude ||
+      searchQuery.get('longitude') ||
+      '',
+    radius:
+      carriedSearch.radius ||
+      searchQuery.get('radius') ||
+      10,
+  }));
   
   useEffect(() => {
     carsAPI
@@ -173,6 +212,14 @@ export default function CarDetail() {
 
   if (!car) return null;
 
+  const hasSearchContext = Boolean(
+    searchParams.location ||
+    searchParams.startDate ||
+    searchParams.endDate ||
+    searchParams.latitude ||
+    searchParams.longitude
+  );
+
   return (
     
     <div
@@ -218,6 +265,70 @@ export default function CarDetail() {
       ====================================================== */}
 
       <AdvertisementBanner placement="car_detail" carId={car.id} />
+
+      {hasSearchContext && (
+        <section
+          className="car-search-summary"
+          aria-label="تفاصيل البحث المستخدم"
+        >
+          <div className="car-search-summary-heading">
+            <div>
+              <span>بحثك الحالي</span>
+              <h2>تفاصيل الاستئجار المطلوبة</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate(`/cars?${routerLocation.search.replace(/^\\?/, '')}`)}
+              className="car-search-summary-edit"
+            >
+              تعديل البحث
+            </button>
+          </div>
+
+          <div className="car-search-summary-grid">
+            {searchParams.location && (
+              <div className="car-search-summary-item">
+                <MapPin size={18} />
+                <span>الموقع</span>
+                <strong>{searchParams.location}</strong>
+              </div>
+            )}
+
+            {searchParams.startDate && (
+              <div className="car-search-summary-item">
+                <CalendarDays size={18} />
+                <span>فترة الاستئجار</span>
+                <strong>
+                  {searchParams.startDate}
+                  {searchParams.endDate
+                    ? ` — ${searchParams.endDate}`
+                    : ''}
+                </strong>
+              </div>
+            )}
+
+            {(searchParams.pickupTime || searchParams.returnTime) && (
+              <div className="car-search-summary-item">
+                <Clock3 size={18} />
+                <span>الأوقات</span>
+                <strong>
+                  {searchParams.pickupTime || '09:00'}
+                  {' — '}
+                  {searchParams.returnTime || '18:00'}
+                </strong>
+              </div>
+            )}
+
+            {(searchParams.latitude && searchParams.longitude) && (
+              <div className="car-search-summary-item">
+                <MapPin size={18} />
+                <span>الموقع الجغرافي</span>
+                <strong>تم تحديده عبر GPS</strong>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <main className="mx-auto grid w-[calc(100%-24px)] max-w-[1280px] items-start gap-6 sm:w-[calc(100%-40px)] lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-7">
         {/* ===================================================

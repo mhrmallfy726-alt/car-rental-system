@@ -28,7 +28,10 @@ export default function Cars() {
     startDate: initialParams.get('startDate') || '',
     endDate: initialParams.get('endDate') || '',
     pickup_time: initialParams.get('pickupTime') || initialParams.get('pickup_time') || '09:00',
-    return_time: initialParams.get('returnTime') || initialParams.get('return_time') || '18:00'
+    return_time: initialParams.get('returnTime') || initialParams.get('return_time') || '18:00',
+    latitude: initialParams.get('latitude') || '',
+    longitude: initialParams.get('longitude') || '',
+    radius: Number(initialParams.get('radius')) || 10
   });
 
   const [showFilters, setShowFilters] = useState(false);
@@ -299,7 +302,27 @@ export default function Cars() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {cars.map(car => (
-                  <Link key={car.id} to={`/cars/${car.id}`} style={{ textDecoration: 'none', color: 'inherit', background: 'white', borderRadius: '12px', overflow: 'hidden', display: 'flex', transition: 'transform 0.2s, box-shadow 0.2s' }} className="hover-up">
+                  <Link
+                    key={car.id}
+                    to={{
+                      pathname: `/cars/${car.id}`,
+                      search: new URLSearchParams({
+                        location: filters.search || '',
+                        startDate: filters.startDate || '',
+                        endDate: filters.endDate || '',
+                        pickupTime: filters.pickup_time || '09:00',
+                        returnTime: filters.return_time || '18:00',
+                        latitude: filters.latitude || '',
+                        longitude: filters.longitude || '',
+                        radius: String(filters.radius || 10),
+                        minPrice: filters.min_price || '',
+                        maxPrice: filters.max_price || '',
+                      }).toString(),
+                      state: { search: filters },
+                    }}
+                    style={{ textDecoration: 'none', color: 'inherit', background: 'white', borderRadius: '12px', overflow: 'hidden', display: 'flex', transition: 'transform 0.2s, box-shadow 0.2s' }}
+                    className="hover-up"
+                  >
                     <div style={{ width: '280px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                       {car.discount_percentage > 0 && (
                         <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, background: '#E3000F', color: 'white', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
