@@ -20,6 +20,7 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const employeeRoutes = require('./src/routes/employeeRoutes');
 const { initCronJobs } = require('./src/utils/cronJobs');
 const advertisementRoutes = require('./src/routes/advertisementRoutes');
+const whatsappRoutes = require('./src/routes/whatsappRoutes');
 // const employeeRoutes = require('./routes/employees');
 const path = require("path");
 // const express = require("express");
@@ -80,8 +81,9 @@ app.use('/api/', limiter);
 // ========================
 // Body Parsing
 // ========================
-// Stripe webhook needs raw body
+// Stripe and WhatsApp webhooks need their raw request body for signature verification.
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/whatsapp/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -111,6 +113,7 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/handover', handoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/employees', employeeRoutes);

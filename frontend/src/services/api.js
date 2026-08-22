@@ -108,6 +108,12 @@ export const notificationsAPI = {
   markAllRead: () => api.put('/notifications/read-all'),
 };
 
+// ── WhatsApp ──────────────────────────────────
+export const whatsappAPI = {
+  getStatus: () => api.get('/whatsapp/status'),
+  sendTest: (data) => api.post('/whatsapp/test', data),
+};
+
 // ── Handover ──────────────────────────────────
 export const handoverAPI = {
   submit: (reservationId, type, data) =>

@@ -3,6 +3,49 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query, getClient } = require('../config/database');
+const {
+  sendTextMessage,
+  sendReservationStatusMessage,
+} = require('../services/whatsappService');
+
+async function notifyReservationWhatsApp(reservationId, status, reason = null) {
+  try {
+    const result = await query(
+      `SELECT r.id, r.customer_id, r.supplier_id,
+              cu.name AS customer_name, cu.phone AS customer_phone,
+              su.name AS supplier_name, su.phone AS supplier_phone,
+              c.make, c.model
+       FROM reservations r
+       JOIN users cu ON cu.id = r.customer_id
+       JOIN users su ON su.id = r.supplier_id
+       JOIN cars c ON c.id = r.car_id
+       WHERE r.id = $1`,
+      [reservationId]
+    );
+
+    const reservation = result.rows[0];
+    if (!reservation) return;
+
+    if (status === 'pending') {
+      await sendTextMessage({
+        to: reservation.supplier_phone,
+        body: `لديك طلب حجز جديد للسيارة ${reservation.make} ${reservation.model}. يرجى مراجعة الطلب من لوحة المورد.\nرقم الحجز: ${reservation.id}`,
+      });
+      return;
+    }
+
+    await sendReservationStatusMessage({
+      to: reservation.customer_phone,
+      customerName: reservation.customer_name,
+      carName: `${reservation.make} ${reservation.model}`,
+      status,
+      reservationId: reservation.id,
+      reason,
+    });
+  } catch (error) {
+    console.error('WhatsApp reservation notification failed:', error.message);
+  }
+}
 
 // ========================
 // @desc    Create reservation
@@ -32,7 +75,7 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   const conflictCheck = await query(`
     SELECT id FROM reservations
     WHERE car_id = $1 AND status IN ('pending','approved','awaiting_pickup','active','returned')
-    AND COALESCE(pickup_at, start_date::timestamp) < $5::timestamp
+    AND COALESCE(pickup_at, start_date::timestamp) < $3::timestamp
     AND COALESCE(return_at, end_date::timestamp + interval '23 hours 59 minutes') > $2::timestamp
   `, [car_id, pickupAt.toISOString(), returnAt.toISOString()]);
 
@@ -59,6 +102,8 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   // Emit socket notification
   const io = req.app.get('io');
   if (io) io.to(`user_${car.supplier_id}`).emit('new_notification', { type: 'reservation', message: 'طلب حجز جديد' });
+
+  void notifyReservationWhatsApp(result.rows[0].id, 'pending');
 
   res.status(201).json({ success: true, data: result.rows[0] });
 }));
@@ -112,6 +157,8 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
   const io = req.app.get('io');
   if (io) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', { type: 'reservation', message: 'تمت الموافقة على حجزك' });
 
+  void notifyReservationWhatsApp(id, 'awaiting_pickup');
+
   res.json({ success: true, data: result.rows[0] });
 }));
 
@@ -132,6 +179,8 @@ router.put('/:id/reject', protect, authorize('supplier'), asyncHandler(async (re
   await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
     VALUES ($1, 'تم رفض حجزك', $2, 'reservation', $3, 'reservation')`,
     [reservation.rows[0].customer_id, supplier_notes || 'تم رفض طلب الحجز من قبل المورد', id]);
+
+  void notifyReservationWhatsApp(id, 'rejected', supplier_notes || null);
 
   res.json({ success: true, data: result.rows[0] });
 }));
@@ -155,6 +204,8 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
   const result = await query(`UPDATE reservations SET status = 'cancelled', cancellation_reason = $1, cancelled_by = $2, cancelled_at = NOW() WHERE id = $3 RETURNING *`,
     [cancellation_reason, req.user.id, id]);
 
+  void notifyReservationWhatsApp(id, 'cancelled', cancellation_reason || null);
+
   res.json({ success: true, data: result.rows[0] });
 }));
 
@@ -176,6 +227,8 @@ router.put('/:id/complete', protect, authorize('supplier'), asyncHandler(async (
 
   // Update car only after the return is documented and the reservation is closed.
   await query('UPDATE cars SET total_trips = total_trips + 1, status = $1 WHERE id = $2', ['available', reservation.rows[0].car_id]);
+
+  void notifyReservationWhatsApp(id, 'completed');
 
   res.json({ success: true, data: result.rows[0] });
 }));
