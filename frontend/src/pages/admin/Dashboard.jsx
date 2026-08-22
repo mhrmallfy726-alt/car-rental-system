@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Users, Car, Calendar, DollarSign, LayoutDashboard, ShieldAlert, Settings, ArrowRight } from 'lucide-react';
+import { Users, Car, Calendar, DollarSign, LayoutDashboard, ShieldAlert, Settings, ArrowRight, WalletCards } from 'lucide-react';
 // import { format } from 'date-fns';
 import { Building2 } from "lucide-react";
 export default function AdminDashboard() {
@@ -123,8 +123,11 @@ export default function AdminDashboard() {
           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
           </Link>
-          <Link to="/admin/advertisementCenter" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/advertisement-center" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الإعلانات
+          </Link>
+          <Link to="/admin/finance" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+            <WalletCards size={20} /> الإدارة المالية
           </Link>
           <Link to="/admin/supplier-requests" style={{   display: "flex",   alignItems: "center",gap: "10px",   padding: "12px 16px",   borderRadius: "10px",   textDecoration: "none",  color: "#374151",fontWeight: 500, }}>
              <Building2 size={20} />  طلبات الموردين
