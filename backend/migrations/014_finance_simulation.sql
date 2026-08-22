@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_method VARCHAR(50) NOT NULL DEFAULT 'simulation',
   status VARCHAR(30) NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'paid', 'failed', 'refunded', 'partially_refunded')),
-  provider_reference VARCHAR(200) UNIQUE,
+  provider_reference VARCHAR(200),
   refund_amount NUMERIC(14, 2) DEFAULT 0 CHECK (refund_amount >= 0),
   refund_reason TEXT,
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -24,6 +24,17 @@ CREATE TABLE IF NOT EXISTS payments (
     reservation_id IS NOT NULL OR advertisement_id IS NOT NULL
   )
 );
+
+-- Existing installations may already have payments without the finance columns.
+-- Add all compatibility columns before indexes and constraints below.
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS advertisement_id UUID REFERENCES advertisements(id) ON DELETE RESTRICT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES users(id) ON DELETE RESTRICT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider_reference VARCHAR(200);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_amount NUMERIC(14, 2) DEFAULT 0;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_reason TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMPTZ;
 
 ALTER TABLE advertisements
   ADD COLUMN IF NOT EXISTS price_per_day NUMERIC(14, 2) NOT NULL DEFAULT 0 CHECK (price_per_day >= 0);
@@ -128,7 +139,6 @@ FOR EACH ROW EXECUTE FUNCTION finance_set_updated_at();
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS advertisement_id UUID REFERENCES advertisements(id) ON DELETE RESTRICT;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS payer_id UUID REFERENCES users(id) ON DELETE RESTRICT;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES users(id) ON DELETE SET NULL;
-ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider_reference VARCHAR(200);
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_amount NUMERIC(14, 2) DEFAULT 0;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS refund_reason TEXT;
