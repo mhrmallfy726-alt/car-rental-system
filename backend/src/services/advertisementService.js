@@ -130,7 +130,15 @@ const advertisementService  = {
     }
   
     if (carId) {
-      params.push(Number(carId));
+      const normalizedCarId = String(carId).trim();
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      // car_id is UUID in the database; never coerce it with Number().
+      if (!uuidPattern.test(normalizedCarId)) {
+        return [];
+      }
+
+      params.push(normalizedCarId);
       where.push(
         `(a.car_id IS NULL OR a.car_id = $${params.length})`
       );
