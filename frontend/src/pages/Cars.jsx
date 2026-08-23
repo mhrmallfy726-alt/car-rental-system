@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../services/api';
 import AdvertisementBanner from '../components/AdvertisementBanner';
-import { Search, Filter, Star, User, Settings, CheckCircle, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
+import { Search, Filter, Star, User, Settings, CheckCircle, ShieldCheck, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 // import ActiveAdvertisements from '../components/ActiveAdvertisements';
@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 export default function Cars() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const locationSearch = useLocation().search;
   const initialParams = new URLSearchParams(locationSearch);
 
@@ -158,19 +159,28 @@ export default function Cars() {
   return (
     <div className="page" style={{ background: '#f8f9fa', minHeight: '100vh', paddingTop: '72px' }}>
 
-      {/* Header Search Section */}
-      <section style={{ background: 'var(--primary)', padding: '40px 0', color: 'white' }}>
-        <div className="container">
-          <h1 className="mb-24" style={{ fontSize: '2.2rem', fontWeight: 900 }}>اعثر على سيارتك المثالية</h1>
-
-          {/* <SearchFilter
-  searchParams={searchParams}
-  setSearchParams={setSearchParams}
-  handleSearch={handleSearch}
-/> */}
-
-
-
+      <section className="cars-hero-3d">
+        <div className="cars-hero-orb cars-hero-orb-one" />
+        <div className="cars-hero-orb cars-hero-orb-two" />
+        <div className="cars-hero-grid" />
+        <div className="container cars-hero-inner">
+          <div className="cars-hero-copy">
+            <span className="cars-eyebrow"><span className="cars-live-dot" /> منصة تأجير موثوقة</span>
+            <h1>اختر رحلتك<br /><em>بأسلوبك.</em></h1>
+            <p>استكشف أسطولاً منتقياً من السيارات الموثوقة، واختر السيارة التي تناسب يومك وميزانيتك.</p>
+            <div className="cars-hero-actions">
+              <button type="button" className="cars-hero-action" onClick={() => document.getElementById('cars-results')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Search size={17} /> استكشف السيارات
+              </button>
+              <span className="cars-hero-meta"><strong>{cars.length || '—'}</strong> سيارة متاحة الآن</span>
+            </div>
+          </div>
+          <div className="cars-hero-stat-card">
+            <div className="cars-stat-glow" />
+            <span className="cars-stat-label">اختيارك الذكي</span>
+            <strong>رحلة أسهل<br /><span>تبدأ من هنا</span></strong>
+            <div className="cars-stat-row"><span><CheckCircle size={16} /> سيارات موثقة</span><span><Star size={16} /> تقييمات حقيقية</span></div>
+          </div>
         </div>
       </section>
       <AdvertisementBanner placement="cars" />
@@ -300,105 +310,36 @@ export default function Cars() {
                 <button onClick={clearFilters} className="btn btn-secondary" style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' }}>عرض جميع السيارات</button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {cars.map(car => (
-                  <Link
-                    key={car.id}
-                    to={{
-                      pathname: `/cars/${car.id}`,
-                      search: new URLSearchParams({
-                        location: filters.search || '',
-                        startDate: filters.startDate || '',
-                        endDate: filters.endDate || '',
-                        pickupTime: filters.pickup_time || '09:00',
-                        returnTime: filters.return_time || '18:00',
-                        latitude: filters.latitude || '',
-                        longitude: filters.longitude || '',
-                        radius: String(filters.radius || 10),
-                        minPrice: filters.min_price || '',
-                        maxPrice: filters.max_price || '',
-                      }).toString(),
-                      state: { search: filters },
-                    }}
-                    style={{ textDecoration: 'none', color: 'inherit', background: 'white', borderRadius: '12px', overflow: 'hidden', display: 'flex', transition: 'transform 0.2s, box-shadow 0.2s' }}
-                    className="hover-up"
-                  >
-                    <div style={{ width: '280px', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-                      {car.discount_percentage > 0 && (
-                        <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 10, background: '#E3000F', color: 'white', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Percent size={12} /> خصم {car.discount_percentage}%
-                        </div>
-                      )}
-                      <img
-                        src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`) : 'https://via.placeholder.com/300x200'}
-                        alt={car.make}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                      {isCustomer() && (
-                        <button
-                          onClick={(e) => { e.preventDefault(); toggleFavorite(e, car.id); }}
-                          style={{
-                            position: 'absolute',
-                            bottom: '12px',
-                            right: '12px',
-                            zIndex: 10,
-                            background: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '36px',
-                            height: '36px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                            transition: 'transform 0.2s'
-                          }}
-                          className="fav-icon-btn"
-                        >
-                          <Heart size={18} fill={favoriteIds.has(car.id) ? "#dc3545" : "none"} color={favoriteIds.has(car.id) ? "#dc3545" : "#666"} />
-                        </button>
-                      )}
-                    </div>
-
-                    <div style={{ flex: 1, padding: '20px', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap' }}>
-                        <div>
-                          <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '4px', color: '#0a58ca' }}>{car.make} {car.model} {car.year}</h3>
-                          <p style={{ fontSize: '0.7rem', color: '#6c757d', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} /> {car.location_city || 'صنعاء'}</p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ffc107', fontWeight: 'bold' }}>
-                          <Star size={14} fill="currentColor" /> {car.average_rating || 'جديد'}
-                        </div>
+              <div id="cars-results" className="cars-grid-3d">
+                {cars.map((car, index) => {
+                  const carImage = car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`) : 'https://via.placeholder.com/640x420';
+                  const discountedPrice = car.price_per_day * (1 - (car.discount_percentage || 0) / 100);
+                  return (
+                    <Link
+                      key={car.id}
+                      to={{
+                        pathname: `/cars/${car.id}`,
+                        search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || 10), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),
+                        state: { search: filters },
+                      }}
+                      className="car-card-3d"
+                      style={{ '--card-index': index }}
+                    >
+                      <div className="car-card-image-wrap">
+                        <div className="car-card-image-shine" />
+                        <img src={carImage} alt={`${car.make} ${car.model}`} className="car-card-image" />
+                        <div className="car-card-topline"><span className="car-card-status"><span /> متاح للحجز</span>{car.discount_percentage > 0 && <span className="car-card-discount"><Percent size={12} /> {car.discount_percentage}%</span>}</div>
+                        {isCustomer() && <button onClick={(e) => { e.preventDefault(); toggleFavorite(e, car.id); }} className="car-card-favorite" aria-label="إضافة للمفضلة"><Heart size={18} fill={favoriteIds.has(car.id) ? '#e85b54' : 'none'} color={favoriteIds.has(car.id) ? '#e85b54' : 'currentColor'} /></button>}
+                        <div className="car-card-image-caption"><span>{car.category || 'اختيار مميز'}</span><span><Star size={13} fill="currentColor" /> {car.average_rating || 'جديد'}</span></div>
                       </div>
-
-                      <div style={{ display: 'flex', gap: '12px', fontSize: '0.7rem', color: '#6c757d', marginBottom: '20px', flexWrap: 'wrap' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8f9fa', padding: '4px 8px', borderRadius: '20px' }}><User size={12} /> {car.seats} مقاعد</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8f9fa', padding: '4px 8px', borderRadius: '20px' }}><Settings size={12} /> {car.transmission === 'automatic' ? 'أوتوماتيك' : 'يدوي'}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8f9fa', padding: '4px 8px', borderRadius: '20px' }}><Fuel size={12} /> {car.fuel_type === 'petrol' ? 'بنزين' : 'ديزل'}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8f9fa', padding: '4px 8px', borderRadius: '20px' }}><Gauge size={12} /> {car.mileage || 0} كم</span>
+                      <div className="car-card-content">
+                        <div className="car-card-title-row"><div><h3>{car.make} {car.model}</h3><p><MapPin size={13} /> {car.location_city || 'صنعاء'} · {car.year || '2024'}</p></div><span className="car-card-arrow">↗</span></div>
+                        <div className="car-specs-row"><span><User size={14} /> {car.seats || 5}</span><span><Settings size={14} /> {car.transmission === 'automatic' ? 'أوتوماتيك' : 'يدوي'}</span><span><Fuel size={14} /> {car.fuel_type === 'petrol' ? 'بنزين' : car.fuel_type === 'hybrid' ? 'هايبرد' : 'ديزل'}</span></div>
+                        <div className="car-card-footer"><div className="car-card-perks"><span><CheckCircle size={13} /> موثقة</span><span><ShieldCheck size={13} /> تأمين متاح</span></div><div className="car-card-price">{car.discount_percentage > 0 && <del>${Number(car.price_per_day).toFixed(0)}</del>}<strong>${Number(discountedPrice).toFixed(0)}</strong><small>/ يوم</small></div></div>
                       </div>
-
-                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '0.7rem', color: '#28a745', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={12} /> إلغاء مجاني</span>
-                          <span style={{ fontSize: '0.7rem', color: '#28a745', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={12} /> تأمين شامل</span>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          {car.discount_percentage > 0 ? (
-                            <>
-                              <span style={{ fontSize: '0.7rem', color: '#6c757d', textDecoration: 'line-through', display: 'block' }}>${car.price_per_day}</span>
-                              <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#E3000F' }}>${(car.price_per_day * (1 - car.discount_percentage / 100)).toFixed(1)}</span>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#0a58ca' }}>${car.price_per_day}</span>
-                          )}
-                          <span style={{ fontSize: '0.7rem', color: '#6c757d', display: 'block' }}>/ يوم</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </main>
@@ -415,53 +356,75 @@ export default function Cars() {
       )}
 {/* <ActiveAdvertisements placement="cars" /> */}
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @media (max-width: 992px) {
-          .cars-layout { flex-direction: column; }
-          .filters-sidebar {
-            position: fixed;
-            right: -300px;
-            top: 0;
-            bottom: 0;
-            z-index: 2001;
-            transition: all 0.3s ease;
-            background: white;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.2);
-            overflow-y: auto;
-            padding: 20px;
-          }
-          .filters-sidebar.show { right: 0; }
-          .hover-up {
-            flex-direction: column;
-          }
-          .hover-up > div:first-child {
-            width: 100% !important;
-            height: 180px;
-          }
-          .hide-mobile { display: none; }
-          .show-tablet { display: block; }
-        }
-        @media (min-width: 993px) {
-          .show-tablet { display: none; }
-        }
-        .hover-up:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
-          border-radius: 50%;
-          animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        `
-      }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        .cars-hero-3d { position: relative; overflow: hidden; min-height: 390px; color: #f8fafc; background: radial-gradient(circle at 80% 12%, rgba(198,83,69,.35), transparent 28%), linear-gradient(135deg, #101827 0%, #18263a 58%, #263f58 100%); }
+        .cars-hero-inner { position: relative; z-index: 2; min-height: 390px; display: flex; align-items: center; justify-content: space-between; gap: 40px; padding-top: 45px; padding-bottom: 45px; }
+        .cars-hero-copy { max-width: 620px; }
+        .cars-eyebrow { display: inline-flex; align-items: center; gap: 9px; padding: 8px 13px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; color: #e9c9a8; background: rgba(255,255,255,.07); font-size: .75rem; font-weight: 800; }
+        .cars-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #7de2ab; box-shadow: 0 0 0 5px rgba(125,226,171,.12); }
+        .cars-hero-copy h1 { margin: 18px 0 12px; font-size: clamp(2.6rem, 6vw, 5.4rem); line-height: .98; letter-spacing: -.07em; font-weight: 950; }
+        .cars-hero-copy h1 em { color: #eaa98e; font-style: normal; text-shadow: 0 10px 30px rgba(234,169,142,.24); }
+        .cars-hero-copy p { max-width: 500px; margin: 0; color: rgba(241,245,249,.72); line-height: 1.9; font-size: .95rem; }
+        .cars-hero-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 25px; }
+        .cars-hero-action { display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: 13px; padding: 13px 18px; color: #172033; background: #f4d4b3; font-weight: 900; cursor: pointer; box-shadow: 0 12px 28px rgba(0,0,0,.18); transition: transform .18s ease, box-shadow .18s ease; }
+        .cars-hero-action:hover { transform: translateY(-3px); box-shadow: 0 17px 34px rgba(0,0,0,.26); }
+        .cars-hero-meta { color: rgba(241,245,249,.65); font-size: .78rem; }
+        .cars-hero-meta strong { display: block; color: #fff; font-size: 1.35rem; }
+        .cars-hero-stat-card { position: relative; width: min(300px, 32vw); min-height: 210px; padding: 25px; overflow: hidden; transform: rotate(5deg) perspective(900px) rotateY(-8deg); border: 1px solid rgba(255,255,255,.21); border-radius: 26px; background: linear-gradient(150deg, rgba(255,255,255,.18), rgba(255,255,255,.04)); box-shadow: 22px 28px 50px rgba(0,0,0,.26), inset 0 1px rgba(255,255,255,.25); backdrop-filter: blur(14px); }
+        .cars-stat-glow { position: absolute; width: 130px; height: 130px; top: -55px; left: -30px; border-radius: 50%; background: #efb087; filter: blur(28px); opacity: .7; }
+        .cars-stat-label { position: relative; color: #f2d9bb; font-size: .7rem; font-weight: 800; }
+        .cars-hero-stat-card strong { position: relative; display: block; margin-top: 24px; color: #fff; font-size: 1.7rem; line-height: 1.35; }
+        .cars-hero-stat-card strong span { color: #f1ba98; }
+        .cars-stat-row { position: absolute; right: 20px; bottom: 20px; left: 20px; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.72); font-size: .62rem; }
+        .cars-stat-row span { display: inline-flex; align-items: center; gap: 4px; }
+        .cars-stat-row svg { color: #8fe0b1; }
+        .cars-hero-orb { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(1px); opacity: .35; }
+        .cars-hero-orb-one { width: 260px; height: 260px; top: -120px; right: 25%; border: 1px solid rgba(255,255,255,.22); box-shadow: 0 0 0 28px rgba(255,255,255,.025), 0 0 0 56px rgba(255,255,255,.018); }
+        .cars-hero-orb-two { width: 160px; height: 160px; bottom: -95px; left: 12%; background: rgba(226,143,116,.34); }
+        .cars-hero-grid { position: absolute; inset: 0; opacity: .12; background-image: linear-gradient(rgba(255,255,255,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.18) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); }
+        .cars-grid-3d { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; perspective: 1200px; }
+        .car-card-3d { position: relative; overflow: hidden; min-width: 0; border: 1px solid rgba(25,43,64,.1); border-radius: 24px; color: inherit; text-decoration: none; background: linear-gradient(155deg, #fff, #f7f9fb); box-shadow: 0 16px 34px rgba(25,43,64,.08), 0 2px 4px rgba(25,43,64,.05); transform: translateY(0) rotateX(0) rotateY(0); transition: transform .28s cubic-bezier(.23,1,.32,1), box-shadow .28s ease, border-color .28s ease; animation: cardIn .55s both; animation-delay: calc(var(--card-index) * 45ms); }
+        .car-card-3d:hover { z-index: 2; border-color: rgba(198,83,69,.28); transform: translateY(-9px) rotateX(2deg) rotateY(-2deg); box-shadow: 0 28px 55px rgba(25,43,64,.16), 0 8px 18px rgba(198,83,69,.1); }
+        .car-card-image-wrap { position: relative; height: 220px; overflow: hidden; background: linear-gradient(135deg, #d9e0e7, #a9b8c7); }
+        .car-card-image { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.23,1,.32,1), filter .3s ease; }
+        .car-card-3d:hover .car-card-image { transform: scale(1.08) rotate(1deg); filter: saturate(1.08) contrast(1.03); }
+        .car-card-image-shine { position: absolute; z-index: 1; inset: 0; opacity: 0; background: linear-gradient(115deg, transparent 25%, rgba(255,255,255,.28) 45%, transparent 65%); transform: translateX(-100%); transition: opacity .2s, transform .75s ease; pointer-events: none; }
+        .car-card-3d:hover .car-card-image-shine { opacity: 1; transform: translateX(100%); }
+        .car-card-topline { position: absolute; z-index: 2; top: 14px; right: 14px; left: 14px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .car-card-status, .car-card-discount { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border-radius: 999px; color: #fff; background: rgba(13,25,39,.62); font-size: .65rem; font-weight: 900; backdrop-filter: blur(8px); }
+        .car-card-status span { width: 6px; height: 6px; border-radius: 50%; background: #7de2ab; box-shadow: 0 0 0 4px rgba(125,226,171,.17); }
+        .car-card-discount { background: #d85d4f; }
+        .car-card-favorite { position: absolute; z-index: 3; right: 14px; bottom: 14px; display: grid; width: 39px; height: 39px; place-items: center; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; color: #fff; background: rgba(13,25,39,.58); cursor: pointer; backdrop-filter: blur(8px); transition: transform .18s ease, background .18s ease; }
+        .car-card-favorite:hover { transform: scale(1.12); background: rgba(216,93,79,.92); }
+        .car-card-image-caption { position: absolute; right: 15px; bottom: 15px; left: 66px; z-index: 2; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.9); font-size: .68rem; font-weight: 800; text-shadow: 0 2px 8px #000; }
+        .car-card-image-caption span:last-child { display: inline-flex; align-items: center; gap: 4px; color: #ffd37d; }
+        .car-card-content { padding: 18px; }
+        .car-card-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .car-card-title-row h3 { margin: 0; color: #162337; font-size: 1.17rem; font-weight: 950; letter-spacing: -.02em; }
+        .car-card-title-row p { display: flex; align-items: center; gap: 5px; margin: 7px 0 0; color: #81909f; font-size: .69rem; }
+        .car-card-title-row p svg { color: #cf6655; }
+        .car-card-arrow { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #c65345; background: #fbeeea; font-size: 1.25rem; transition: transform .2s ease; }
+        .car-card-3d:hover .car-card-arrow { transform: translate(-2px, -2px); }
+        .car-specs-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 18px 0; padding-bottom: 16px; border-bottom: 1px solid #edf0f2; }
+        .car-specs-row span { display: inline-flex; align-items: center; gap: 5px; padding: 7px 8px; border-radius: 9px; color: #6d7e8e; background: #f3f6f8; font-size: .66rem; font-weight: 800; }
+        .car-specs-row svg { color: #c85d4d; }
+        .car-card-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; }
+        .car-card-perks { display: flex; flex-direction: column; gap: 7px; color: #4d9a70; font-size: .64rem; font-weight: 800; }
+        .car-card-perks span { display: inline-flex; align-items: center; gap: 5px; }
+        .car-card-price { text-align: left; color: #17283d; white-space: nowrap; }
+        .car-card-price del { display: block; color: #9ba6af; font-size: .65rem; }
+        .car-card-price strong { font-size: 1.45rem; font-weight: 950; }
+        .car-card-price small { margin-right: 4px; color: #8996a3; font-size: .65rem; }
+        .cars-layout { align-items: flex-start; }
+        .filters-sidebar .card { border: 1px solid #e8edf1; box-shadow: 0 17px 40px rgba(25,43,64,.06); }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e7edf1; border-top-color: #c65345; border-radius: 50%; animation: spin .8s linear infinite; }
+        @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 992px) { .cars-layout { flex-direction: column; } .filters-sidebar { position: fixed; right: -320px; top: 0; bottom: 0; z-index: 2001; width: 300px !important; transition: right .28s ease; background: white; box-shadow: -12px 0 35px rgba(0,0,0,.18); overflow-y: auto; padding: 20px; } .filters-sidebar.show { right: 0; } .hide-mobile { display: none; } .show-tablet { display: block; } .cars-hero-stat-card { width: 270px; } }
+        @media (max-width: 720px) { .cars-hero-inner { min-height: 480px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 25px; } .cars-hero-stat-card { align-self: flex-start; width: min(290px, 80vw); min-height: 155px; transform: rotate(2deg); } .cars-hero-copy h1 { font-size: 3.2rem; } .cars-grid-3d { grid-template-columns: 1fr; gap: 16px; } .car-card-image-wrap { height: 210px; } }
+        @media (min-width: 993px) { .show-tablet { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .car-card-3d, .car-card-image, .cars-hero-action, .car-card-favorite { animation: none; transition: none; } }
+      ` }} />
     </div>
   );
 }
