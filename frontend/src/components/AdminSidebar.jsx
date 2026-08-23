@@ -39,7 +39,7 @@ export default function AdminSidebar() {
         .admin-sidebar-link:hover { color: #173a52; background: #f2f7f8; transform: translateX(-2px); }
         .admin-sidebar-link.is-active { color: #173a52; background: linear-gradient(135deg, #edf7f5, #f8fbfb); border-color: #cfe7e0; box-shadow: 0 7px 16px rgba(23,58,82,.07); }
         .admin-sidebar-link.is-active svg { color: #b78a22; }
-        @media (max-width: 900px) { .admin-sidebar { width: 100%; min-height: auto; padding: 14px; border-left: 0; border-bottom: 1px solid #e7edf0; } .admin-sidebar-brand { display: flex; align-items: baseline; gap: 9px; padding: 0 4px 12px; margin-bottom: 10px; } .admin-sidebar-brand small { display: none; } .admin-sidebar-nav { display: flex; overflow-x: auto; padding-bottom: 2px; } .admin-sidebar-link { flex: 0 0 auto; min-height: 40px; white-space: nowrap; } }
+        @media (max-width: 900px) { .admin-sidebar { display: none !important; } }
       `}</style>
     </aside>
   );

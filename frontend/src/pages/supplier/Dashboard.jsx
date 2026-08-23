@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit,Users} from 'lucide-react';
 
 import { format } from 'date-fns';
-import '../../styles/supplier-dashboard.css';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
