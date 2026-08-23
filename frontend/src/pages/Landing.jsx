@@ -150,7 +150,7 @@ export default function Landing() {
                 </Link> */}
 
                 <Link
-                  to="/MarketingChoice"
+                  to="/marketing"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '10px',
                     background: 'rgba(255,255,255,0.1)',
@@ -443,7 +443,7 @@ export default function Landing() {
 
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
               <Link
-                to="./marketing/MarketingChoice"
+                to="/marketing"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
                   background: 'linear-gradient(135deg, #febb02, #f5a623)',
@@ -664,7 +664,7 @@ export default function Landing() {
               تصفح السيارات <ArrowLeft size={20} />
             </Link>
             <Link
-              to="/MarketingChoice"
+              to="/marketing"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                 background: 'rgba(255,255,255,0.15)',

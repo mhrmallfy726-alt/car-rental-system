@@ -61,6 +61,16 @@ const getDashboardPath = (user) => {
   return '/my-reservations';
 };
 
+const LegacyCarRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/cars/${id}`} replace />;
+};
+
+const LegacyEmployeeRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/supplier/employees/${id}`} replace />;
+};
+
 const PrivateRoute = ({ children, roles }) => {
   const { user, token } = useAuthStore();
   const location = useLocation();
@@ -105,13 +115,15 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/about" element={<About />} />
-        <Route path="/MarketingChoice" element={<MarketingChoice />} />
+        <Route path="/marketing" element={<MarketingChoice />} />
+        <Route path="/MarketingChoice" element={<Navigate to="/marketing" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/Vendor-Join" element={<VendorJoin />} />
+        <Route path="/supplier/join" element={<VendorJoin />} />
+        <Route path="/Vendor-Join" element={<Navigate to="/supplier/join" replace />} />
         <Route path="/cars" element={<Cars />} />
         <Route path="/cars/:id" element={<CarDetail />} />
-        <Route path="/car/:id" element={<CarDetail />} />
+        <Route path="/car/:id" element={<LegacyCarRedirect />} />
         <Route path="/supplier-benefits" element={<MarketingRole role="supplier" />} />
         <Route path="/renter-benefits" element={<MarketingRole role="renter" />} />
         {/* Profile & Chat (Any authenticated user) */}
@@ -175,15 +187,11 @@ export default function App() {
         <Route path="/admin/complaints" element={
           <PrivateRoute roles={['admin']}><AdminComplaints /></PrivateRoute>
         } />
-        <Route path="/admin/advertisements" element={
-          <PrivateRoute roles={['admin']}><Adminadvertisements /></PrivateRoute>
-        } />
-        <Route path="/admin/advertisementCenter" element={
-          <PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>
-        } />
         <Route path="/admin/advertisement-center" element={
           <PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>
         } />
+        <Route path="/admin/advertisements" element={<Navigate to="/admin/advertisement-center" replace />} />
+        <Route path="/admin/advertisementCenter" element={<Navigate to="/admin/advertisement-center" replace />} />
         <Route path="/admin/cars" element={
           <PrivateRoute roles={['admin']}><AdminCars /></PrivateRoute>
         } />
@@ -196,22 +204,14 @@ export default function App() {
         <Route path="/admin/supplier-requests" element={
             <PrivateRoute roles={['admin']}><SupplierRequests /> </PrivateRoute>
         }/>
-         <Route path="/pages/supplier/employees/:id" element={<PrivateRoute roles={['supplier']}><EmployeeDetail /></PrivateRoute>} />
-  <Route path="/supplier/EmployeeForm" element={
-          <PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>
-        } />
-        <Route path="/supplier/AdvertisementRequest" element={
-          <PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>
-        } />
-        <Route path="/supplier/advertisement-request" element={
-          <PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>
-        } />
-        <Route path="/supplier/EmployeeList" element={
-          <PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>
-        } />
-        <Route path="/supplier/employees" element={
-          <PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>
-        } />
+         <Route path="/supplier/employees/:id" element={<PrivateRoute roles={['supplier']}><EmployeeDetail /></PrivateRoute>} />
+        <Route path="/supplier/employees/new" element={<PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>} />
+        <Route path="/supplier/advertisement-request" element={<PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>} />
+        <Route path="/supplier/employees" element={<PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>} />
+        <Route path="/pages/supplier/employees/:id" element={<LegacyEmployeeRedirect />} />
+        <Route path="/supplier/EmployeeForm" element={<Navigate to="/supplier/employees/new" replace />} />
+        <Route path="/supplier/AdvertisementRequest" element={<Navigate to="/supplier/advertisement-request" replace />} />
+        <Route path="/supplier/EmployeeList" element={<Navigate to="/supplier/employees" replace />} />
         <Route path="*" element={<Navigate to="/" replace  />} />
       </Routes>
       </div>

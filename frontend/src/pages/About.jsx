@@ -30,7 +30,7 @@ export default function About() {
           <p>نوصل العملاء بموردين موثوقين ونحوّل استئجار السيارة إلى تجربة سهلة، شفافة، ومريحة من أول بحث حتى إعادة السيارة.</p>
           <div className="about-hero-actions">
             <a href="/cars" className="about-primary-action">استكشف السيارات</a>
-            <a href="/Vendor-Join" className="about-secondary-action">انضم كمورد</a>
+            <a href="/supplier/join" className="about-secondary-action">انضم كمورد</a>
           </div>
         </div>
         <div className="about-hero-stat-card">

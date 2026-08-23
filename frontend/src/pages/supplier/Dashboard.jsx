@@ -110,13 +110,13 @@ export default function SupplierDashboard() {
           <Link to="/supplier/reservations" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Calendar size={20} /> الحجوزات
           </Link>
-          <Link to="/supplier/EmployeeForm" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/supplier/employees/new" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Users size={20} /> الموضفين
           </Link>
           <Link to="/supplier/advertisement-request" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Star size={20} /> طلبات الإعلانات
           </Link>
-          <Link to="/supplier/EmployeeList" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/supplier/employees" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
             <Users size={20} />  قائمه الموضفين 
           </Link>
           <Link to="/supplier/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
