@@ -26,6 +26,7 @@ SET status = CASE LOWER(TRIM(COALESCE(status, 'pending')))
   WHEN 'accepted' THEN 'approved'
   WHEN 'approved' THEN 'approved'
   WHEN 'requested' THEN 'pending'
+  WHEN 'pending_payment' THEN 'pending'
   WHEN 'new' THEN 'pending'
   WHEN 'waiting' THEN 'pending'
   WHEN 'waiting_pickup' THEN 'awaiting_pickup'
