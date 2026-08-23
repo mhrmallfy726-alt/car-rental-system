@@ -1,5 +1,23 @@
 BEGIN;
 
+-- Create the employee table on a new database before repairing legacy installations.
+CREATE TABLE IF NOT EXISTS employees (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  supplier_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  full_name VARCHAR(150) NOT NULL,
+  phone_number VARCHAR(40),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(30) NOT NULL DEFAULT 'employee',
+  status VARCHAR(30) NOT NULL DEFAULT 'active',
+  must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
+  is_online BOOLEAN NOT NULL DEFAULT FALSE,
+  is_accepting_orders BOOLEAN NOT NULL DEFAULT TRUE,
+  last_active_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Compatibility repair for employee tables created before the employee workspace was introduced.
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS supplier_id UUID;
 ALTER TABLE employees ADD COLUMN IF NOT EXISTS status VARCHAR(30) NOT NULL DEFAULT 'active';

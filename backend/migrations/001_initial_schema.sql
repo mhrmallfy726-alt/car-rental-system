@@ -1,417 +1,405 @@
--- -- =====================================================
--- -- 🚗 Car Rental System - Database Schema
--- -- 17 Tables - Full System
--- -- =====================================================
+-- =====================================================
+-- 🚗 Car Rental System - Database Schema
+-- 17 Tables - Full System
+-- =====================================================
 
--- -- Enable UUID extension
--- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- -- =====================================================
--- -- 1. USERS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS users (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     name VARCHAR(100) NOT NULL,
---     email VARCHAR(150) UNIQUE NOT NULL,
---     password VARCHAR(255) NOT NULL,
---     role VARCHAR(20) NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'supplier', 'admin')),
---     phone VARCHAR(20),
---     avatar VARCHAR(500),
---     date_of_birth DATE,
---     address TEXT,
---     is_verified BOOLEAN DEFAULT FALSE,
---     is_active BOOLEAN DEFAULT TRUE,
---     email_verified BOOLEAN DEFAULT FALSE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 1. USERS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS users (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     name VARCHAR(100) NOT NULL,
+     email VARCHAR(150) UNIQUE NOT NULL,
+     password VARCHAR(255) NOT NULL,
+     role VARCHAR(20) NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'supplier', 'admin')),
+     phone VARCHAR(20),
+     avatar VARCHAR(500),
+     date_of_birth DATE,
+     address TEXT,
+     is_verified BOOLEAN DEFAULT FALSE,
+     is_active BOOLEAN DEFAULT TRUE,
+     email_verified BOOLEAN DEFAULT FALSE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 2. DOCUMENTS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS documents (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     type VARCHAR(50) NOT NULL CHECK (type IN ('id_card', 'driver_license', 'passport', 'other')),
---     file_url VARCHAR(500) NOT NULL,
---     file_public_id VARCHAR(300),
---     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
---     rejection_reason TEXT,
---     reviewed_by UUID REFERENCES users(id),
---     reviewed_at TIMESTAMP WITH TIME ZONE,
---     expires_at DATE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 2. DOCUMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS documents (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     type VARCHAR(50) NOT NULL CHECK (type IN ('id_card', 'driver_license', 'passport', 'other')),
+     file_url VARCHAR(500) NOT NULL,
+     file_public_id VARCHAR(300),
+     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+     rejection_reason TEXT,
+     reviewed_by UUID REFERENCES users(id),
+     reviewed_at TIMESTAMP WITH TIME ZONE,
+     expires_at DATE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 3. CATEGORIES TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS categories (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     name VARCHAR(100) NOT NULL,
---     name_ar VARCHAR(100),
---     description TEXT,
---     icon VARCHAR(100),
---     is_active BOOLEAN DEFAULT TRUE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 3. CATEGORIES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS categories (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     name VARCHAR(100) NOT NULL,
+     name_ar VARCHAR(100),
+     description TEXT,
+     icon VARCHAR(100),
+     is_active BOOLEAN DEFAULT TRUE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 4. LOCATIONS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS locations (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     city VARCHAR(100) NOT NULL,
---     country VARCHAR(100) DEFAULT 'Yemen',
---     address TEXT,
---     latitude DECIMAL(10, 8),
---     longitude DECIMAL(11, 8),
---     is_active BOOLEAN DEFAULT TRUE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 4. LOCATIONS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS locations (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     city VARCHAR(100) NOT NULL,
+     country VARCHAR(100) DEFAULT 'Yemen',
+     address TEXT,
+     latitude DECIMAL(10, 8),
+     longitude DECIMAL(11, 8),
+     is_active BOOLEAN DEFAULT TRUE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 5. CARS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS cars (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
---     location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
---     make VARCHAR(100) NOT NULL,
---     model VARCHAR(100) NOT NULL,
---     year INTEGER NOT NULL,
---     color VARCHAR(50),
---     license_plate VARCHAR(50) UNIQUE,
---     seats INTEGER DEFAULT 5,
---     doors INTEGER DEFAULT 4,
---     transmission VARCHAR(20) DEFAULT 'automatic' CHECK (transmission IN ('manual', 'automatic')),
---     fuel_type VARCHAR(20) DEFAULT 'petrol' CHECK (fuel_type IN ('petrol', 'diesel', 'electric', 'hybrid')),
---     price_per_day DECIMAL(10, 2) NOT NULL,
---     description TEXT,
---     mileage INTEGER DEFAULT 0,
---     status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available', 'reserved', 'maintenance', 'inactive')),
---     is_approved BOOLEAN DEFAULT FALSE,
---     approved_by UUID REFERENCES users(id),
---     approved_at TIMESTAMP WITH TIME ZONE,
---     total_trips INTEGER DEFAULT 0,
---     average_rating DECIMAL(3, 2) DEFAULT 0,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 5. CARS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS cars (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+     location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
+     make VARCHAR(100) NOT NULL,
+     model VARCHAR(100) NOT NULL,
+     year INTEGER NOT NULL,
+     color VARCHAR(50),
+     license_plate VARCHAR(50) UNIQUE,
+     seats INTEGER DEFAULT 5,
+     doors INTEGER DEFAULT 4,
+     transmission VARCHAR(20) DEFAULT 'automatic' CHECK (transmission IN ('manual', 'automatic')),
+     fuel_type VARCHAR(20) DEFAULT 'petrol' CHECK (fuel_type IN ('petrol', 'diesel', 'electric', 'hybrid')),
+     price_per_day DECIMAL(10, 2) NOT NULL,
+     description TEXT,
+     mileage INTEGER DEFAULT 0,
+     status VARCHAR(20) DEFAULT 'available' CHECK (status IN ('available', 'reserved', 'maintenance', 'inactive')),
+     is_approved BOOLEAN DEFAULT FALSE,
+     approved_by UUID REFERENCES users(id),
+     approved_at TIMESTAMP WITH TIME ZONE,
+     total_trips INTEGER DEFAULT 0,
+     average_rating DECIMAL(3, 2) DEFAULT 0,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 6. CAR IMAGES TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS car_images (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
---     image_url VARCHAR(500) NOT NULL,
---     image_public_id VARCHAR(300),
---     is_primary BOOLEAN DEFAULT FALSE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 6. CAR IMAGES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS car_images (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+     image_url VARCHAR(500) NOT NULL,
+     image_public_id VARCHAR(300),
+     is_primary BOOLEAN DEFAULT FALSE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 7. CAR FEATURES TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS car_features (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
---     feature VARCHAR(100) NOT NULL,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     UNIQUE(car_id, feature)
--- );
+-- =====================================================
+-- 7. CAR FEATURES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS car_features (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+     feature VARCHAR(100) NOT NULL,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(car_id, feature)
+);
 
--- -- =====================================================
--- -- 8. RESERVATIONS TABLE (مركز النظام)
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS reservations (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE RESTRICT,
---     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     start_date DATE NOT NULL,
---     end_date DATE NOT NULL,
---     total_days INTEGER NOT NULL,
---     price_per_day DECIMAL(10, 2) NOT NULL,
---     total_price DECIMAL(10, 2) NOT NULL,
---     status VARCHAR(30) DEFAULT 'pending' CHECK (
---         status IN ('pending', 'approved', 'rejected', 'cancelled', 'active', 'completed', 'disputed')
---     ),
---     pickup_location TEXT,
---     dropoff_location TEXT,
---     customer_notes TEXT,
---     supplier_notes TEXT,
---     cancellation_reason TEXT,
---     cancelled_by UUID REFERENCES users(id),
---     cancelled_at TIMESTAMP WITH TIME ZONE,
---     approved_at TIMESTAMP WITH TIME ZONE,
---     completed_at TIMESTAMP WITH TIME ZONE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     CONSTRAINT valid_dates CHECK (end_date > start_date)
--- );
+-- =====================================================
+-- 8. RESERVATIONS TABLE (مركز النظام)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS reservations (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE RESTRICT,
+     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     start_date DATE NOT NULL,
+     end_date DATE NOT NULL,
+     total_days INTEGER NOT NULL,
+     price_per_day DECIMAL(10, 2) NOT NULL,
+     total_price DECIMAL(10, 2) NOT NULL,
+     status VARCHAR(30) DEFAULT 'pending' CHECK (
+         status IN ('pending', 'approved', 'rejected', 'cancelled', 'active', 'completed', 'disputed')
+     ),
+     pickup_location TEXT,
+     dropoff_location TEXT,
+     customer_notes TEXT,
+     supplier_notes TEXT,
+     cancellation_reason TEXT,
+     cancelled_by UUID REFERENCES users(id),
+     cancelled_at TIMESTAMP WITH TIME ZONE,
+     approved_at TIMESTAMP WITH TIME ZONE,
+     completed_at TIMESTAMP WITH TIME ZONE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     CONSTRAINT valid_dates CHECK (end_date > start_date)
+);
 
--- -- =====================================================
--- -- 9. PAYMENTS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS payments (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE RESTRICT,
---     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     amount DECIMAL(10, 2) NOT NULL,
---     currency VARCHAR(10) DEFAULT 'USD',
---     payment_method VARCHAR(50) DEFAULT 'card' CHECK (payment_method IN ('card', 'cash', 'wallet', 'bank_transfer')),
---     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'refunded', 'partially_refunded')),
---     stripe_payment_intent_id VARCHAR(300),
---     stripe_charge_id VARCHAR(300),
---     refund_amount DECIMAL(10, 2),
---     refund_reason TEXT,
---     paid_at TIMESTAMP WITH TIME ZONE,
---     refunded_at TIMESTAMP WITH TIME ZONE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 9. PAYMENTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS payments (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE RESTRICT,
+     customer_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     amount DECIMAL(10, 2) NOT NULL,
+     currency VARCHAR(10) DEFAULT 'USD',
+     payment_method VARCHAR(50) DEFAULT 'card' CHECK (payment_method IN ('card', 'cash', 'wallet', 'bank_transfer')),
+     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'failed', 'refunded', 'partially_refunded')),
+     stripe_payment_intent_id VARCHAR(300),
+     stripe_charge_id VARCHAR(300),
+     refund_amount DECIMAL(10, 2),
+     refund_reason TEXT,
+     paid_at TIMESTAMP WITH TIME ZONE,
+     refunded_at TIMESTAMP WITH TIME ZONE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 10. REVIEWS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS reviews (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
---     reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
---     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     car_rating INTEGER NOT NULL CHECK (car_rating BETWEEN 1 AND 5),
---     supplier_rating INTEGER NOT NULL CHECK (supplier_rating BETWEEN 1 AND 5),
---     comment TEXT,
---     is_visible BOOLEAN DEFAULT TRUE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     UNIQUE(reservation_id, reviewer_id)
--- );
+-- =====================================================
+-- 10. REVIEWS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS reviews (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
+     reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+     supplier_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     car_rating INTEGER NOT NULL CHECK (car_rating BETWEEN 1 AND 5),
+     supplier_rating INTEGER NOT NULL CHECK (supplier_rating BETWEEN 1 AND 5),
+     comment TEXT,
+     is_visible BOOLEAN DEFAULT TRUE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(reservation_id, reviewer_id)
+);
 
--- -- =====================================================
--- -- 11. COMPLAINTS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS complaints (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE RESTRICT,
---     complainant_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     against_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     type VARCHAR(50) NOT NULL CHECK (
---         type IN ('damage', 'late_return', 'fraud', 'poor_condition', 'payment_issue', 'other')
---     ),
---     title VARCHAR(200) NOT NULL,
---     description TEXT NOT NULL,
---     status VARCHAR(30) DEFAULT 'open' CHECK (
---         status IN ('open', 'in_progress', 'resolved', 'closed', 'rejected')
---     ),
---     priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
---     resolution TEXT,
---     resolved_by UUID REFERENCES users(id),
---     resolved_at TIMESTAMP WITH TIME ZONE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 11. COMPLAINTS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS complaints (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE RESTRICT,
+     complainant_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     against_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     type VARCHAR(50) NOT NULL CHECK (
+         type IN ('damage', 'late_return', 'fraud', 'poor_condition', 'payment_issue', 'other')
+     ),
+     title VARCHAR(200) NOT NULL,
+     description TEXT NOT NULL,
+     status VARCHAR(30) DEFAULT 'open' CHECK (
+         status IN ('open', 'in_progress', 'resolved', 'closed', 'rejected')
+     ),
+     priority VARCHAR(20) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+     resolution TEXT,
+     resolved_by UUID REFERENCES users(id),
+     resolved_at TIMESTAMP WITH TIME ZONE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 12. COMPLAINT MESSAGES TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS complaint_messages (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     complaint_id UUID NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
---     sender_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
---     message TEXT NOT NULL,
---     attachment_url VARCHAR(500),
---     is_internal BOOLEAN DEFAULT FALSE,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 12. COMPLAINT MESSAGES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS complaint_messages (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     complaint_id UUID NOT NULL REFERENCES complaints(id) ON DELETE CASCADE,
+     sender_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+     message TEXT NOT NULL,
+     attachment_url VARCHAR(500),
+     is_internal BOOLEAN DEFAULT FALSE,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 13. NOTIFICATIONS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS notifications (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---     title VARCHAR(200) NOT NULL,
---     message TEXT NOT NULL,
---     type VARCHAR(50) NOT NULL CHECK (
---         type IN ('reservation', 'payment', 'review', 'complaint', 'system', 'document', 'car')
---     ),
---     is_read BOOLEAN DEFAULT FALSE,
---     reference_id UUID,
---     reference_type VARCHAR(50),
---     action_url VARCHAR(300),
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 13. NOTIFICATIONS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS notifications (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+     title VARCHAR(200) NOT NULL,
+     message TEXT NOT NULL,
+     type VARCHAR(50) NOT NULL CHECK (
+         type IN ('reservation', 'payment', 'review', 'complaint', 'system', 'document', 'car')
+     ),
+     is_read BOOLEAN DEFAULT FALSE,
+     reference_id UUID,
+     reference_type VARCHAR(50),
+     action_url VARCHAR(300),
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 14. HANDOVER LOGS TABLE (توثيق حالة السيارة)
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS handover_logs (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
---     type VARCHAR(10) NOT NULL CHECK (type IN ('before', 'after')),
---     recorded_by UUID NOT NULL REFERENCES users(id),
---     fuel_level INTEGER CHECK (fuel_level BETWEEN 0 AND 100),
---     mileage INTEGER,
---     condition_notes TEXT,
---     exterior_condition VARCHAR(20) CHECK (exterior_condition IN ('excellent', 'good', 'fair', 'poor')),
---     interior_condition VARCHAR(20) CHECK (interior_condition IN ('excellent', 'good', 'fair', 'poor')),
---     gps_lat DECIMAL(10, 8),
---     gps_lng DECIMAL(11, 8),
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     UNIQUE(reservation_id, type)
--- );
+-- =====================================================
+-- 14. HANDOVER LOGS TABLE (توثيق حالة السيارة)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS handover_logs (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     reservation_id UUID NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
+     type VARCHAR(10) NOT NULL CHECK (type IN ('before', 'after')),
+     recorded_by UUID NOT NULL REFERENCES users(id),
+     fuel_level INTEGER CHECK (fuel_level BETWEEN 0 AND 100),
+     mileage INTEGER,
+     condition_notes TEXT,
+     exterior_condition VARCHAR(20) CHECK (exterior_condition IN ('excellent', 'good', 'fair', 'poor')),
+     interior_condition VARCHAR(20) CHECK (interior_condition IN ('excellent', 'good', 'fair', 'poor')),
+     gps_lat DECIMAL(10, 8),
+     gps_lng DECIMAL(11, 8),
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(reservation_id, type)
+);
 
--- -- =====================================================
--- -- 15. HANDOVER IMAGES TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS handover_images (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     handover_log_id UUID NOT NULL REFERENCES handover_logs(id) ON DELETE CASCADE,
---     image_url VARCHAR(500) NOT NULL,
---     image_public_id VARCHAR(300),
---     caption VARCHAR(200),
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
+-- =====================================================
+-- 15. HANDOVER IMAGES TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS handover_images (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     handover_log_id UUID NOT NULL REFERENCES handover_logs(id) ON DELETE CASCADE,
+     image_url VARCHAR(500) NOT NULL,
+     image_public_id VARCHAR(300),
+     caption VARCHAR(200),
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- -- =====================================================
--- -- 16. AVAILABILITY TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS availability (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
---     date DATE NOT NULL,
---     is_available BOOLEAN DEFAULT TRUE,
---     reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
---     UNIQUE(car_id, date)
--- );
+-- =====================================================
+-- 16. AVAILABILITY TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS availability (
+     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+     car_id UUID NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
+     date DATE NOT NULL,
+     is_available BOOLEAN DEFAULT TRUE,
+     reservation_id UUID REFERENCES reservations(id) ON DELETE SET NULL,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+     UNIQUE(car_id, date)
+);
 
--- -- =====================================================
--- -- 17. AUDIT LOGS TABLE
--- -- =====================================================
--- CREATE TABLE IF NOT EXISTS audit_logs (
---     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
---     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
---     action VARCHAR(100) NOT NULL,
---     entity_type VARCHAR(50) NOT NULL,
---     entity_id UUID,
---     old_data JSONB,
---     new_data JSONB,
---     ip_address INET,
---     user_agent TEXT,
---     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
--- );
--- CREATE TABLE email_verifications (
---     id SERIAL PRIMARY KEY,
+-- =====================================================
+-- 17. AUDIT LOGS TABLE
+-- =====================================================
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id UUID,
+    old_data JSONB,
+    new_data JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS email_verifications (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp VARCHAR(6) NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
---     email VARCHAR(255) NOT NULL,
+-- =====================================================
+-- INDEXES (لتحسين الأداء)
+-- =====================================================
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_cars_supplier ON cars(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_cars_status ON cars(status);
+CREATE INDEX IF NOT EXISTS idx_cars_location ON cars(location_id);
+CREATE INDEX IF NOT EXISTS idx_cars_category ON cars(category_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_customer ON reservations(customer_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_car ON reservations(car_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_supplier ON reservations(supplier_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_payments_reservation ON payments(reservation_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
+CREATE INDEX IF NOT EXISTS idx_handover_reservation ON handover_logs(reservation_id);
+CREATE INDEX IF NOT EXISTS idx_availability_car_date ON availability(car_id, date);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
 
---     otp VARCHAR(6) NOT NULL,
+-- =====================================================
+-- DEFAULT DATA
+-- =====================================================
 
---     expires_at TIMESTAMP NOT NULL,
+-- Default Categories
+INSERT INTO categories (name, name_ar, icon) VALUES
+ ('Economy', 'اقتصادية', 'car'),
+ ('Sedan', 'سيدان', 'car-side'),
+ ('SUV', 'دفع رباعي', 'truck'),
+ ('Luxury', 'فاخرة', 'gem'),
+ ('Van', 'فان', 'bus'),
+ ('Sports', 'رياضية', 'bolt')
+ ON CONFLICT DO NOTHING;
 
---     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- );
--- -- جدول التحقق من رمز المرسل للبريد
--- -- CREATE TABLE email_verifications (
--- --     id SERIAL PRIMARY KEY,
--- --     email VARCHAR(255) NOT NULL,
--- --     otp VARCHAR(6) NOT NULL,
--- --     attempts INTEGER DEFAULT 0,
--- --     expires_at TIMESTAMP NOT NULL,
--- --     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
--- -- );
+-- Default Locations
+INSERT INTO locations (city, country) VALUES
+ ('صنعاء', 'اليمن'),
+ ('عدن', 'اليمن'),
+ ('تعز', 'اليمن'),
+ ('الحديدة', 'اليمن'),
+ ('إب', 'اليمن')
+ ON CONFLICT DO NOTHING;
 
--- -- =====================================================
--- -- INDEXES (لتحسين الأداء)
--- -- =====================================================
--- CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
--- CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
--- CREATE INDEX IF NOT EXISTS idx_cars_supplier ON cars(supplier_id);
--- CREATE INDEX IF NOT EXISTS idx_cars_status ON cars(status);
--- CREATE INDEX IF NOT EXISTS idx_cars_location ON cars(location_id);
--- CREATE INDEX IF NOT EXISTS idx_cars_category ON cars(category_id);
--- CREATE INDEX IF NOT EXISTS idx_reservations_customer ON reservations(customer_id);
--- CREATE INDEX IF NOT EXISTS idx_reservations_car ON reservations(car_id);
--- CREATE INDEX IF NOT EXISTS idx_reservations_supplier ON reservations(supplier_id);
--- CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
--- CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(start_date, end_date);
--- CREATE INDEX IF NOT EXISTS idx_payments_reservation ON payments(reservation_id);
--- CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
--- CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
--- CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(user_id, is_read);
--- CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);
--- CREATE INDEX IF NOT EXISTS idx_handover_reservation ON handover_logs(reservation_id);
--- CREATE INDEX IF NOT EXISTS idx_availability_car_date ON availability(car_id, date);
--- CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
+-- Default Admin User (password: Admin@123456)
+INSERT INTO users (name, email, password, role, is_verified, email_verified)
+ VALUES (
+     'System Admin',
+     'admin@carrental.com',
+     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS1dIJq',
+     'admin',
+     TRUE,
+     TRUE
+ ) ON CONFLICT (email) DO NOTHING;
 
--- -- =====================================================
--- -- DEFAULT DATA
--- -- =====================================================
+-- =====================================================
+-- FUNCTIONS & TRIGGERS
+-- =====================================================
 
--- -- Default Categories
--- INSERT INTO categories (name, name_ar, icon) VALUES
--- ('Economy', 'اقتصادية', 'car'),
--- ('Sedan', 'سيدان', 'car-side'),
--- ('SUV', 'دفع رباعي', 'truck'),
--- ('Luxury', 'فاخرة', 'gem'),
--- ('Van', 'فان', 'bus'),
--- ('Sports', 'رياضية', 'bolt')
--- ON CONFLICT DO NOTHING;
+-- Auto-update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+     NEW.updated_at = NOW();
+     RETURN NEW;
+END;
+$$ language 'plpgsql';
 
--- -- Default Locations
--- INSERT INTO locations (city, country) VALUES
--- ('صنعاء', 'اليمن'),
--- ('عدن', 'اليمن'),
--- ('تعز', 'اليمن'),
--- ('الحديدة', 'اليمن'),
--- ('إب', 'اليمن')
--- ON CONFLICT DO NOTHING;
+CREATE OR REPLACE TRIGGER update_users_updated_at
+     BEFORE UPDATE ON users
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- -- Default Admin User (password: Admin@123456)
--- INSERT INTO users (name, email, password, role, is_verified, email_verified)
--- VALUES (
---     'System Admin',
---     'admin@carrental.com',
---     '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/HS1dIJq',
---     'admin',
---     TRUE,
---     TRUE
--- ) ON CONFLICT (email) DO NOTHING;
+CREATE OR REPLACE TRIGGER update_cars_updated_at
+     BEFORE UPDATE ON cars
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- -- =====================================================
--- -- FUNCTIONS & TRIGGERS
--- -- =====================================================
+CREATE OR REPLACE TRIGGER update_reservations_updated_at
+     BEFORE UPDATE ON reservations
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- -- Auto-update updated_at timestamp
--- CREATE OR REPLACE FUNCTION update_updated_at_column()
--- RETURNS TRIGGER AS $$
--- BEGIN
---     NEW.updated_at = NOW();
---     RETURN NEW;
--- END;
--- $$ language 'plpgsql';
+CREATE OR REPLACE TRIGGER update_payments_updated_at
+     BEFORE UPDATE ON payments
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- CREATE OR REPLACE TRIGGER update_users_updated_at
---     BEFORE UPDATE ON users
---     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- CREATE OR REPLACE TRIGGER update_cars_updated_at
---     BEFORE UPDATE ON cars
---     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- CREATE OR REPLACE TRIGGER update_reservations_updated_at
---     BEFORE UPDATE ON reservations
---     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- CREATE OR REPLACE TRIGGER update_payments_updated_at
---     BEFORE UPDATE ON payments
---     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- CREATE OR REPLACE TRIGGER update_complaints_updated_at
---     BEFORE UPDATE ON complaints
---     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE OR REPLACE TRIGGER update_complaints_updated_at
+     BEFORE UPDATE ON complaints
+     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

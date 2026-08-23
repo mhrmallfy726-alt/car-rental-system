@@ -46,10 +46,3 @@ CREATE TABLE IF NOT EXISTS reservation_reminders (
   UNIQUE(reservation_id, kind, channel)
 );
 CREATE INDEX IF NOT EXISTS idx_reservation_reminders_status ON reservation_reminders(status, kind);
-
-
-UPDATE reservations
-SET status = 'awaiting_pickup',
-handover_state = 'awaiting_pickup',
-approved_at = NOW()
-WHERE id = $1;
