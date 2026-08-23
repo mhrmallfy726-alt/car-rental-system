@@ -89,9 +89,9 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   const total_price = total_days * car.price_per_day;
 
   const result = await query(`
-    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, handover_state)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *
-  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, 'not_started']);
+    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, handover_state, status)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *
+  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, 'not_started', 'pending']);
 
   // The supplier is notified after successful payment in paymentRoutes.js.
   res.status(201).json({ success: true, data: result.rows[0] });
@@ -232,6 +232,7 @@ router.get('/:id', protect, asyncHandler(async (req, res, next) => {
     SELECT r.*, c.make, c.model, c.year, c.color, c.license_plate,
       cu.name as customer_name, cu.phone as customer_phone,
       su.name as supplier_name, su.phone as supplier_phone,
+      COALESCE((SELECT p.status FROM payments p WHERE p.reservation_id = r.id ORDER BY p.created_at DESC LIMIT 1), 'unpaid') AS payment_status,
       (SELECT image_url FROM car_images WHERE car_id = c.id AND is_primary = true LIMIT 1) as car_image
     FROM reservations r
     JOIN cars c ON r.car_id = c.id

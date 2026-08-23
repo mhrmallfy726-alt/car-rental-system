@@ -76,7 +76,12 @@ export default function SupplierReservationDetail() {
           <span style={{
             background: reservation.status === 'pending' ? '#ffc107' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? '#17a2b8' : reservation.status === 'active' ? '#28a745' : reservation.status === 'returned' ? '#8b5cf6' : reservation.status === 'completed' ? '#0a58ca' : reservation.status === 'rejected' ? '#dc3545' : '#6c757d',
             color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: 'auto'
-          }}>{reservation.status === 'pending' ? 'قيد المراجعة' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? 'بانتظار استلام العميل' : reservation.status === 'active' ? 'السيارة مع العميل' : reservation.status === 'returned' ? 'تم استلام السيارة' : reservation.status === 'completed' ? 'مكتمل' : reservation.status === 'rejected' ? 'مرفوض' : reservation.status}</span>
+          }}>{reservation.status === 'pending' ? 'بانتظار مراجعة المورد' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? 'بانتظار استلام العميل' : reservation.status === 'active' ? 'السيارة مع العميل' : reservation.status === 'returned' ? 'تم استلام السيارة' : reservation.status === 'completed' ? 'مكتمل' : reservation.status === 'rejected' ? 'مرفوض' : reservation.status}</span>
+          {reservation.payment_status === 'paid' && (
+            <span style={{ background: '#198754', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+              مدفوع
+            </span>
+          )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>

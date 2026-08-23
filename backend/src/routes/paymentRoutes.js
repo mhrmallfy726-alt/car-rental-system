@@ -51,6 +51,11 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
   if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن الدفع لهذا الحجز في حالته الحالية', 400));
+  const existingPaid = await query(
+    `SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`,
+    [reservation_id]
+  );
+  if (existingPaid.rows.length > 0) return next(new AppError('تم دفع هذا الحجز مسبقاً', 409));
 
   if (saved_card_id) {
     const card = await query('SELECT id FROM saved_cards WHERE id = $1 AND user_id = $2', [saved_card_id, req.user.id]);
