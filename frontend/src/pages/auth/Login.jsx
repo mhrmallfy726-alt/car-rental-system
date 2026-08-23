@@ -183,7 +183,7 @@
 
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
 import logo from '../../assets/LOGO.png';
@@ -196,6 +196,7 @@ export default function Login() {
   // const [,setIsLoading] = useState(false);
    const { login,isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [supplierStatus, setSupplierStatus] = useState(null);
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -230,26 +231,30 @@ export default function Login() {
       }
   
       toast.success("تم تسجيل الدخول بنجاح");
-  
-      if (res.user.account_type === 'employee') {
-        navigate('/employee/dashboard');
+
+      const requestedPath = location.state?.from;
+      if (requestedPath && requestedPath !== '/login') {
+        navigate(requestedPath, { replace: true });
+        return;
+      }
+
+      if (res.user.account_type === 'employee' || res.user.role === 'employee') {
+        navigate('/employee/dashboard', { replace: true });
         return;
       }
 
       switch (res.user.role) {
         case "admin":
-          navigate("/admin/dashboard");
+          navigate("/admin/dashboard", { replace: true });
           break;
-  
         case "supplier":
-          navigate("/supplier/dashboard");
+          navigate("/supplier/dashboard", { replace: true });
           break;
-  
         default:
-          navigate("/");
+          navigate("/my-reservations", { replace: true });
           break;
       }
-  
+
       return;
     }
   

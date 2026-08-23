@@ -53,12 +53,29 @@ import SupplierRequests from "./pages/admin/SupplierRequests";
 import EmployeeDashboard from './pages/employee/DashboardEMP';
 
 // Guards
+const getDashboardPath = (user) => {
+  if (!user) return '/';
+  if (user.account_type === 'employee' || user.role === 'employee') return '/employee/dashboard';
+  if (user.role === 'admin') return '/admin/dashboard';
+  if (user.role === 'supplier') return '/supplier/dashboard';
+  return '/my-reservations';
+};
+
 const PrivateRoute = ({ children, roles }) => {
   const { user, token } = useAuthStore();
-  if (!token || !user) return <Navigate to="/login" replace />;
-  const isEmployeeAccount = user.account_type === 'employee';
+  const location = useLocation();
+
+  if (!token || !user) {
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}${location.hash}` }} />;
+  }
+
+  const isEmployeeAccount = user.account_type === 'employee' || user.role === 'employee';
   const roleAllowed = !roles || roles.includes(user.role) || (roles.includes('employee') && isEmployeeAccount);
-  if (!roleAllowed) return <Navigate to="/" replace />;
+
+  if (!roleAllowed) {
+    return <Navigate to={getDashboardPath(user)} replace state={{ deniedFrom: location.pathname }} />;
+  }
+
   return children;
 };
 
@@ -86,7 +103,7 @@ export default function App() {
 
         {/* Public */}
         <Route path="/" element={<Landing />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/about" element={<About />} />
         <Route path="/MarketingChoice" element={<MarketingChoice />} />
         <Route path="/login" element={<Login />} />

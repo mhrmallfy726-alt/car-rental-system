@@ -91,6 +91,7 @@ export default function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return '/';
+    if (user.account_type === 'employee' || user.role === 'employee') return '/employee/dashboard';
     if (user.role === 'admin') return '/admin/dashboard';
     if (user.role === 'supplier') return '/supplier/dashboard';
     return '/my-reservations';
@@ -98,7 +99,8 @@ export default function Navbar() {
 
   const getDashboardText = () => {
     if (!user) return '';
-    if (user.role === 'admin') return 'لوحة التحكم';
+    if (user.account_type === 'employee' || user.role === 'employee') return 'لوحة الموظف';
+    if (user.role === 'admin') return 'لوحة الإدارة';
     if (user.role === 'supplier') return 'لوحة المورد';
     return 'حجوزاتي';
   };
