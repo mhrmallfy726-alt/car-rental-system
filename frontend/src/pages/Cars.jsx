@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../services/api';
 import AdvertisementBanner from '../components/AdvertisementBanner';
@@ -39,6 +39,15 @@ export default function Cars() {
   const [categories, setCategories] = useState([]);
   const { user, isAuthenticated, isCustomer } = useAuthStore();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const displayCategories = useMemo(() => {
+    const unique = new Map();
+    categories.forEach((category) => {
+      const label = String(category.name_ar || category.name || '').trim();
+      const key = label.toLocaleLowerCase('ar') || String(category.id);
+      if (label && !unique.has(key)) unique.set(key, { ...category, displayName: label });
+    });
+    return Array.from(unique.values());
+  }, [categories]);
 
   // جلب البيانات الأولية
   useEffect(() => {
@@ -84,7 +93,8 @@ export default function Cars() {
   const fetchInitialData = async () => {
     try {
       const catRes = await carsAPI.getCategories();
-      setCategories(catRes.data.data);
+      const incomingCategories = Array.isArray(catRes.data?.data) ? catRes.data.data : [];
+      setCategories(incomingCategories);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -168,12 +178,18 @@ export default function Cars() {
             <span className="cars-eyebrow"><span className="cars-live-dot" /> منصة تأجير موثوقة</span>
             <h1>اختر رحلتك<br /><em>بأسلوبك.</em></h1>
             <p>استكشف أسطولاً منتقياً من السيارات الموثوقة، واختر السيارة التي تناسب يومك وميزانيتك.</p>
+            <form className="cars-hero-search" onSubmit={handleSearchSubmit}>
+              <Search size={18} />
+              <input value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="ابحث عن مدينة أو موقع الاستلام" aria-label="البحث عن موقع الاستلام" />
+              <button type="submit">بحث</button>
+            </form>
             <div className="cars-hero-actions">
               <button type="button" className="cars-hero-action" onClick={() => document.getElementById('cars-results')?.scrollIntoView({ behavior: 'smooth' })}>
                 <Search size={17} /> استكشف السيارات
               </button>
               <span className="cars-hero-meta"><strong>{cars.length || '—'}</strong> سيارة متاحة الآن</span>
             </div>
+            {displayCategories.length > 0 && <div className="cars-quick-categories"><span>الأكثر طلباً:</span>{displayCategories.slice(0, 4).map((category) => <button key={category.id} type="button" onClick={() => handleFilterChange('category', category.id)}>{category.displayName}</button>)}</div>}
           </div>
           <div className="cars-hero-stat-card">
             <div className="cars-stat-glow" />
@@ -199,7 +215,7 @@ export default function Cars() {
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ fontWeight: 'bold', marginBottom: '12px', display: 'block', fontSize: '0.85rem' }}>نوع السيارة</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {categories.map(cat => (
+                  {displayCategories.map(cat => (
                     <label key={cat.id} style={{ display: 'flex', gap: '10px', alignItems: 'center', cursor: 'pointer', fontSize: '0.85rem', padding: '4px 0' }}>
                       <input
                         type="radio"
@@ -207,7 +223,7 @@ export default function Cars() {
                         checked={filters.category === cat.id}
                         onChange={() => handleFilterChange('category', filters.category === cat.id ? '' : cat.id)}
                       />
-                      {cat.name_ar || cat.name}
+                      {cat.displayName}
                     </label>
                   ))}
                 </div>
@@ -365,7 +381,14 @@ export default function Cars() {
         .cars-hero-copy h1 { margin: 18px 0 12px; font-size: clamp(2.6rem, 6vw, 5.4rem); line-height: .98; letter-spacing: -.07em; font-weight: 950; }
         .cars-hero-copy h1 em { color: #eaa98e; font-style: normal; text-shadow: 0 10px 30px rgba(234,169,142,.24); }
         .cars-hero-copy p { max-width: 500px; margin: 0; color: rgba(241,245,249,.72); line-height: 1.9; font-size: .95rem; }
-        .cars-hero-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 25px; }
+        .cars-hero-search { display: flex; align-items: center; gap: 10px; max-width: 520px; margin-top: 23px; padding: 7px 8px 7px 15px; border: 1px solid rgba(255,255,255,.18); border-radius: 15px; color: rgba(255,255,255,.7); background: rgba(255,255,255,.1); box-shadow: inset 0 1px rgba(255,255,255,.12); backdrop-filter: blur(12px); }
+        .cars-hero-search input { min-width: 0; flex: 1; border: 0; outline: 0; color: #fff; background: transparent; font: inherit; font-size: .78rem; }
+        .cars-hero-search input::placeholder { color: rgba(255,255,255,.55); }
+        .cars-hero-search button { border: 0; border-radius: 10px; padding: 10px 16px; color: #172033; background: #f4d4b3; font-weight: 900; cursor: pointer; }
+        .cars-hero-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 18px; }
+        .cars-quick-categories { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 18px; color: rgba(241,245,249,.58); font-size: .68rem; }
+        .cars-quick-categories button { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 6px 10px; color: rgba(255,255,255,.82); background: rgba(255,255,255,.07); font-size: .67rem; cursor: pointer; transition: background .18s ease, transform .18s ease; }
+        .cars-quick-categories button:hover { transform: translateY(-2px); color: #172033; background: #f4d4b3; }
         .cars-hero-action { display: inline-flex; align-items: center; gap: 9px; border: 0; border-radius: 13px; padding: 13px 18px; color: #172033; background: #f4d4b3; font-weight: 900; cursor: pointer; box-shadow: 0 12px 28px rgba(0,0,0,.18); transition: transform .18s ease, box-shadow .18s ease; }
         .cars-hero-action:hover { transform: translateY(-3px); box-shadow: 0 17px 34px rgba(0,0,0,.26); }
         .cars-hero-meta { color: rgba(241,245,249,.65); font-size: .78rem; }
@@ -421,7 +444,7 @@ export default function Cars() {
         @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 992px) { .cars-layout { flex-direction: column; } .filters-sidebar { position: fixed; right: -320px; top: 0; bottom: 0; z-index: 2001; width: 300px !important; transition: right .28s ease; background: white; box-shadow: -12px 0 35px rgba(0,0,0,.18); overflow-y: auto; padding: 20px; } .filters-sidebar.show { right: 0; } .hide-mobile { display: none; } .show-tablet { display: block; } .cars-hero-stat-card { width: 270px; } }
-        @media (max-width: 720px) { .cars-hero-inner { min-height: 480px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 25px; } .cars-hero-stat-card { align-self: flex-start; width: min(290px, 80vw); min-height: 155px; transform: rotate(2deg); } .cars-hero-copy h1 { font-size: 3.2rem; } .cars-grid-3d { grid-template-columns: 1fr; gap: 16px; } .car-card-image-wrap { height: 210px; } }
+        @media (max-width: 720px) { .cars-hero-inner { min-height: 520px; align-items: flex-start; flex-direction: column; justify-content: center; gap: 25px; } .cars-hero-stat-card { align-self: flex-start; width: min(290px, 80vw); min-height: 155px; transform: rotate(2deg); } .cars-hero-copy h1 { font-size: 3.2rem; } .cars-hero-search { width: 100%; } .cars-hero-search button { padding-inline: 12px; } .cars-grid-3d { grid-template-columns: 1fr; gap: 16px; } .car-card-image-wrap { height: 210px; } }
         @media (min-width: 993px) { .show-tablet { display: none; } }
         @media (prefers-reduced-motion: reduce) { .car-card-3d, .car-card-image, .cars-hero-action, .car-card-favorite { animation: none; transition: none; } }
       ` }} />
