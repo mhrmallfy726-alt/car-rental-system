@@ -1,11 +1,6 @@
 BEGIN;
 
--- توحيد القيم الحالية قبل إعادة إنشاء القيد.
-UPDATE public.reservations
-SET status = LOWER(TRIM(status))
-WHERE status IS NOT NULL;
-
--- إزالة أي قيد قديم على عمود reservations.status مهما كان اسمه.
+-- إزالة القيد القديم أولاً حتى يمكن تنظيف السجلات المخالفة.
 DO $$
 DECLARE
   constraint_row RECORD;
@@ -23,6 +18,34 @@ BEGIN
     );
   END LOOP;
 END $$;
+
+-- توحيد الحالات القديمة إلى حالات دورة الحجز المعتمدة.
+UPDATE public.reservations
+SET status = CASE LOWER(TRIM(COALESCE(status, 'pending')))
+  WHEN 'confirmed' THEN 'approved'
+  WHEN 'accepted' THEN 'approved'
+  WHEN 'approved' THEN 'approved'
+  WHEN 'requested' THEN 'pending'
+  WHEN 'new' THEN 'pending'
+  WHEN 'waiting' THEN 'pending'
+  WHEN 'waiting_pickup' THEN 'awaiting_pickup'
+  WHEN 'awaiting_pickup' THEN 'awaiting_pickup'
+  WHEN 'picked_up' THEN 'active'
+  WHEN 'in_progress' THEN 'active'
+  WHEN 'active' THEN 'active'
+  WHEN 'finished' THEN 'completed'
+  WHEN 'done' THEN 'completed'
+  WHEN 'completed' THEN 'completed'
+  WHEN 'returned' THEN 'returned'
+  WHEN 'declined' THEN 'rejected'
+  WHEN 'denied' THEN 'rejected'
+  WHEN 'rejected' THEN 'rejected'
+  WHEN 'cancel' THEN 'cancelled'
+  WHEN 'canceled' THEN 'cancelled'
+  WHEN 'cancelled' THEN 'cancelled'
+  WHEN 'disputed' THEN 'disputed'
+  ELSE 'pending'
+END;
 
 ALTER TABLE public.reservations
   ALTER COLUMN status SET DEFAULT 'pending';
