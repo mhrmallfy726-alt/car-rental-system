@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
+import AdminSidebar from '../../components/AdminSidebar';
 import toast from 'react-hot-toast';
 import { Users as UsersIcon, LayoutDashboard, ShieldAlert, CheckCircle, XCircle, Car, Settings, UserCheck, UserX } from 'lucide-react';
 import { format } from 'date-fns';
@@ -67,26 +68,7 @@ export default function AdminUsers() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* القائمة الجانبية */}
-      <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <LayoutDashboard size={20} /> الإحصائيات
-          </Link>
-          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
-            <UsersIcon size={20} /> المستخدمين
-          </Link>
-          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Car size={20} /> السيارات
-          </Link>
-          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <ShieldAlert size={20} /> الشكاوى
-          </Link>
-          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Settings size={20} /> الإعدادات
-          </Link>
-        </div>
-      </div>
+      <AdminSidebar />
 
       <div style={{ flex: 1, padding: '30px 24px' }}>
         <h1 style={{ fontSize: '1.8rem', marginBottom: '32px' }}>إدارة المستخدمين</h1>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
+import AdminSidebar from '../../components/AdminSidebar';
 import toast from 'react-hot-toast';
 import { Users, Car, Calendar, DollarSign, LayoutDashboard, ShieldAlert, Settings, ArrowRight, WalletCards } from 'lucide-react';
 // import { format } from 'date-fns';
@@ -108,35 +109,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* القائمة الجانبية (مع تحسين للهواتف) */}
-      <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
-            <LayoutDashboard size={20} /> الإحصائيات
-          </Link>
-          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Users size={20} /> المستخدمين
-          </Link>
-          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Car size={20} /> السيارات
-          </Link>
-          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <ShieldAlert size={20} /> الشكاوى
-          </Link>
-          <Link to="/admin/advertisement-center" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <ShieldAlert size={20} /> الإعلانات
-          </Link>
-          <Link to="/admin/finance" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <WalletCards size={20} /> الإدارة المالية
-          </Link>
-          <Link to="/admin/supplier-requests" style={{   display: "flex",   alignItems: "center",gap: "10px",   padding: "12px 16px",   borderRadius: "10px",   textDecoration: "none",  color: "#374151",fontWeight: 500, }}>
-             <Building2 size={20} />  طلبات الموردين
-          </Link>
-          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Settings size={20} /> الإعدادات
-          </Link>
-        </div>
-      </div>
+      <AdminSidebar />
 
       <div style={{ flex: 1, padding: '30px 24px' }}>
         <h1 style={{ fontSize: '1.8rem', marginBottom: '32px' }}>لوحة تحكم الإدارة</h1>
