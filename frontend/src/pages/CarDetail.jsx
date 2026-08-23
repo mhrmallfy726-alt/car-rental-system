@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   Clock3,
   Fuel,
   Gauge,
@@ -13,6 +14,7 @@ import {
   Star,
   Users,
   Settings2,
+  X,
 } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
 import { carsAPI, reservationsAPI } from '../services/api';
@@ -35,6 +37,7 @@ export default function CarDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
 
   const [booking, setBooking] = useState({
@@ -339,23 +342,29 @@ export default function CarDetail() {
             Gallery
         ==================================================== */}
 
-        <section className="overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:p-3.5">
+        <section className="detail-gallery-3d overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:p-3.5">
 
           {/* Main Image */}
 
-          <div className="group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]">
+          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" onClick={() => setIsGalleryOpen(true)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setIsGalleryOpen(true)} aria-label="فتح معرض الصور">
+            <div className="detail-gallery-grid" />
+            <div className="detail-gallery-glow" />
 
             <img
               src={images[activeImage]}
               alt={`${car.make} ${car.model}`}
-              className="block h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+              className="detail-gallery-main-image block h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
             />
+
+            <div className="detail-gallery-top-badge"><CheckCircle2 size={14} /> صور حقيقية للسيارة</div>
+            <div className="detail-gallery-counter">{activeImage + 1} / {images.length}</div>
 
             {/* Favorite */}
 
             <button
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (!isAuthenticated()) {
                   navigate('/login');
                   return;
@@ -378,17 +387,18 @@ export default function CarDetail() {
               <CheckCircle2 size={15} />
               سيارة موثقة
             </div>
+            <span className="detail-gallery-open-hint">اضغط لاستعراض الصور بحجم كامل</span>
           </div>
 
           {/* Thumbnails */}
 
-          <div className="flex gap-2 overflow-x-auto px-1 pb-1 pt-3 [scrollbar-width:thin]">
+          <div className="detail-gallery-thumbs flex gap-2 overflow-x-auto px-1 pb-1 pt-3 [scrollbar-width:thin]">
             {images.map((img, index) => (
               <button
                 key={img + index}
                 type="button"
                 onClick={() => setActiveImage(index)}
-                className={`h-14 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all sm:h-16 sm:w-20 ${
+                className={`detail-gallery-thumb h-14 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all sm:h-16 sm:w-20 ${
                   activeImage === index
                     ? 'border-[#c65345] shadow-md'
                     : 'border-transparent hover:-translate-y-0.5'
@@ -403,6 +413,16 @@ export default function CarDetail() {
             ))}
           </div>
         </section>
+
+        {isGalleryOpen && (
+          <div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="معرض صور السيارة" onClick={() => setIsGalleryOpen(false)}>
+            <button type="button" className="detail-lightbox-close" onClick={() => setIsGalleryOpen(false)} aria-label="إغلاق"><X size={22} /></button>
+            <button type="button" className="detail-lightbox-nav detail-lightbox-prev" onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + images.length) % images.length); }} aria-label="الصورة السابقة"><ChevronRight size={28} /></button>
+            <img src={images[activeImage]} alt={`${car.make} ${car.model}`} className="detail-lightbox-image" onClick={(e) => e.stopPropagation()} />
+            <button type="button" className="detail-lightbox-nav detail-lightbox-next" onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage + 1) % images.length); }} aria-label="الصورة التالية"><ChevronLeft size={28} /></button>
+            <div className="detail-lightbox-caption">{car.make} {car.model} · {activeImage + 1} / {images.length}</div>
+          </div>
+        )}
 
         {/* ===================================================
             Booking Sidebar
@@ -842,10 +862,34 @@ export default function CarDetail() {
       
       <style dangerouslySetInnerHTML={{
         __html: `
-        @media (max-width: 992px) {
-          .detail-layout { flex-direction: column; }
-          .booking-sidebar { width: 100% !important; position: static !important; }
-        }
+        .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
+        .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
+        .detail-gallery-stage { cursor: zoom-in; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+        .detail-gallery-main-image { position: relative; z-index: 0; filter: saturate(1.04) contrast(1.02); }
+        .detail-gallery-stage::after { position: absolute; inset: 0; z-index: 1; content: ''; pointer-events: none; background: linear-gradient(180deg, rgba(8,18,30,.22), transparent 28%, transparent 60%, rgba(8,18,30,.48)); }
+        .detail-gallery-grid { position: absolute; z-index: 2; inset: 0; opacity: .15; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(135deg, transparent, #000 35%, transparent 85%); }
+        .detail-gallery-glow { position: absolute; z-index: 1; width: 220px; height: 220px; right: 16%; bottom: -150px; border-radius: 50%; pointer-events: none; background: rgba(229,151,119,.42); filter: blur(42px); }
+        .detail-gallery-top-badge, .detail-gallery-counter { position: absolute; z-index: 4; top: 17px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 8px 11px; color: #fff; background: rgba(8,18,30,.55); font-size: 10px; font-weight: 900; backdrop-filter: blur(10px); }
+        .detail-gallery-top-badge { right: 17px; color: #b9f0ce; }
+        .detail-gallery-counter { left: 17px; direction: ltr; }
+        .detail-gallery-open-hint { position: absolute; z-index: 4; bottom: 17px; left: 17px; color: rgba(255,255,255,.76); font-size: 10px; text-shadow: 0 2px 8px #000; }
+        .detail-gallery-thumb { position: relative; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+        .detail-gallery-thumb:hover { transform: translateY(-4px) scale(1.03); border-color: #df9a7b; box-shadow: 0 8px 16px rgba(25,43,64,.14); }
+        .detail-lightbox { position: fixed; z-index: 5000; inset: 0; display: flex; align-items: center; justify-content: center; padding: 70px 9vw; background: rgba(7,14,24,.92); backdrop-filter: blur(18px); animation: detailFadeIn .2s ease-out; }
+        .detail-lightbox-image { max-width: min(1100px, 90vw); max-height: 78vh; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; object-fit: contain; box-shadow: 0 30px 100px rgba(0,0,0,.5); animation: detailImageIn .25s cubic-bezier(.23,1,.32,1); }
+        .detail-lightbox-close, .detail-lightbox-nav { position: absolute; z-index: 2; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); color: #fff; background: rgba(255,255,255,.1); cursor: pointer; backdrop-filter: blur(10px); transition: transform .18s ease, background .18s ease; }
+        .detail-lightbox-close { top: 24px; right: 25px; width: 44px; height: 44px; border-radius: 50%; }
+        .detail-lightbox-nav { top: 50%; width: 50px; height: 50px; border-radius: 16px; transform: translateY(-50%); }
+        .detail-lightbox-prev { right: 3vw; }
+        .detail-lightbox-next { left: 3vw; }
+        .detail-lightbox-close:hover, .detail-lightbox-nav:hover { background: rgba(198,83,69,.85); transform: translateY(-50%) scale(1.08); }
+        .detail-lightbox-close:hover { transform: scale(1.08); }
+        .detail-lightbox-caption { position: absolute; right: 0; bottom: 28px; left: 0; text-align: center; color: rgba(255,255,255,.78); font-size: 12px; font-weight: 800; }
+        @keyframes detailFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes detailImageIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+        @media (max-width: 992px) { .detail-layout { flex-direction: column; } .booking-sidebar { width: 100% !important; position: static !important; } }
+        @media (max-width: 640px) { .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
+        @media (prefers-reduced-motion: reduce) { .detail-gallery-3d, .detail-gallery-thumb, .detail-lightbox, .detail-lightbox-image { transition: none; animation: none; } }
         .custom-input {
           width: 100%;
           padding: 10px 12px;
