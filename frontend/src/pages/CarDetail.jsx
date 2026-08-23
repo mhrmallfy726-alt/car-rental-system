@@ -231,7 +231,7 @@ export default function CarDetail() {
     
     <div
       dir="rtl"
-      className="min-h-screen overflow-hidden bg-gradient-to-b from-[#faf9f7] via-white to-[#f7f7f5] pb-20 text-[#1d1d1f]"
+      className="car-detail-page min-h-screen overflow-hidden bg-gradient-to-b from-[#faf9f7] via-white to-[#f7f7f5] pb-20 text-[#1d1d1f]"
     >
       {/* =====================================================
           Breadcrumb
@@ -337,12 +337,12 @@ export default function CarDetail() {
         </section>
       )}
 
-      <main className="mx-auto grid w-[calc(100%-24px)] max-w-[1280px] items-start gap-6 sm:w-[calc(100%-40px)] lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-7">
+      <main className="car-detail-main mx-auto grid w-[calc(100%-24px)] max-w-[1280px] items-start gap-6 sm:w-[calc(100%-40px)] lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-7">
         {/* ===================================================
             Gallery
         ==================================================== */}
 
-        <section className="detail-gallery-3d overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:p-3.5">
+        <section className="car-detail-gallery detail-gallery-3d overflow-hidden rounded-[28px] border border-stone-200 bg-white p-2.5 shadow-[0_18px_50px_rgba(0,0,0,0.06)] sm:p-3.5">
 
           {/* Main Image */}
 
@@ -428,7 +428,7 @@ export default function CarDetail() {
             Booking Sidebar
         ==================================================== */}
 
-        <aside className="relative w-full rounded-[25px] border border-stone-200 bg-white p-5 shadow-[0_20px_55px_rgba(0,0,0,0.08)] sm:p-6 lg:sticky lg:top-[100px]">
+        <aside className="car-detail-booking relative w-full rounded-[25px] border border-stone-200 bg-white p-5 shadow-[0_20px_55px_rgba(0,0,0,0.08)] sm:p-6 lg:sticky lg:top-[100px]">
 
           {/* Supplier */}
 
@@ -698,7 +698,7 @@ export default function CarDetail() {
           Car Details
       ====================================================== */}
 
-      <section className="mx-auto mt-6 w-[calc(100%-24px)] max-w-[1280px] rounded-[26px] border border-stone-200 bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.045)] sm:mt-8 sm:w-[calc(100%-40px)] sm:p-8">
+      <section className="car-detail-specs mx-auto mt-6 w-[calc(100%-24px)] max-w-[1280px] rounded-[26px] border border-stone-200 bg-white p-5 shadow-[0_12px_40px_rgba(0,0,0,0.045)] sm:mt-8 sm:w-[calc(100%-40px)] sm:p-8">
 
         {/* Header */}
 
@@ -862,6 +862,53 @@ export default function CarDetail() {
       
       <style dangerouslySetInnerHTML={{
         __html: `
+        .car-detail-page { min-height: 100vh; padding: 24px 0 70px; background: var(--bg-base); color: var(--text-main); font-family: 'Cairo', 'Inter', sans-serif; }
+        .car-detail-page *, .car-detail-page *::before, .car-detail-page *::after { box-sizing: border-box; }
+        .car-detail-page h1, .car-detail-page h2, .car-detail-page h3, .car-detail-page p { margin: 0; }
+        .car-detail-page button, .car-detail-page input { font-family: inherit; }
+        .car-detail-page > div:first-child { max-width: 1200px; width: calc(100% - 40px); margin: 0 auto 18px; padding: 0; }
+        .car-detail-main { display: grid !important; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr) !important; gap: 24px !important; width: calc(100% - 40px) !important; max-width: 1200px !important; margin: 0 auto !important; align-items: start !important; }
+        .car-detail-gallery, .car-detail-booking, .car-detail-specs { border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important; background: var(--bg-white) !important; box-shadow: var(--shadow-md) !important; }
+        .car-detail-gallery { padding: 14px !important; }
+        .detail-gallery-stage { height: 470px !important; border-radius: 14px !important; }
+        .car-detail-booking { position: sticky; top: 82px; padding: 24px !important; }
+        .car-detail-booking > div:first-child { display: flex; align-items: center; gap: 12px; margin: 0 0 22px; padding: 0 0 18px; border-bottom: 1px solid var(--border); }
+        .car-detail-booking > div:first-child > div:first-child { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 12px; }
+        .car-detail-booking > div:first-child > div:last-child { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+        .car-detail-booking > div:first-child span, .car-detail-booking > div:first-child strong, .car-detail-booking > div:first-child small { display: block; line-height: 1.5; }
+        .car-detail-booking > div:nth-of-type(2) { margin-bottom: 20px; }
+        .car-detail-booking > div:nth-of-type(2) span { display: inline-flex; margin-bottom: 8px; }
+        .car-detail-booking > div:nth-of-type(2) h1 { display: block; font-size: 28px; line-height: 1.25; color: var(--primary); }
+        .car-detail-booking > div:nth-of-type(2) p { display: block; margin-top: 8px; color: var(--text-muted); line-height: 1.7; }
+        .car-detail-booking > div:nth-of-type(3) { display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8f9fa; }
+        .car-detail-booking > div:nth-of-type(3) small, .car-detail-booking > div:nth-of-type(3) strong, .car-detail-booking > div:nth-of-type(3) span { display: inline-block; }
+        .car-detail-booking > div:nth-of-type(3) strong { color: var(--primary); font-size: 28px; line-height: 1; }
+        .car-detail-booking form { display: flex; flex-direction: column; gap: 15px; }
+        .car-detail-booking form label { display: flex; flex-direction: column; gap: 7px; color: var(--text-main); font-size: 13px; font-weight: 700; }
+        .car-detail-booking form label span { display: flex; align-items: center; gap: 6px; }
+        .car-detail-booking form input { width: 100%; height: 46px; padding: 0 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text-main); font-size: 13px; outline: none; transition: var(--transition); }
+        .car-detail-booking form input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(0,108,228,.1); }
+        .car-detail-booking form > div { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .car-detail-booking form > div:has(strong) { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 12px 14px; border: 1px dashed #cfd6df; border-radius: var(--radius-sm); background: #fbfcfd; }
+        .car-detail-booking form > div:has(strong) span, .car-detail-booking form > div:has(strong) strong { display: block; }
+        .car-detail-booking form > button { width: 100%; min-height: 50px; border: 0; border-radius: var(--radius-sm); background: var(--secondary); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; transition: var(--transition); }
+        .car-detail-booking form > button:hover { background: var(--secondary-hover); transform: translateY(-2px); }
+        .car-detail-booking > div:last-child { display: flex; align-items: flex-start; gap: 9px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .car-detail-booking > div:last-child strong, .car-detail-booking > div:last-child small { display: block; line-height: 1.6; }
+        .car-detail-specs { width: calc(100% - 40px) !important; max-width: 1200px !important; margin: 24px auto 0 !important; padding: 28px !important; }
+        .car-detail-specs > div:first-child { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .car-detail-specs > div:first-child span, .car-detail-specs > div:first-child h2 { display: block; }
+        .car-detail-specs > div:first-child h2 { font-size: 22px; color: var(--primary); }
+        .car-detail-specs > div:nth-child(2) { display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); }
+        .car-detail-specs > div:nth-child(2) > div { min-height: 100px; display: flex; align-items: center; gap: 12px; padding: 18px; border-inline-start: 1px solid var(--border); }
+        .car-detail-specs > div:nth-child(2) > div:first-child { border-inline-start: 0; }
+        .car-detail-specs > div:nth-child(2) span { display: flex; flex-direction: column; gap: 4px; color: var(--text-muted); font-size: 12px; }
+        .car-detail-specs > div:nth-child(2) strong { display: block; color: var(--text-main); font-size: 14px; }
+        .car-detail-specs > div:nth-child(3) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+        .car-detail-specs > div:nth-child(3) > div { display: flex; align-items: flex-start; gap: 10px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8f9fa; }
+        .car-detail-specs > div:nth-child(3) span { display: flex; flex-direction: column; gap: 4px; }
+        .car-detail-specs > div:nth-child(3) strong, .car-detail-specs > div:nth-child(3) small { display: block; line-height: 1.6; }
+        .car-detail-page .car-search-summary { width: calc(100% - 40px); max-width: 1200px; margin: 20px auto; }
         .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
         .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
         .detail-gallery-stage { cursor: zoom-in; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
@@ -888,7 +935,8 @@ export default function CarDetail() {
         @keyframes detailFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes detailImageIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 992px) { .detail-layout { flex-direction: column; } .booking-sidebar { width: 100% !important; position: static !important; } }
-        @media (max-width: 640px) { .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
+        @media (max-width: 992px) { .car-detail-main { grid-template-columns: 1fr !important; } .car-detail-booking { position: static; } .detail-gallery-stage { height: 400px !important; } .car-detail-specs > div:nth-child(2) { grid-template-columns: repeat(2, 1fr); } .car-detail-specs > div:nth-child(2) > div { border-bottom: 1px solid var(--border); } .car-detail-specs > div:nth-child(3) { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
         @media (prefers-reduced-motion: reduce) { .detail-gallery-3d, .detail-gallery-thumb, .detail-lightbox, .detail-lightbox-image { transition: none; animation: none; } }
         .custom-input {
           width: 100%;
