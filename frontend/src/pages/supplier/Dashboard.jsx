@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { carsAPI, reservationsAPI } from '../../services/api';
+import SupplierSidebar from '../../components/SupplierSidebar';
 import toast from 'react-hot-toast';
 import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit,Users} from 'lucide-react';
 
@@ -95,35 +96,7 @@ export default function SupplierDashboard() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* القائمة الجانبية (responsive) */}
-      <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/supplier/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
-            <LayoutDashboard size={20} /> لوحة التحكم
-          </Link>
-          <Link to="/supplier/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Car size={20} /> سياراتي
-          </Link>
-          <Link to="/supplier/cars/add" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Plus size={20} /> إضافة سيارة
-          </Link>
-          <Link to="/supplier/reservations" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Calendar size={20} /> الحجوزات
-          </Link>
-          <Link to="/supplier/employees/new" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Users size={20} /> الموضفين
-          </Link>
-          <Link to="/supplier/advertisement-request" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Star size={20} /> طلبات الإعلانات
-          </Link>
-          <Link to="/supplier/employees" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Users size={20} />  قائمه الموضفين 
-          </Link>
-          <Link to="/supplier/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Settings size={20} /> الإعدادات
-          </Link>
-        </div>
-      </div>
+      <SupplierSidebar />
 
       <div style={{ flex: 1, padding: '30px 24px' }}>
         {/* رأس الصفحة */}

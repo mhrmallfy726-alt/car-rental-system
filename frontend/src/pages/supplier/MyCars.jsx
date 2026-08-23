@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../../services/api';
+import SupplierSidebar from '../../components/SupplierSidebar';
 import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Edit, Trash2, Percent, Settings } from 'lucide-react';
 import { getCarImage } from '../../utils/imageUtils';
@@ -77,26 +78,7 @@ export default function MyCars() {
 
   return (
     <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* Sidebar محسّن للهواتف */}
-      <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '0 16px' }}>
-          <Link to="/supplier/dashboard" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none', marginBottom: '4px' }}>
-            <LayoutDashboard size={20} /> لوحة التحكم
-          </Link>
-          <Link to="/supplier/cars" className="sidebar-item active" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
-            <Car size={20} /> سياراتي
-          </Link>
-          <Link to="/supplier/cars/add" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none', marginBottom: '4px' }}>
-            <Plus size={20} /> إضافة سيارة
-          </Link>
-          <Link to="/supplier/reservations" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none', marginBottom: '4px' }}>
-            <Calendar size={20} /> الحجوزات
-          </Link>
-          <Link to="/supplier/settings" className="sidebar-item" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Settings size={20} /> الإعدادات
-          </Link>
-        </div>
-      </div>
+      <SupplierSidebar />
 
       <div className="dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
