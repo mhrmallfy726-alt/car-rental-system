@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft,
   Clock3,
   Fuel,
   Gauge,
@@ -35,7 +36,7 @@ export default function CarDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [isGalleryPaused, setIsGalleryPaused] = useState(false);
+
 
 
   const [booking, setBooking] = useState({
@@ -110,13 +111,8 @@ export default function CarDetail() {
         'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85',
       ];
 
-  useEffect(() => {
-    if (images.length < 2 || isGalleryPaused) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveImage((current) => (current + 1) % images.length);
-    }, 4200);
-    return () => window.clearInterval(timer);
-  }, [images.length, isGalleryPaused]);
+  const showPreviousImage = () => setActiveImage((current) => (current - 1 + images.length) % images.length);
+  const showNextImage = () => setActiveImage((current) => (current + 1) % images.length);
 
   const days = useMemo(() => {
     if (!booking.start_date || !booking.end_date) return 0;
@@ -352,15 +348,19 @@ export default function CarDetail() {
 
           {/* Main Image */}
 
-          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" onMouseEnter={() => setIsGalleryPaused(true)} onMouseLeave={() => setIsGalleryPaused(false)} aria-label="معرض صور السيارة">
+          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" aria-label="معرض صور السيارة">
             <div className="detail-gallery-grid" />
             <div className="detail-gallery-glow" />
 
             <img
               src={images[activeImage]}
               alt={`${car.make} ${car.model}`}
-              className="detail-gallery-main-image block h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+              className="detail-gallery-main-image block h-full w-full object-contain transition-transform duration-700"
             />
+            {images.length > 1 && <>
+              <button type="button" className="detail-gallery-arrow detail-gallery-arrow-next" onClick={(e) => { e.stopPropagation(); showPreviousImage(); }} aria-label="الصورة السابقة"><ChevronRight size={22} /></button>
+              <button type="button" className="detail-gallery-arrow detail-gallery-arrow-prev" onClick={(e) => { e.stopPropagation(); showNextImage(); }} aria-label="الصورة التالية"><ChevronLeft size={22} /></button>
+            </>}
 
             <div className="detail-gallery-top-badge"><CheckCircle2 size={14} /> صور حقيقية للسيارة</div>
             <div className="detail-gallery-counter">{activeImage + 1} / {images.length}</div>
@@ -393,32 +393,13 @@ export default function CarDetail() {
               <CheckCircle2 size={15} />
               سيارة موثقة
             </div>
-            <span className="detail-gallery-open-hint">تتبدل الصور تلقائياً</span>
+            <span className="detail-gallery-open-hint">استخدم الأسهم لاستعراض الصور</span>
           </div>
           <div className="detail-gallery-progress" aria-hidden="true"><span style={{ width: `${((activeImage + 1) / images.length) * 100}%` }} /></div>
 
           {/* Thumbnails */}
 
-          <div className="detail-gallery-thumbs flex gap-2 overflow-x-auto px-1 pb-1 pt-3 [scrollbar-width:thin]">
-            {images.map((img, index) => (
-              <button
-                key={img + index}
-                type="button"
-                onClick={() => setActiveImage(index)}
-                className={`detail-gallery-thumb h-14 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all sm:h-16 sm:w-20 ${
-                  activeImage === index
-                    ? 'border-[#c65345] shadow-md'
-                    : 'border-transparent hover:-translate-y-0.5'
-                }`}
-              >
-                <img
-                  src={img}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+
         </section>
 
 
@@ -868,7 +849,7 @@ export default function CarDetail() {
         .car-detail-main { display: grid !important; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr) !important; gap: 24px !important; width: calc(100% - 40px) !important; max-width: 1200px !important; margin: 0 auto !important; align-items: start !important; }
         .car-detail-gallery, .car-detail-booking, .car-detail-specs { border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important; background: var(--bg-white) !important; box-shadow: var(--shadow-md) !important; }
         .car-detail-gallery { padding: 14px !important; }
-        .detail-gallery-stage { height: 320px !important; border-radius: 14px !important; }
+        .detail-gallery-stage { height: 320px !important; border-radius: 14px !important; background: linear-gradient(145deg, #eef3f8, #f9fbfd) !important; }
         .car-detail-booking { position: sticky; top: 82px; padding: 24px !important; }
         .car-detail-booking > div:first-child { display: flex; align-items: center; gap: 12px; margin: 0 0 22px; padding: 0 0 18px; border-bottom: 1px solid var(--border); }
         .car-detail-booking > div:first-child > div:first-child { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 12px; }
@@ -909,8 +890,13 @@ export default function CarDetail() {
         .car-detail-page .car-search-summary { width: calc(100% - 40px); max-width: 1200px; margin: 20px auto; }
         .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
         .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
-        .detail-gallery-stage { cursor: zoom-in; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-        .detail-gallery-main-image { position: relative; z-index: 0; filter: saturate(1.04) contrast(1.02); animation: detailCarouselIn .55s ease-out; }
+        .detail-gallery-stage { cursor: default; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+        .detail-gallery-main-image { position: relative; z-index: 0; width: 100%; height: 100%; object-fit: contain !important; object-position: center; padding: 22px; filter: saturate(1.04) contrast(1.02); animation: detailCarouselIn .55s ease-out; }
+        .detail-gallery-arrow { position: absolute; z-index: 5; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; color: #fff; background: rgba(0,53,128,.78); box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; transform: translateY(-50%); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+        .detail-gallery-arrow-prev { right: 16px; }
+        .detail-gallery-arrow-next { left: 16px; }
+        .detail-gallery-arrow:hover { background: var(--secondary); box-shadow: 0 10px 24px rgba(0,0,0,.28); transform: translateY(-50%) scale(1.08); }
+        .detail-gallery-arrow:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
         .detail-gallery-stage::after { position: absolute; inset: 0; z-index: 1; content: ''; pointer-events: none; background: linear-gradient(180deg, rgba(8,18,30,.22), transparent 28%, transparent 60%, rgba(8,18,30,.48)); }
         .detail-gallery-grid { position: absolute; z-index: 2; inset: 0; opacity: .15; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(135deg, transparent, #000 35%, transparent 85%); }
         .detail-gallery-glow { position: absolute; z-index: 1; width: 220px; height: 220px; right: 16%; bottom: -150px; border-radius: 50%; pointer-events: none; background: rgba(229,151,119,.42); filter: blur(42px); }
@@ -937,7 +923,7 @@ export default function CarDetail() {
         @keyframes detailImageIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 992px) { .detail-layout { flex-direction: column; } .booking-sidebar { width: 100% !important; position: static !important; } }
         @media (max-width: 992px) { .car-detail-main { grid-template-columns: 1fr !important; } .car-detail-booking { position: static; } .detail-gallery-stage { height: 300px !important; } .car-detail-specs > div:nth-child(2) { grid-template-columns: repeat(2, 1fr); } .car-detail-specs > div:nth-child(2) > div { border-bottom: 1px solid var(--border); } .car-detail-specs > div:nth-child(3) { grid-template-columns: 1fr; } }
-        @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
+        @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .detail-gallery-arrow { width: 38px; height: 38px; } .detail-gallery-main-image { padding: 12px; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
         @media (prefers-reduced-motion: reduce) { .detail-gallery-3d, .detail-gallery-thumb, .detail-lightbox, .detail-lightbox-image { transition: none; animation: none; } }
         .custom-input {
           width: 100%;
