@@ -14,9 +14,9 @@ const permissionMeta = {
   view_reservations: { label: 'عرض الحجوزات', description: 'مشاهدة حجوزات سيارات المورد وبيانات العملاء الأساسية.', icon: CalendarDays },
   manage_reservations: { label: 'إدارة الحجوزات', description: 'متابعة إجراءات الحجوزات المسموح بها من قبل المورد.', icon: CheckCircle2 },
   view_customers: { label: 'عرض العملاء', description: 'الوصول إلى معلومات العملاء المرتبطة بعمليات المورد.', icon: Users },
-  view_payments: { label: 'عرض المدفوعات', description: 'مشاهدة ملخص المدفوعات والتسويات المسموح بها.', icon: WalletCards },
-  manage_maintenance: { label: 'إدارة الصيانة', description: 'متابعة حالة الصيانة والملاحظات التشغيلية.', icon: Activity },
-  view_reports: { label: 'عرض التقارير', description: 'الوصول إلى التقارير التشغيلية المتاحة للموظف.', icon: Activity },
+  manage_advertisements: { label: 'إدارة الإعلانات', description: 'إدارة طلبات وإعلانات المورد.', icon: Activity },
+  view_finance: { label: 'عرض المالية', description: 'مشاهدة التقارير المالية المسموح بها للمورد.', icon: WalletCards },
+  manage_team: { label: 'إدارة فريق العمل', description: 'إدارة موظفي المورد وصلاحياتهم.', icon: Users },
 };
 
 const statusLabels = {

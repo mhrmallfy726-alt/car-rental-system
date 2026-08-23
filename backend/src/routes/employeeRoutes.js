@@ -175,11 +175,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// صلاحيات البداية حسب الدور، ويمكن للمورد تعديلها لاحقاً من صفحة تفاصيل الموظف.
+const defaultPermissionNamesByRole = {
+  employee: ['view_cars', 'view_reservations'],
+  manager: ['view_cars', 'manage_cars', 'view_reservations', 'manage_reservations', 'view_customers', 'manage_advertisements', 'view_finance', 'manage_team'],
+};
+
 // POST /api/employees
-// body: { full_name, phone_number, email, password, role, supplier_id }
+// body: { full_name, phone_number, email, password, role, permission_ids, supplier_id }
 router.post('/', async (req, res) => {
   try {
-    const { full_name, phone_number, email, password, role } = req.body;
+    const { full_name, phone_number, email, password, role, permission_ids } = req.body;
     const supplier_id = req.user.role === 'supplier'
       ? getAuthenticatedSupplierId(req.user)
       : (req.body.supplier_id ? String(req.body.supplier_id) : null);
@@ -197,13 +203,28 @@ router.post('/', async (req, res) => {
     }
 
     const hashed = await hashPassword(password);
+    const normalizedRole = role === 'manager' ? 'manager' : 'employee';
     const insert = await query(
-      `INSERT INTO employees (full_name, phone_number, email, password, role, supplier_id) 
+      `INSERT INTO employees (full_name, phone_number, email, password, role, supplier_id)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, full_name, email, role, supplier_id, status, created_at`,
-      [full_name, phone_number || null, email, hashed, role || 'staff', supplier_id]
+      [full_name, phone_number || null, email, hashed, normalizedRole, supplier_id]
     );
 
-    res.status(201).json({ success: true, data: insert.rows[0] });
+    const requestedPermissionIds = Array.isArray(permission_ids) ? permission_ids.filter((id) => Number.isInteger(Number(id))).map(Number) : [];
+    let selectedPermissionIds = requestedPermissionIds;
+    if (selectedPermissionIds.length === 0) {
+      const defaultNames = defaultPermissionNamesByRole[normalizedRole] || defaultPermissionNamesByRole.employee;
+      const defaultPermissions = await query('SELECT id FROM permissions WHERE name = ANY($1::text[])', [defaultNames]);
+      selectedPermissionIds = defaultPermissions.rows.map((permission) => permission.id);
+    }
+    for (const permissionId of selectedPermissionIds) {
+      await query(
+        'INSERT INTO employees_permissions (employee_id, permission_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [insert.rows[0].id, permissionId]
+      );
+    }
+
+    res.status(201).json({ success: true, data: insert.rows[0], permission_ids: selectedPermissionIds });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
