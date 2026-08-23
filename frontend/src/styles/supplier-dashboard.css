@@ -79,3 +79,6 @@
     flex-basis: 100%;
   }
 }
+
+.supplier-dashboard-page .supplier-sidebar{display:block}
+@media(max-width:900px){.supplier-dashboard-page .supplier-sidebar{display:none!important}}
