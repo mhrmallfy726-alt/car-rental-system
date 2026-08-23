@@ -348,7 +348,16 @@ export default function CarDetail() {
 
           {/* Main Image */}
 
-          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" aria-label="معرض صور السيارة">
+          <div
+            className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]"
+            aria-label="معرض صور السيارة"
+            style={{
+              backgroundImage: `linear-gradient(135deg, rgba(255,255,255,.18), rgba(12,25,40,.3)), url(${images[activeImage]})`,
+              backgroundPosition: 'center',
+              backgroundSize: 'cover',
+            }}
+          >
+            <div className="detail-gallery-image-backdrop" aria-hidden="true" style={{ backgroundImage: `url(${images[activeImage]})` }} />
             <div className="detail-gallery-grid" />
             <div className="detail-gallery-glow" />
 
@@ -891,7 +900,8 @@ export default function CarDetail() {
         .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
         .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
         .detail-gallery-stage { cursor: default; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-        .detail-gallery-main-image { position: relative; z-index: 0; width: 100%; height: 100%; object-fit: contain !important; object-position: center; padding: 22px; filter: saturate(1.04) contrast(1.02); animation: detailCarouselIn .55s ease-out; }
+        .detail-gallery-image-backdrop { position: absolute; z-index: 0; inset: -22px; background-position: center; background-size: cover; background-repeat: no-repeat; filter: blur(18px) saturate(1.12); opacity: .34; transform: scale(1.08); transition: background-image .25s ease, opacity .25s ease; }
+        .detail-gallery-main-image { position: relative; z-index: 2; width: 100%; height: 100%; object-fit: contain !important; object-position: center; padding: 22px; filter: saturate(1.04) contrast(1.02) drop-shadow(0 18px 24px rgba(12,25,40,.2)); animation: detailCarouselIn .55s ease-out; }
         .detail-gallery-arrow { position: absolute; z-index: 5; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; color: #fff; background: rgba(0,53,128,.78); box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; transform: translateY(-50%); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
         .detail-gallery-arrow-prev { right: 16px; }
         .detail-gallery-arrow-next { left: 16px; }
@@ -923,7 +933,7 @@ export default function CarDetail() {
         @keyframes detailImageIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 992px) { .detail-layout { flex-direction: column; } .booking-sidebar { width: 100% !important; position: static !important; } }
         @media (max-width: 992px) { .car-detail-main { grid-template-columns: 1fr !important; } .car-detail-booking { position: static; } .detail-gallery-stage { height: 300px !important; } .car-detail-specs > div:nth-child(2) { grid-template-columns: repeat(2, 1fr); } .car-detail-specs > div:nth-child(2) > div { border-bottom: 1px solid var(--border); } .car-detail-specs > div:nth-child(3) { grid-template-columns: 1fr; } }
-        @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .detail-gallery-arrow { width: 38px; height: 38px; } .detail-gallery-main-image { padding: 12px; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
+        @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .detail-gallery-arrow { width: 38px; height: 38px; } .detail-gallery-main-image { padding: 12px; } .detail-gallery-image-backdrop { filter: blur(14px) saturate(1.08); opacity: .3; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
         @media (prefers-reduced-motion: reduce) { .detail-gallery-3d, .detail-gallery-thumb, .detail-lightbox, .detail-lightbox-image { transition: none; animation: none; } }
         .custom-input {
           width: 100%;
