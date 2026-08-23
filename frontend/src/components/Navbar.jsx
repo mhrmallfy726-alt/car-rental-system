@@ -8,12 +8,48 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import logo from '../assets/LOGO.png';
 
-const navItems = [
+const publicNavItems = [
   { to: '/', label: 'الرئيسية' },
-  { to: '/home', label: 'المنصة' },
   { to: '/cars', label: 'استئجار سيارة' },
   { to: '/about', label: 'عن المنصة' },
+  { to: '/supplier/join', label: 'انضم كمورد' },
 ];
+
+const roleNavItems = {
+  customer: [
+    { to: '/', label: 'الرئيسية' },
+    { to: '/cars', label: 'استئجار سيارة' },
+    { to: '/my-reservations', label: 'حجوزاتي' },
+    { to: '/about', label: 'عن المنصة' },
+  ],
+  supplier: [
+    { to: '/supplier/dashboard', label: 'لوحة المورد' },
+    { to: '/supplier/cars', label: 'سياراتي' },
+    { to: '/supplier/reservations', label: 'الحجوزات' },
+    { to: '/supplier/employees', label: 'الموظفون' },
+    { to: '/supplier/advertisement-request', label: 'الإعلانات' },
+    { to: '/supplier/settings', label: 'الإعدادات' },
+  ],
+  employee: [
+    { to: '/employee/dashboard', label: 'لوحة الموظف' },
+    { to: '/profile', label: 'ملفي الوظيفي' },
+  ],
+  admin: [
+    { to: '/admin/dashboard', label: 'لوحة الإدارة' },
+    { to: '/admin/users', label: 'المستخدمون' },
+    { to: '/admin/cars', label: 'السيارات' },
+    { to: '/admin/advertisement-center', label: 'الإعلانات' },
+    { to: '/admin/finance', label: 'المالية' },
+    { to: '/admin/complaints', label: 'الشكاوى' },
+    { to: '/admin/settings', label: 'الإعدادات' },
+  ],
+};
+
+const getNavigationItems = (user) => {
+  if (!user) return publicNavItems;
+  const role = user.account_type === 'employee' ? 'employee' : user.role;
+  return roleNavItems[role] || publicNavItems;
+};
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -108,6 +144,7 @@ export default function Navbar() {
   const isActive = (path) => path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`);
   const isHome = location.pathname === '/';
   const shellSolid = isScrolled || !isHome || isMobileMenuOpen;
+  const navigationItems = getNavigationItems(user);
 
   return (
     <>
@@ -121,7 +158,7 @@ export default function Navbar() {
           </Link>
 
           <div className="rc-desktop-links">
-            {navItems.map((item) => <Link key={item.to} to={item.to} className={`rc-nav-link ${isActive(item.to) ? 'rc-nav-link-active' : ''}`}>{item.label}<span /></Link>)}
+            {navigationItems.map((item) => <Link key={item.to} to={item.to} className={`rc-nav-link ${isActive(item.to) ? 'rc-nav-link-active' : ''}`}>{item.label}<span /></Link>)}
           </div>
 
           <div className="rc-actions">
@@ -147,7 +184,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {isMobileMenuOpen && <MobileMenu authenticated={isAuthenticated()} getDashboardLink={getDashboardLink} getDashboardText={getDashboardText} handleLogout={handleLogout} setOpen={setIsMobileMenuOpen} isActive={isActive} />}
+      {isMobileMenuOpen && <MobileMenu authenticated={isAuthenticated()} navigationItems={navigationItems} getDashboardLink={getDashboardLink} getDashboardText={getDashboardText} handleLogout={handleLogout} setOpen={setIsMobileMenuOpen} isActive={isActive} />}
 
       <style>{`
         .rc-navbar { position: fixed; inset: 0 0 auto; height: 78px; z-index: 1000; color: #f7fbff; background: linear-gradient(180deg, rgba(7,18,33,.84), rgba(7,18,33,.35)); border-bottom: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(16px); transition: background .28s ease, box-shadow .28s ease, border-color .28s ease; }
@@ -226,6 +263,6 @@ function NotificationPanel({ notifications, unreadCount, onOpenNotification, onM
   </div>;
 }
 
-function MobileMenu({ authenticated, getDashboardLink, getDashboardText, handleLogout, setOpen, isActive }) {
-  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CIRCLE</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="#4df5c7" /></div><div className="rc-mobile-menu-nav">{navItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,#4df5c7,#c8ffed)' }}>إنشاء حساب جديد</Link></>}</div></div>;
+function MobileMenu({ authenticated, navigationItems, getDashboardLink, getDashboardText, handleLogout, setOpen, isActive }) {
+  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CIRCLE</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="#4df5c7" /></div><div className="rc-mobile-menu-nav">{navigationItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,#4df5c7,#c8ffed)' }}>إنشاء حساب جديد</Link></>}</div></div>;
 }
