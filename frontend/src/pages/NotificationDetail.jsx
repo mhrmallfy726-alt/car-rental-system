@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Bell, CalendarDays, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { notificationsAPI } from '../services/api';
+import useAuthStore from '../store/authStore';
 
 const formatDate = (value) => {
   if (!value) return '';
@@ -14,17 +15,20 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-const getReferencePath = (notification) => {
+const getReferencePath = (notification, user) => {
   if (!notification?.reference_id) return null;
 
   switch (notification.reference_type || notification.type) {
     case 'reservation':
-      return `/reservations/${notification.reference_id}`;
+      if (user?.role === 'supplier') return `/supplier/reservations/${notification.reference_id}`;
+      if (user?.role === 'employee') return '/employee/dashboard';
+      if (user?.role === 'admin') return '/admin/dashboard';
+      return '/my-reservations';
     case 'car':
       return `/cars/${notification.reference_id}`;
     case 'advertisement':
     case 'advertisement_request':
-      return `/admin/advertisement-center`;
+      return user?.role === 'supplier' ? '/supplier/advertisement-request' : '/admin/advertisement-center';
     case 'complaint':
       return `/complaints/${notification.reference_id}`;
     case 'user':
@@ -37,6 +41,7 @@ const getReferencePath = (notification) => {
 export default function NotificationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [notification, setNotification] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +87,7 @@ export default function NotificationDetail() {
 
   if (!notification) return null;
 
-  const referencePath = getReferencePath(notification);
+  const referencePath = getReferencePath(notification, user);
 
   return (
     <main className="notification-detail-page" dir="rtl">
