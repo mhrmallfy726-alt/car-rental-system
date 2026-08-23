@@ -4,7 +4,6 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
-  ChevronLeft,
   Clock3,
   Fuel,
   Gauge,
@@ -14,7 +13,6 @@ import {
   Star,
   Users,
   Settings2,
-  X,
 } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
 import { carsAPI, reservationsAPI } from '../services/api';
@@ -37,7 +35,7 @@ export default function CarDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [isGalleryPaused, setIsGalleryPaused] = useState(false);
 
 
   const [booking, setBooking] = useState({
@@ -111,6 +109,14 @@ export default function CarDetail() {
     : [
         'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85',
       ];
+
+  useEffect(() => {
+    if (images.length < 2 || isGalleryPaused) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveImage((current) => (current + 1) % images.length);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [images.length, isGalleryPaused]);
 
   const days = useMemo(() => {
     if (!booking.start_date || !booking.end_date) return 0;
@@ -346,7 +352,7 @@ export default function CarDetail() {
 
           {/* Main Image */}
 
-          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" onClick={() => setIsGalleryOpen(true)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setIsGalleryOpen(true)} aria-label="فتح معرض الصور">
+          <div className="detail-gallery-stage group relative h-[280px] overflow-hidden rounded-[20px] bg-stone-100 sm:h-[430px] lg:h-[580px]" onMouseEnter={() => setIsGalleryPaused(true)} onMouseLeave={() => setIsGalleryPaused(false)} aria-label="معرض صور السيارة">
             <div className="detail-gallery-grid" />
             <div className="detail-gallery-glow" />
 
@@ -387,8 +393,9 @@ export default function CarDetail() {
               <CheckCircle2 size={15} />
               سيارة موثقة
             </div>
-            <span className="detail-gallery-open-hint">اضغط لاستعراض الصور بحجم كامل</span>
+            <span className="detail-gallery-open-hint">تتبدل الصور تلقائياً</span>
           </div>
+          <div className="detail-gallery-progress" aria-hidden="true"><span style={{ width: `${((activeImage + 1) / images.length) * 100}%` }} /></div>
 
           {/* Thumbnails */}
 
@@ -414,15 +421,6 @@ export default function CarDetail() {
           </div>
         </section>
 
-        {isGalleryOpen && (
-          <div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="معرض صور السيارة" onClick={() => setIsGalleryOpen(false)}>
-            <button type="button" className="detail-lightbox-close" onClick={() => setIsGalleryOpen(false)} aria-label="إغلاق"><X size={22} /></button>
-            <button type="button" className="detail-lightbox-nav detail-lightbox-prev" onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage - 1 + images.length) % images.length); }} aria-label="الصورة السابقة"><ChevronRight size={28} /></button>
-            <img src={images[activeImage]} alt={`${car.make} ${car.model}`} className="detail-lightbox-image" onClick={(e) => e.stopPropagation()} />
-            <button type="button" className="detail-lightbox-nav detail-lightbox-next" onClick={(e) => { e.stopPropagation(); setActiveImage((activeImage + 1) % images.length); }} aria-label="الصورة التالية"><ChevronLeft size={28} /></button>
-            <div className="detail-lightbox-caption">{car.make} {car.model} · {activeImage + 1} / {images.length}</div>
-          </div>
-        )}
 
         {/* ===================================================
             Booking Sidebar
@@ -870,7 +868,7 @@ export default function CarDetail() {
         .car-detail-main { display: grid !important; grid-template-columns: minmax(0, 1.35fr) minmax(340px, .65fr) !important; gap: 24px !important; width: calc(100% - 40px) !important; max-width: 1200px !important; margin: 0 auto !important; align-items: start !important; }
         .car-detail-gallery, .car-detail-booking, .car-detail-specs { border: 1px solid var(--border) !important; border-radius: var(--radius-lg) !important; background: var(--bg-white) !important; box-shadow: var(--shadow-md) !important; }
         .car-detail-gallery { padding: 14px !important; }
-        .detail-gallery-stage { height: 470px !important; border-radius: 14px !important; }
+        .detail-gallery-stage { height: 320px !important; border-radius: 14px !important; }
         .car-detail-booking { position: sticky; top: 82px; padding: 24px !important; }
         .car-detail-booking > div:first-child { display: flex; align-items: center; gap: 12px; margin: 0 0 22px; padding: 0 0 18px; border-bottom: 1px solid var(--border); }
         .car-detail-booking > div:first-child > div:first-child { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 12px; }
@@ -912,7 +910,7 @@ export default function CarDetail() {
         .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
         .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
         .detail-gallery-stage { cursor: zoom-in; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-        .detail-gallery-main-image { position: relative; z-index: 0; filter: saturate(1.04) contrast(1.02); }
+        .detail-gallery-main-image { position: relative; z-index: 0; filter: saturate(1.04) contrast(1.02); animation: detailCarouselIn .55s ease-out; }
         .detail-gallery-stage::after { position: absolute; inset: 0; z-index: 1; content: ''; pointer-events: none; background: linear-gradient(180deg, rgba(8,18,30,.22), transparent 28%, transparent 60%, rgba(8,18,30,.48)); }
         .detail-gallery-grid { position: absolute; z-index: 2; inset: 0; opacity: .15; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(135deg, transparent, #000 35%, transparent 85%); }
         .detail-gallery-glow { position: absolute; z-index: 1; width: 220px; height: 220px; right: 16%; bottom: -150px; border-radius: 50%; pointer-events: none; background: rgba(229,151,119,.42); filter: blur(42px); }
@@ -920,6 +918,9 @@ export default function CarDetail() {
         .detail-gallery-top-badge { right: 17px; color: #b9f0ce; }
         .detail-gallery-counter { left: 17px; direction: ltr; }
         .detail-gallery-open-hint { position: absolute; z-index: 4; bottom: 17px; left: 17px; color: rgba(255,255,255,.76); font-size: 10px; text-shadow: 0 2px 8px #000; }
+        .detail-gallery-progress { height: 3px; margin: 9px 8px 0; overflow: hidden; border-radius: 99px; background: #e9eef2; }
+        .detail-gallery-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #006ce4, #008009); transition: width .35s ease; }
+        @keyframes detailCarouselIn { from { opacity: .45; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
         .detail-gallery-thumb { position: relative; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
         .detail-gallery-thumb:hover { transform: translateY(-4px) scale(1.03); border-color: #df9a7b; box-shadow: 0 8px 16px rgba(25,43,64,.14); }
         .detail-lightbox { position: fixed; z-index: 5000; inset: 0; display: flex; align-items: center; justify-content: center; padding: 70px 9vw; background: rgba(7,14,24,.92); backdrop-filter: blur(18px); animation: detailFadeIn .2s ease-out; }
@@ -935,7 +936,7 @@ export default function CarDetail() {
         @keyframes detailFadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes detailImageIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
         @media (max-width: 992px) { .detail-layout { flex-direction: column; } .booking-sidebar { width: 100% !important; position: static !important; } }
-        @media (max-width: 992px) { .car-detail-main { grid-template-columns: 1fr !important; } .car-detail-booking { position: static; } .detail-gallery-stage { height: 400px !important; } .car-detail-specs > div:nth-child(2) { grid-template-columns: repeat(2, 1fr); } .car-detail-specs > div:nth-child(2) > div { border-bottom: 1px solid var(--border); } .car-detail-specs > div:nth-child(3) { grid-template-columns: 1fr; } }
+        @media (max-width: 992px) { .car-detail-main { grid-template-columns: 1fr !important; } .car-detail-booking { position: static; } .detail-gallery-stage { height: 300px !important; } .car-detail-specs > div:nth-child(2) { grid-template-columns: repeat(2, 1fr); } .car-detail-specs > div:nth-child(2) > div { border-bottom: 1px solid var(--border); } .car-detail-specs > div:nth-child(3) { grid-template-columns: 1fr; } }
         @media (max-width: 640px) { .car-detail-page { padding-top: 10px; } .car-detail-main, .car-detail-specs, .car-detail-page .car-search-summary { width: calc(100% - 24px) !important; } .car-detail-main { gap: 14px !important; } .car-detail-gallery, .car-detail-booking, .car-detail-specs { padding: 16px !important; border-radius: var(--radius-md) !important; } .detail-gallery-open-hint { display: none; } .detail-lightbox { padding: 70px 16px; } .detail-lightbox-image { max-width: 94vw; max-height: 70vh; border-radius: 14px; } .detail-lightbox-nav { width: 42px; height: 42px; } .detail-lightbox-prev { right: 10px; } .detail-lightbox-next { left: 10px; } .detail-lightbox-close { top: 16px; right: 16px; } }
         @media (prefers-reduced-motion: reduce) { .detail-gallery-3d, .detail-gallery-thumb, .detail-lightbox, .detail-lightbox-image { transition: none; animation: none; } }
         .custom-input {
