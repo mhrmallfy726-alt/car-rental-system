@@ -5,6 +5,7 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 const financeService = require('../services/financeService');
 const { listCurrencies, assertCurrency, convertFromYER } = require('../services/currencyService');
+const { sendTextMessage } = require('../services/whatsappService');
 
 // GET /api/payments/currencies
 router.get('/currencies', protect, asyncHandler(async (req, res) => {
@@ -49,7 +50,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND customer_id = $2', [reservation_id, req.user.id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
-  if (r.status !== 'approved') return next(new AppError('يجب الموافقة على الحجز أولاً', 400));
+  if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن الدفع لهذا الحجز في حالته الحالية', 400));
 
   if (saved_card_id) {
     const card = await query('SELECT id FROM saved_cards WHERE id = $1 AND user_id = $2', [saved_card_id, req.user.id]);
@@ -112,10 +113,38 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     );
   }
 
-  await query(`UPDATE reservations SET status = 'active' WHERE id = $1`, [reservation_id]);
-  await query(`UPDATE cars SET status = 'reserved' WHERE id = $1`, [r.car_id]);
+  // Payment-first flow: pending reservations remain pending until the supplier approves them.
+  if (r.status === 'approved') {
+    await query(`UPDATE reservations SET status = 'active' WHERE id = $1`, [reservation_id]);
+    await query(`UPDATE cars SET status = 'reserved' WHERE id = $1`, [r.car_id]);
+  }
 
-  res.status(201).json({ success: true, data: payment.rows[0] });
+  const supplierInfo = await query(
+    `SELECT r.supplier_id, c.make, c.model, u.phone AS supplier_phone
+     FROM reservations r
+     JOIN cars c ON c.id = r.car_id
+     JOIN users u ON u.id = r.supplier_id
+     WHERE r.id = $1`,
+    [reservation_id]
+  );
+  const supplier = supplierInfo.rows[0];
+  if (r.status === 'pending' && supplier) {
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+       VALUES ($1, $2, $3, 'reservation', $4, 'reservation')`,
+      [supplier.supplier_id, 'طلب حجز مدفوع', `تم دفع حجز سيارة ${supplier.make} ${supplier.model}. يرجى مراجعته.`, reservation_id]
+    );
+    const io = req.app.get('io');
+    if (io) io.to(`user_${supplier.supplier_id}`).emit('new_notification', { type: 'reservation', message: 'لديك طلب حجز مدفوع جديد' });
+    if (supplier.supplier_phone) {
+      void sendTextMessage({
+        to: supplier.supplier_phone,
+        body: `لديك طلب حجز مدفوع للسيارة ${supplier.make} ${supplier.model}. يرجى مراجعة الطلب من لوحة المورد.\\nرقم الحجز: ${reservation_id}`,
+      });
+    }
+  }
+
+  res.status(201).json({ success: true, data: payment.rows[0], reservation_status: r.status });
 }));
 
 router.get('/history', protect, asyncHandler(async (req, res) => {

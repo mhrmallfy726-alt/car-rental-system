@@ -135,8 +135,8 @@ export default function MyReservations() {
 
   const getStatusBadge = (status) => {
     const map = {
-      pending: { label: 'قيد المراجعة', bg: '#ffc107', color: '#1a1a1a' },
-      approved: { label: 'بانتظار الدفع', bg: '#17a2b8', color: 'white' },
+      pending: { label: 'بانتظار الدفع ومراجعة المورد', bg: '#ffc107', color: '#212529' },
+      approved: { label: 'بانتظار الدفع', bg: '#ffc107', color: '#212529' },
       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
       active: { label: 'نشط', bg: '#28a745', color: 'white' },
@@ -149,7 +149,7 @@ export default function MyReservations() {
     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
   };
 
-  const canPay = (status) => ['approved', 'awaiting_pickup'].includes(status);
+  const canPay = (status) => ['pending', 'approved'].includes(status);
   const canCancel = (status) => ['pending', 'approved', 'awaiting_pickup'].includes(status);
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending

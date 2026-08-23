@@ -170,13 +170,17 @@ export default function CarDetail() {
     }
 
     try {
-      await reservationsAPI.create({
+      const reservationResponse = await reservationsAPI.create({
         car_id: id,
         ...booking,
       });
+      const createdReservation = reservationResponse.data?.data;
+      if (!createdReservation?.id) {
+        throw new Error('لم يتم إنشاء رقم الحجز');
+      }
 
-      toast.success('تم إرسال طلب الحجز');
-      navigate('/my-reservations');
+      toast.success('تم إنشاء الحجز، انتقل الآن إلى الدفع');
+      navigate(`/checkout/${createdReservation.id}`);
     } catch (err) {
       toast.error(
         err.response?.data?.message || 'تعذر إنشاء الحجز'

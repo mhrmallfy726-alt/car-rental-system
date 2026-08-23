@@ -68,7 +68,7 @@ export default function Checkout() {
         paymentsAPI.getSavedCards()
       ]);
 
-      if (resRes.data.data.status !== 'approved') {
+      if (!['pending', 'approved'].includes(resRes.data.data.status)) {
         toast.error('لا يمكن الدفع لهذا الحجز');
         navigate('/my-reservations');
         return;
@@ -132,7 +132,7 @@ export default function Checkout() {
         currency,
       });
 
-      toast.success('تم الدفع بنجاح! الحجز الآن نشط.');
+      toast.success('تم الدفع بنجاح! أُرسل طلبك للمورد للمراجعة.');
       navigate('/my-reservations');
     } catch (error) {
       toast.error(error.response?.data?.message || 'فشل الدفع');

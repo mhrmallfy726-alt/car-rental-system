@@ -93,18 +93,7 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *
   `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, 'not_started']);
 
-  // Create notification for supplier
-  await query(`
-    INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
-    VALUES ($1, $2, $3, $4, $5, $6)
-  `, [car.supplier_id, 'طلب حجز جديد', `لديك طلب حجز جديد لسيارة ${car.make} ${car.model}`, 'reservation', result.rows[0].id, 'reservation']);
-
-  // Emit socket notification
-  const io = req.app.get('io');
-  if (io) io.to(`user_${car.supplier_id}`).emit('new_notification', { type: 'reservation', message: 'طلب حجز جديد' });
-
-  void notifyReservationWhatsApp(result.rows[0].id, 'pending');
-
+  // The supplier is notified after successful payment in paymentRoutes.js.
   res.status(201).json({ success: true, data: result.rows[0] });
 }));
 
