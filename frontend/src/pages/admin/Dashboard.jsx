@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import AdminSidebar from '../../components/AdminSidebar';
+import '../../styles/admin-dashboard.css';
 import toast from 'react-hot-toast';
 import { Users, Car, Calendar, DollarSign, LayoutDashboard, ShieldAlert, Settings, ArrowRight, WalletCards } from 'lucide-react';
 // import { format } from 'date-fns';
@@ -108,10 +109,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="admin-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
       <AdminSidebar />
 
-      <div style={{ flex: 1, padding: '30px 24px' }}>
+      <div className="admin-dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
         <h1 style={{ fontSize: '1.8rem', marginBottom: '32px' }}>لوحة تحكم الإدارة</h1>
 
         {/* بطاقات الإحصائيات */}

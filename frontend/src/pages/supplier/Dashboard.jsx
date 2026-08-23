@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit,Users} from 'lucide-react';
 
 import { format } from 'date-fns';
+import '../../styles/supplier-dashboard.css';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -95,10 +96,10 @@ export default function SupplierDashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="supplier-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
       <SupplierSidebar />
 
-      <div style={{ flex: 1, padding: '30px 24px' }}>
+      <div className="supplier-dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
         {/* رأس الصفحة */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, CreditCard, XCircle, CheckCircle, Star, X, MessageSquare, AlertTriangle } from 'lucide-react';
+import '../../styles/customer-reservations.css';
 
 export default function MyReservations() {
   const [reservations, setReservations] = useState([]);
@@ -166,8 +167,8 @@ export default function MyReservations() {
   }
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="customer-reservations-page" dir="rtl" style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
+      <div className="customer-reservations-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>حجوزاتي</h1>
           <p style={{ color: '#6c757d' }}>إدارة ومتابعة طلبات الحجز الخاصة بك</p>
