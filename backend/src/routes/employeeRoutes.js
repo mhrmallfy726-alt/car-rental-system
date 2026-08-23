@@ -203,7 +203,8 @@ router.post('/', async (req, res) => {
     }
 
     const hashed = await hashPassword(password);
-    const normalizedRole = role === 'manager' ? 'manager' : 'employee';
+    const normalizedRole = role === 'manager' ? 'manager' : role === 'employee' ? 'employee' : null;
+    if (!normalizedRole) return res.status(400).json({ success: false, message: 'الدور يجب أن يكون موظفاً أو مدير فريق' });
     const insert = await query(
       `INSERT INTO employees (full_name, phone_number, email, password, role, supplier_id)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, full_name, email, role, supplier_id, status, created_at`,
@@ -216,6 +217,12 @@ router.post('/', async (req, res) => {
       const defaultNames = defaultPermissionNamesByRole[normalizedRole] || defaultPermissionNamesByRole.employee;
       const defaultPermissions = await query('SELECT id FROM permissions WHERE name = ANY($1::text[])', [defaultNames]);
       selectedPermissionIds = defaultPermissions.rows.map((permission) => permission.id);
+    } else {
+      const validPermissions = await query('SELECT id FROM permissions WHERE id = ANY($1::int[])', [selectedPermissionIds]);
+      const validIds = new Set(validPermissions.rows.map((permission) => permission.id));
+      if (selectedPermissionIds.some((permissionId) => !validIds.has(permissionId))) {
+        return res.status(400).json({ success: false, message: 'توجد صلاحية غير صالحة في الطلب' });
+      }
     }
     for (const permissionId of selectedPermissionIds) {
       await query(
@@ -238,6 +245,12 @@ router.put('/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const { full_name, phone_number, role, status } = req.body;
+    if (role !== undefined && !['employee', 'manager'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'الدور يجب أن يكون موظفاً أو مدير فريق' });
+    }
+    if (status !== undefined && !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'حالة الموظف غير صالحة' });
+    }
 
     const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
@@ -319,7 +332,10 @@ router.put('/:id/permissions', async (req, res) => {
   try {
     const id = req.params.id;
     const { permission_ids } = req.body;
-    if (!Array.isArray(permission_ids)) return res.status(400).json({ success: false, message: 'permission_ids يجب أن تكون مصفوفة' });
+    if (!Array.isArray(permission_ids) || permission_ids.some((permissionId) => !Number.isInteger(Number(permissionId)))) {
+      return res.status(400).json({ success: false, message: 'permission_ids يجب أن تكون مصفوفة من أرقام صحيحة' });
+    }
+    const normalizedPermissionIds = permission_ids.map(Number);
 
     const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
@@ -327,10 +343,16 @@ router.put('/:id/permissions', async (req, res) => {
     const supplier_id = found.rows[0].supplier_id;
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
+    const validPermissions = await query('SELECT id FROM permissions WHERE id = ANY($1::int[])', [normalizedPermissionIds]);
+    const validIds = new Set(validPermissions.rows.map((permission) => permission.id));
+    if (normalizedPermissionIds.some((permissionId) => !validIds.has(permissionId))) {
+      return res.status(400).json({ success: false, message: 'توجد صلاحية غير صالحة في الطلب' });
+    }
+
     await client.query('BEGIN');
     await client.query('DELETE FROM employees_permissions WHERE employee_id = $1', [id]);
 
-    for (const pid of permission_ids) {
+    for (const pid of normalizedPermissionIds) {
       await client.query('INSERT INTO employees_permissions (employee_id, permission_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [id, pid]);
     }
 
