@@ -121,7 +121,8 @@ const protect = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'الموظف غير موجود.' });
       }
 
-      if (employee.status !== 'active') {
+      const normalizedEmployeeStatus = String(employee.status || '').trim().toLowerCase();
+      if (normalizedEmployeeStatus !== 'active') {
         return res.status(403).json({ success: false, message: 'حساب الموظف غير فعال.' });
       }
 
@@ -136,7 +137,7 @@ const protect = async (req, res, next) => {
         phone: employee.phone_number,
         role: employee.role,
         account_type: 'employee',
-        status: employee.status,
+        status: normalizedEmployeeStatus,
         is_active: true,
       };
 

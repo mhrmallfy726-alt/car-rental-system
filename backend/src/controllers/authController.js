@@ -578,7 +578,8 @@ const login = asyncHandler(async (req, res, next) => {
 const employee = employeeResult.rows[0];
 
 if (employee) {
-  if (employee.status !== 'active') {
+  const normalizedEmployeeStatus = String(employee.status || '').trim().toLowerCase();
+  if (normalizedEmployeeStatus !== 'active') {
     return next(new AppError('حساب الموظف غير فعال. تواصل مع المورد', 403));
   }
 
@@ -600,7 +601,7 @@ if (employee) {
       phone: employee.phone_number,
       phone_number: employee.phone_number,
       role: employee.role,
-      status: employee.status,
+      status: normalizedEmployeeStatus,
       supplier_id: String(employee.supplier_id),
       employee_id: String(employee.id),
     },
