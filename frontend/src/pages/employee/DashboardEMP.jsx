@@ -116,6 +116,7 @@ export default function EmployeeDashboard() {
     { id: 'overview', label: 'نظرة عامة', icon: LayoutDashboard, visible: true },
     { id: 'cars', label: 'سيارات المورد', icon: Car, visible: canViewCars },
     { id: 'reservations', label: 'الحجوزات', icon: CalendarDays, visible: canViewReservations },
+    { id: 'security', label: 'الأمان وكلمة المرور', icon: KeyRound, visible: true },
   ].filter((item) => item.visible);
 
   return (
