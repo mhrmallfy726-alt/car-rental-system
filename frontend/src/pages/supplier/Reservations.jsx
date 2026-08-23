@@ -199,7 +199,7 @@ export default function SupplierReservations() {
                     <span className={`badge`} style={{
                       background: res.status === 'pending' ? '#ffc107' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#17a2b8' : res.status === 'active' ? '#28a745' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#0a58ca' : res.status === 'disputed' ? '#dc3545' : '#6c757d',
                       color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
-                    }}>{res.status === 'pending' ? 'قيد الانتظار' : ['approved', 'awaiting_pickup'].includes(res.status) ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
+                    }}>{res.status === 'pending' ? 'طلب مدفوع بانتظار المراجعة' : ['approved', 'awaiting_pickup'].includes(res.status) ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: '#6c757d', marginBottom: '8px' }}>

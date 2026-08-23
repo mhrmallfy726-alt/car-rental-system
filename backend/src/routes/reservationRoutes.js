@@ -105,7 +105,9 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
 router.get('/my', protect, asyncHandler(async (req, res) => {
   let sql;
   if (req.user.role === 'customer') {
-    sql = `SELECT r.*, c.make, c.model, c.year, u.name as supplier_name,
+      sql = `SELECT r.*,
+           COALESCE((SELECT p.status FROM payments p WHERE p.reservation_id = r.id ORDER BY p.created_at DESC LIMIT 1), 'unpaid') AS payment_status,
+           c.make, c.model, c.year, u.name as supplier_name,
            COALESCE((SELECT image_url FROM car_images WHERE car_id = c.id AND is_primary = true LIMIT 1), 
                     (SELECT image_url FROM car_images WHERE car_id = c.id LIMIT 1)) as car_image
            FROM reservations r 
@@ -119,7 +121,9 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
            FROM reservations r 
            JOIN cars c ON r.car_id = c.id 
            JOIN users u ON r.customer_id = u.id
-           WHERE r.supplier_id = $1 ORDER BY r.created_at DESC`;
+           WHERE r.supplier_id = $1
+             AND EXISTS (SELECT 1 FROM payments p WHERE p.reservation_id = r.id AND p.status = 'paid')
+           ORDER BY r.created_at DESC`;
   }
   const result = await query(sql, [req.user.id]);
   res.json({ success: true, data: result.rows });
@@ -135,12 +139,14 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
   const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, req.user.id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن الموافقة على هذا الحجز', 400));
+  const paidPayment = await query(`SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`, [id]);
+  if (paidPayment.rows.length === 0) return next(new AppError('لا يمكن مراجعة الحجز قبل إتمام الدفع', 400));
 
   const result = await query(`UPDATE reservations SET status = 'awaiting_pickup', handover_state = 'awaiting_pickup', approved_at = NOW() WHERE id = $1 RETURNING *`, [id]);
 
   // Notify customer
   await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
-    VALUES ($1, 'تمت الموافقة على حجزك', 'تمت الموافقة على طلب حجزك. يرجى إتمام الدفع.', 'reservation', $2, 'reservation')`,
+    VALUES ($1, 'تمت الموافقة على حجزك', 'تمت الموافقة على طلب حجزك المدفوع. يمكنك متابعة تفاصيل الاستلام.', 'reservation', $2, 'reservation')`,
     [reservation.rows[0].customer_id, id]);
 
   const io = req.app.get('io');
@@ -246,6 +252,9 @@ router.get('/:id', protect, asyncHandler(async (req, res, next) => {
   const r = result.rows[0];
   if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id && req.user.role !== 'admin') {
     return next(new AppError('غير مصرح لك', 403));
+  }
+  if (r.supplier_id === req.user.id && r.payment_status !== 'paid' && req.user.role !== 'admin') {
+    return next(new AppError('الحجز غير متاح للمورد قبل إتمام الدفع', 404));
   }
 
   res.json({ success: true, data: r });

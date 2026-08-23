@@ -135,8 +135,8 @@ export default function MyReservations() {
 
   const getStatusBadge = (status) => {
     const map = {
-      pending: { label: 'بانتظار الدفع ومراجعة المورد', bg: '#ffc107', color: '#212529' },
-      approved: { label: 'بانتظار الدفع', bg: '#ffc107', color: '#212529' },
+      pending: { label: 'جاهز لإتمام الحجز', bg: '#ffc107', color: '#212529' },
+      approved: { label: 'بانتظار مراجعة المورد', bg: '#17a2b8', color: 'white' },
       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
       active: { label: 'نشط', bg: '#28a745', color: 'white' },
@@ -149,7 +149,7 @@ export default function MyReservations() {
     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
   };
 
-  const canPay = (status) => ['pending', 'approved'].includes(status);
+  const canPay = (reservation) => ['pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
   const canCancel = (status) => ['pending', 'approved', 'awaiting_pickup'].includes(status);
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
@@ -209,9 +209,9 @@ export default function MyReservations() {
                   {res.handover_state === 'returned' && res.status === 'returned' && (
                     <span style={{ background: '#ede7f6', color: '#5e35b1', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>ﺗﻢ اﺳﺘﻼم اﻟﺴﻴﺎرة، واﻟﺤﺠﺰ ﺑﺎﻧﺘﻈﺎر اﻹﻏﻼق</span>
                   )}
-                  {canPay(res.status) && (
+                  {canPay(res) && (
                     <Link to={`/checkout/${res.id}`} style={{ background: '#28a745', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                      <CreditCard size={16} /> ادفع الآن
+                      <CreditCard size={16} /> إتمام الدفع وإرسال الطلب
                     </Link>
                   )}
                   {canCancel(res.status) && (
