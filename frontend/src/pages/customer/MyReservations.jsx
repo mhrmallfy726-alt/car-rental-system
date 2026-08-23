@@ -151,10 +151,10 @@ export default function MyReservations() {
   };
 
   const canPay = (reservation) => ['pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
-  const canCancel = (status) => ['pending', 'approved', 'awaiting_pickup'].includes(status);
+  const canCancel = (status) => ['pending', 'approved'].includes(status);
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
-  const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'disputed'].includes(status);
+  const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'awaiting_pickup', 'disputed'].includes(status);
   // Dispute allowed only for active or completed (not if already disputed)
   const canDispute = (status) => ['active', 'completed'].includes(status);
 
