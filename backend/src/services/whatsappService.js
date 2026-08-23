@@ -57,35 +57,52 @@ async function sendMessagePayload(payload) {
   }
 
   const url = `https://graph.facebook.com/${DEFAULT_VERSION}/${phoneNumberId}/messages`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      recipient_type: 'individual',
-      ...payload,
-    }),
-  });
+  const timeoutMs = Math.max(1000, Number(process.env.WHATSAPP_REQUEST_TIMEOUT_MS || 8000));
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(
-      result?.error?.message ||
-      `WhatsApp API returned ${response.status}`
-    );
-    error.status = response.status;
-    error.providerResponse = result;
-    throw error;
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        ...payload,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(
+        result?.error?.message ||
+        `WhatsApp API returned ${response.status}`
+      );
+      error.status = response.status;
+      error.providerResponse = result;
+      throw error;
+    }
+
+    return {
+      sent: true,
+      messageId: result?.messages?.[0]?.id || null,
+      providerResponse: result,
+    };
+  } catch (error) {
+    // WhatsApp is an optional integration. Its outage must never crash the API.
+    console.warn('[whatsapp] delivery skipped:', error.name === 'AbortError' ? `timeout after ${timeoutMs}ms` : error.message);
+    return {
+      sent: false,
+      skipped: true,
+      reason: error.name === 'AbortError' ? 'whatsapp_timeout' : 'whatsapp_unreachable',
+    };
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return {
-    sent: true,
-    messageId: result?.messages?.[0]?.id || null,
-    providerResponse: result,
-  };
 }
 
 async function sendTextMessage({ to, body, previewUrl = false }) {
@@ -175,7 +192,7 @@ async function sendReservationStatusMessage({
 
 function verifyWebhookSignature(rawBody, signature) {
   const { appSecret } = getConfig();
-  if (!appSecret) return true;
+  if (!appSecret) return process.env.NODE_ENV !== 'production';
   if (!signature || !signature.startsWith('sha256=')) return false;
 
   const expected = crypto

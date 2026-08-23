@@ -36,9 +36,14 @@ router.post('/webhook', asyncHandler(async (req, res) => {
     });
   }
 
-  const payload = Buffer.isBuffer(req.body)
-    ? JSON.parse(req.body.toString('utf8'))
-    : req.body;
+  let payload;
+  try {
+    payload = Buffer.isBuffer(req.body)
+      ? JSON.parse(req.body.toString('utf8'))
+      : req.body;
+  } catch (error) {
+    return res.status(400).json({ success: false, message: 'Invalid WhatsApp webhook payload' });
+  }
 
   const events = whatsappService.extractWebhookEvents(payload);
   for (const event of events) {
