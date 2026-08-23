@@ -897,10 +897,10 @@ export default function CarDetail() {
         .car-detail-specs > div:nth-child(3) span { display: flex; flex-direction: column; gap: 4px; }
         .car-detail-specs > div:nth-child(3) strong, .car-detail-specs > div:nth-child(3) small { display: block; line-height: 1.6; }
         .car-detail-page .car-search-summary { width: calc(100% - 40px); max-width: 1200px; margin: 20px auto; }
-        .detail-gallery-3d { position: relative; transform: perspective(1400px) rotateX(0deg); transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease; }
-        .detail-gallery-3d:hover { transform: perspective(1400px) rotateX(.7deg); box-shadow: 0 28px 70px rgba(25,43,64,.13); }
-        .detail-gallery-stage { cursor: default; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
-        .detail-gallery-image-backdrop { position: absolute; z-index: 0; inset: -22px; background-position: center; background-size: cover; background-repeat: no-repeat; filter: blur(18px) saturate(1.12); opacity: .34; transform: scale(1.08); transition: background-image .25s ease, opacity .25s ease; }
+        .detail-gallery-3d { position: relative; overflow: hidden; transform: none; box-shadow: 0 18px 50px rgba(0,0,0,.06); }
+        .detail-gallery-3d:hover { transform: none; box-shadow: 0 18px 50px rgba(0,0,0,.06); }
+        .detail-gallery-stage { cursor: default; isolation: isolate; contain: paint; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+        .detail-gallery-image-backdrop { position: absolute; z-index: 0; inset: 0; background-position: center; background-size: cover; background-repeat: no-repeat; filter: blur(18px) saturate(1.12); opacity: .34; transform: scale(1.12); clip-path: inset(0 round 20px); transition: background-image .25s ease, opacity .25s ease; }
         .detail-gallery-main-image { position: relative; z-index: 2; width: 100%; height: 100%; object-fit: contain !important; object-position: center; padding: 22px; filter: saturate(1.04) contrast(1.02) drop-shadow(0 18px 24px rgba(12,25,40,.2)); animation: detailCarouselIn .55s ease-out; }
         .detail-gallery-arrow { position: absolute; z-index: 5; top: 50%; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; color: #fff; background: rgba(0,53,128,.78); box-shadow: 0 8px 20px rgba(0,0,0,.22); cursor: pointer; transform: translateY(-50%); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
         .detail-gallery-arrow-prev { right: 16px; }
@@ -909,7 +909,7 @@ export default function CarDetail() {
         .detail-gallery-arrow:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
         .detail-gallery-stage::after { position: absolute; inset: 0; z-index: 1; content: ''; pointer-events: none; background: linear-gradient(180deg, rgba(8,18,30,.22), transparent 28%, transparent 60%, rgba(8,18,30,.48)); }
         .detail-gallery-grid { position: absolute; z-index: 2; inset: 0; opacity: .15; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px); background-size: 34px 34px; mask-image: linear-gradient(135deg, transparent, #000 35%, transparent 85%); }
-        .detail-gallery-glow { position: absolute; z-index: 1; width: 220px; height: 220px; right: 16%; bottom: -150px; border-radius: 50%; pointer-events: none; background: rgba(229,151,119,.42); filter: blur(42px); }
+        .detail-gallery-glow { position: absolute; z-index: 1; width: 220px; height: 220px; right: 16%; bottom: -70px; border-radius: 50%; pointer-events: none; background: rgba(229,151,119,.42); filter: blur(42px); clip-path: inset(0 round 20px); }
         .detail-gallery-top-badge, .detail-gallery-counter { position: absolute; z-index: 4; top: 17px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.26); border-radius: 999px; padding: 8px 11px; color: #fff; background: rgba(8,18,30,.55); font-size: 10px; font-weight: 900; backdrop-filter: blur(10px); }
         .detail-gallery-top-badge { right: 17px; color: #b9f0ce; }
         .detail-gallery-counter { left: 17px; direction: ltr; }
