@@ -12,7 +12,7 @@ const pool = new Pool({
 });
 
 async function runMigration() {
-  const migrationFile = process.argv[2] || process.env.MIGRATION_FILE || '015_finance_repair.sql';
+  const migrationFile = process.argv[2] || process.env.MIGRATION_FILE || '016_employee_schema_repair.sql';
   const migrationPath = path.join(__dirname, 'migrations', migrationFile);
 
   if (!fs.existsSync(migrationPath)) {
