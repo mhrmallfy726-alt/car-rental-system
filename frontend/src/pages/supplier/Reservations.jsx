@@ -7,6 +7,19 @@ import { Calendar, LayoutDashboard, Car, Plus, CheckCircle, XCircle, Camera, Upl
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
+const getReservationEventDate = (reservation, type) => {
+  const atValue = type === 'before' ? reservation.pickup_at : reservation.return_at;
+  if (atValue) return new Date(atValue);
+  const dateValue = type === 'before' ? reservation.start_date : reservation.end_date;
+  const timeValue = type === 'before' ? reservation.pickup_time : reservation.return_time;
+  return dateValue ? new Date(`${dateValue}T${timeValue || (type === 'before' ? '09:00' : '18:00')}`) : null;
+};
+
+const isReportWindowOpen = (reservation, type) => {
+  const eventDate = getReservationEventDate(reservation, type);
+  return eventDate && !Number.isNaN(eventDate.getTime()) && Date.now() >= eventDate.getTime() - 60 * 60 * 1000;
+};
+
 export default function SupplierReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -202,11 +215,17 @@ export default function SupplierReservations() {
                       <button onClick={() => handleAction(res.id, 'reject')} className="btn btn-danger" style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> رفض</button>
                     </>
                   )}
-                  {['approved', 'awaiting_pickup'].includes(res.status) && (
+                  {['approved', 'awaiting_pickup'].includes(res.status) && isReportWindowOpen(res, 'before') && (
                     <button onClick={() => openHandover(res.id, 'before')} className="btn btn-secondary" style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق التسليم (قبل)</button>
                   )}
-                  {res.status === 'active' && (
+                  {['approved', 'awaiting_pickup'].includes(res.status) && !isReportWindowOpen(res, 'before') && (
+                    <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير التسليم قبل الموعد بساعة</span>
+                  )}
+                  {res.status === 'active' && isReportWindowOpen(res, 'after') && (
                     <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#ffc107', color: '#1a1a1a', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>
+                  )}
+                  {res.status === 'active' && !isReportWindowOpen(res, 'after') && (
+                    <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير الإرجاع قبل الموعد بساعة</span>
                   )}
                   {res.status === 'returned' && (
                     <button onClick={() => handleAction(res.id, 'complete')} className="btn btn-success" style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> إغلاق الحجز وإتاحة السيارة</button>

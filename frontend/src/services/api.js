@@ -120,6 +120,10 @@ export const handoverAPI = {
   submit: (reservationId, type, data) =>
     api.post(`/handover/${reservationId}/${type}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getLogs: (reservationId) => api.get(`/handover/${reservationId}`),
+  reviewBefore: (reservationId, formData) =>
+    api.post(`/handover/${reservationId}/before/review`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 };
 
 // ── Finance ────────────────────────────────────

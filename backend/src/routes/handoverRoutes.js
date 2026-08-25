@@ -5,6 +5,20 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 const { uploadHandoverImages } = require('../middleware/upload');
 
+const REPORT_WINDOW_MS = 60 * 60 * 1000;
+
+function getScheduledAt(reservation, type) {
+  const value = type === 'before' ? reservation.pickup_at : reservation.return_at;
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date : null;
+}
+
+function isReportWindowOpen(reservation, type) {
+  const scheduledAt = getScheduledAt(reservation, type);
+  if (!scheduledAt) return false;
+  return Date.now() >= scheduledAt.getTime() - REPORT_WINDOW_MS;
+}
+
 // Record before-delivery or after-return inspection and advance the reservation lifecycle.
 router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler(async (req, res, next) => {
   const { reservationId, type } = req.params;
@@ -31,6 +45,11 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   const expectedStatus = type === 'before' ? ['approved', 'awaiting_pickup'] : ['active'];
   if (!expectedStatus.includes(reservation.status)) {
     return next(new AppError(type === 'before' ? 'الحجز ليس في انتظار التسليم' : 'السيارة ليست مستلمة من العميل حالياً', 400));
+  }
+
+  if (!isReportWindowOpen(reservation, type)) {
+    const scheduledAt = getScheduledAt(reservation, type);
+    return next(new AppError(`لا يمكن رفع تقرير ${type === 'before' ? 'التسليم' : 'الإرجاع'} قبل ساعة من الموعد المحدد (${scheduledAt.toLocaleString('ar-YE')})`, 425));
   }
 
   const duplicate = await query('SELECT id FROM handover_logs WHERE reservation_id = $1 AND type = $2', [reservationId, type]);
@@ -85,6 +104,65 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   });
 }));
 
+router.post('/:reservationId/before/review', protect, uploadHandoverImages, asyncHandler(async (req, res, next) => {
+  const { reservationId } = req.params;
+  const { result, notes = '' } = req.body;
+  if (!['matched', 'discrepancy'].includes(result)) return next(new AppError('نتيجة المطابقة يجب أن تكون matched أو discrepancy', 400));
+  if (result === 'discrepancy' && String(notes).trim().length < 3 && !req.files?.length) {
+    return next(new AppError('عند تسجيل اختلاف يجب إضافة وصف أو صورة واحدة على الأقل', 400));
+  }
+
+  const reservationResult = await query(
+    `SELECT r.id, r.customer_id, r.supplier_id, r.status, h.id AS handover_log_id
+     FROM reservations r
+     LEFT JOIN handover_logs h ON h.reservation_id = r.id AND h.type = 'before'
+     WHERE r.id = $1`,
+    [reservationId]
+  );
+  if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود', 404));
+  const reservation = reservationResult.rows[0];
+  if (reservation.customer_id !== req.user.id) return next(new AppError('غير مصرح لك بمراجعة هذا التقرير', 403));
+  if (!reservation.handover_log_id) return next(new AppError('لم يرفع المورد تقرير التسليم بعد', 409));
+  if (!['active', 'returned', 'completed'].includes(reservation.status)) return next(new AppError('لا يمكن مراجعة تقرير التسليم في الحالة الحالية', 400));
+
+  const existing = await query(
+    `SELECT id FROM handover_verifications WHERE reservation_id = $1 AND handover_log_id = $2 AND stage = 'before'`,
+    [reservationId, reservation.handover_log_id]
+  );
+  if (existing.rows.length) return next(new AppError('تمت مراجعة تقرير التسليم مسبقاً', 409));
+
+  const verification = await query(
+    `INSERT INTO handover_verifications (reservation_id, handover_log_id, verified_by, stage, result, notes)
+     VALUES ($1, $2, $3, 'before', $4, $5) RETURNING *`,
+    [reservationId, reservation.handover_log_id, req.user.id, result, String(notes).trim()]
+  );
+
+  if (req.files?.length) {
+    for (const file of req.files) {
+      await query(
+        'INSERT INTO handover_verification_images (verification_id, image_url) VALUES ($1, $2)',
+        [verification.rows[0].id, file.path.replace(/\\/g, '/')]
+      );
+    }
+  }
+
+  if (result === 'discrepancy') {
+    await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1 AND status IN ('active', 'returned')`, [reservationId]);
+  }
+
+  const io = req.app.get('io');
+  if (io) {
+    io.to(`user_${reservation.supplier_id}`).emit('handover_verification_created', {
+      reservationId,
+      stage: 'before',
+      result,
+      status: result === 'discrepancy' ? 'disputed' : reservation.status
+    });
+  }
+
+  res.status(201).json({ success: true, data: verification.rows[0], message: result === 'matched' ? 'تم تأكيد مطابقة السيارة' : 'تم تسجيل الاختلاف وإبلاغ المورد' });
+}));
+
 router.get('/:reservationId', protect, asyncHandler(async (req, res, next) => {
   const reservation = await query('SELECT customer_id, supplier_id FROM reservations WHERE id = $1', [req.params.reservationId]);
   if (!reservation.rows.length) return next(new AppError('الحجز غير موجود', 404));
@@ -94,7 +172,16 @@ router.get('/:reservationId', protect, asyncHandler(async (req, res, next) => {
   const logs = await query('SELECT * FROM handover_logs WHERE reservation_id = $1 ORDER BY created_at', [req.params.reservationId]);
   for (const log of logs.rows) {
     const imgs = await query('SELECT * FROM handover_images WHERE handover_log_id = $1', [log.id]);
+    const verification = await query(
+      `SELECT v.*, COALESCE(json_agg(i ORDER BY i.created_at) FILTER (WHERE i.id IS NOT NULL), '[]') AS verification_images
+       FROM handover_verifications v
+       LEFT JOIN handover_verification_images i ON i.verification_id = v.id
+       WHERE v.handover_log_id = $1
+       GROUP BY v.id`,
+      [log.id]
+    );
     log.images = imgs.rows;
+    log.verification = verification.rows[0] || null;
   }
   res.json({ success: true, data: logs.rows });
 }));

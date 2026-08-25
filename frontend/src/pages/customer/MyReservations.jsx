@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { reservationsAPI, reviewsAPI, default as api } from '../../services/api';
+import { reservationsAPI, reviewsAPI, handoverAPI, default as api } from '../../services/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,13 @@ export default function MyReservations() {
   const [showDispute, setShowDispute] = useState(false);
   const [disputeData, setDisputeData] = useState({ type: 'other', title: '', description: '' });
   const [submittingDispute, setSubmittingDispute] = useState(false);
+
+  const [showHandoverReview, setShowHandoverReview] = useState(false);
+  const [handoverReviewLog, setHandoverReviewLog] = useState(null);
+  const [handoverReview, setHandoverReview] = useState({ result: 'matched', notes: '' });
+  const [handoverReviewImages, setHandoverReviewImages] = useState([]);
+  const [handoverReviewPreviews, setHandoverReviewPreviews] = useState([]);
+  const [submittingHandoverReview, setSubmittingHandoverReview] = useState(false);
 
   useEffect(() => {
     fetchReservations();
@@ -99,6 +106,60 @@ export default function MyReservations() {
       navigate(`/complaints/${res.data.data.id}`);
     } catch (error) {
       toast.error('فشل بدء المحادثة: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const openHandoverReview = async (reservation) => {
+    try {
+      const response = await handoverAPI.getLogs(reservation.id);
+      const beforeLog = (response.data?.data || []).find((log) => log.type === 'before');
+      if (!beforeLog) return toast.error('لم يرفع المورد تقرير التسليم بعد');
+      if (beforeLog.verification) return toast.success('تمت مراجعة تقرير التسليم مسبقاً');
+      setSelectedRes(reservation);
+      setHandoverReviewLog(beforeLog);
+      setHandoverReview({ result: 'matched', notes: '' });
+      setHandoverReviewImages([]);
+      setHandoverReviewPreviews([]);
+      setShowHandoverReview(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تحميل تقرير التسليم');
+    }
+  };
+
+  const handleHandoverReviewImages = (event) => {
+    const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/'));
+    setHandoverReviewImages((current) => [...current, ...files]);
+    setHandoverReviewPreviews((current) => [...current, ...files.map((file) => URL.createObjectURL(file))]);
+    event.target.value = '';
+  };
+
+  const removeHandoverReviewImage = (index) => {
+    URL.revokeObjectURL(handoverReviewPreviews[index]);
+    setHandoverReviewImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setHandoverReviewPreviews((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const submitHandoverReview = async (event) => {
+    event.preventDefault();
+    const notes = handoverReview.notes.trim();
+    if (handoverReview.result === 'discrepancy' && notes.length < 3 && handoverReviewImages.length === 0) {
+      toast.error('عند وجود اختلاف اكتب وصفاً أو أرفق صورة واحدة على الأقل');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('result', handoverReview.result);
+    formData.append('notes', notes);
+    handoverReviewImages.forEach((file) => formData.append('images', file));
+    setSubmittingHandoverReview(true);
+    try {
+      await handoverAPI.reviewBefore(selectedRes.id, formData);
+      toast.success(handoverReview.result === 'matched' ? 'تم تأكيد مطابقة السيارة' : 'تم تسجيل الاختلاف وإبلاغ المورد');
+      setShowHandoverReview(false);
+      fetchReservations();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر حفظ مراجعة التقرير');
+    } finally {
+      setSubmittingHandoverReview(false);
     }
   };
 
@@ -207,6 +268,11 @@ export default function MyReservations() {
                   {res.handover_state === 'with_customer' && (
                     <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>السيارة معك الآن</span>
                   )}
+                  {['active', 'returned', 'completed'].includes(res.status) && (
+                    <button onClick={() => openHandoverReview(res)} style={{ background: '#173a52', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                      <CheckCircle size={16} /> مراجعة تقرير التسليم
+                    </button>
+                  )}
                   {res.handover_state === 'returned' && res.status === 'returned' && (
                     <span style={{ background: '#ede7f6', color: '#5e35b1', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>ﺗﻢ اﺳﺘﻼم اﻟﺴﻴﺎرة، واﻟﺤﺠﺰ ﺑﺎﻧﺘﻈﺎر اﻹﻏﻼق</span>
                   )}
@@ -241,6 +307,39 @@ export default function MyReservations() {
           </div>
         )}
       </div>
+
+      {/* Handover Verification Modal */}
+      {showHandoverReview && selectedRes && handoverReviewLog && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 34, 48, 0.68)', zIndex: 1060, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div dir="rtl" style={{ background: 'white', borderRadius: '20px', maxWidth: '680px', width: '100%', maxHeight: '92vh', overflowY: 'auto', padding: '24px', boxShadow: '0 24px 70px rgba(0,0,0,.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', borderBottom: '1px solid #e6edf1', paddingBottom: '16px', marginBottom: '18px' }}>
+              <div>
+                <h2 style={{ margin: 0, color: '#173a52', fontSize: '1.25rem' }}>مطابقة تقرير تسليم السيارة</h2>
+                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '.86rem' }}>{selectedRes.make} {selectedRes.model} — راجع بيانات المورد قبل التأكيد</p>
+              </div>
+              <button type="button" onClick={() => setShowHandoverReview(false)} style={{ background: '#f1f5f9', border: 0, borderRadius: '50%', width: 36, height: 36, cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '18px' }}>
+              <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '12px' }}><small style={{ color: '#64748b' }}>العداد</small><strong style={{ display: 'block', color: '#173a52', marginTop: 4 }}>{handoverReviewLog.mileage} كم</strong></div>
+              <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '12px' }}><small style={{ color: '#64748b' }}>الوقود</small><strong style={{ display: 'block', color: '#173a52', marginTop: 4 }}>{handoverReviewLog.fuel_level}%</strong></div>
+              <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '12px' }}><small style={{ color: '#64748b' }}>الحالة</small><strong style={{ display: 'block', color: '#173a52', marginTop: 4 }}>{handoverReviewLog.exterior_condition === 'excellent' ? 'ممتازة' : handoverReviewLog.exterior_condition === 'good' ? 'جيدة' : 'تحتاج مراجعة'}</strong></div>
+            </div>
+
+            {handoverReviewLog.condition_notes && <p style={{ background: '#fff8e1', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
+            {handoverReviewLog.images?.length > 0 && (
+              <div style={{ margin: '18px 0' }}><h3 style={{ color: '#173a52', fontSize: '.98rem', marginBottom: 10 }}>صور الحالة عند التسليم</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>{handoverReviewLog.images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : `http://localhost:5000/${image.image_url}`} alt="صورة حالة السيارة" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, border: '1px solid #e2e8f0' }} />)}</div></div>
+            )}
+
+            <form onSubmit={submitHandoverReview} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>نتيجة المطابقة</label><select value={handoverReview.result} onChange={(event) => setHandoverReview({ ...handoverReview, result: event.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit' }}><option value="matched">مطابق — لا توجد اختلافات</option><option value="discrepancy">يوجد اختلاف يحتاج توثيقاً</option></select></div>
+              <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>ملاحظاتك {handoverReview.result === 'discrepancy' ? '(مطلوبة عند عدم إرفاق صورة)' : '(اختياري)'}</label><textarea rows="3" value={handoverReview.notes} onChange={(event) => setHandoverReview({ ...handoverReview, notes: event.target.value })} placeholder="صف أي خدش أو اختلاف في العداد أو الوقود..." style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit', resize: 'vertical' }} /></div>
+              {handoverReview.result === 'discrepancy' && <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>صور الاختلاف</label><input type="file" accept="image/*" multiple onChange={handleHandoverReviewImages} style={{ width: '100%' }} />{handoverReviewPreviews.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{handoverReviewPreviews.map((src, index) => <button type="button" key={src} onClick={() => removeHandoverReviewImage(index)} title="حذف الصورة" style={{ padding: 0, border: '2px solid #dc3545', borderRadius: 10, overflow: 'hidden', background: 'white', cursor: 'pointer' }}><img src={src} alt={`اختلاف ${index + 1}`} style={{ width: 76, height: 64, objectFit: 'cover', display: 'block' }} /></button>)}</div>}</div>}
+              <button type="submit" disabled={submittingHandoverReview} style={{ background: handoverReview.result === 'discrepancy' ? '#b42318' : '#173a52', color: 'white', border: 0, padding: '13px 16px', borderRadius: 12, fontWeight: 900, cursor: 'pointer' }}>{submittingHandoverReview ? 'جاري حفظ المطابقة...' : handoverReview.result === 'discrepancy' ? 'تسجيل الاختلاف وإبلاغ المورد' : 'تأكيد أن السيارة مطابقة'}</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Review Modal */}
       {showReview && selectedRes && (
