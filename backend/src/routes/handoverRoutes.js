@@ -148,6 +148,25 @@ router.post('/:reservationId/before/review', protect, uploadHandoverImages, asyn
 
   if (result === 'discrepancy') {
     await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1 AND status IN ('active', 'returned')`, [reservationId]);
+
+    const details = String(notes).trim() || 'أرفق العميل صوراً توضح اختلافاً في حالة السيارة عند التسليم.';
+    const notificationResult = await query(
+      `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+       VALUES ($1, $2, $3, 'reservation', $4, 'reservation', $5)
+       RETURNING *`,
+      [
+        reservation.supplier_id,
+        'اختلاف جديد في تقرير تسليم السيارة',
+        `أبلغ العميل عن اختلاف في الحجز. التفاصيل: ${details}`,
+        reservationId,
+        `/supplier/reservations/${reservationId}`,
+      ]
+    );
+
+    const io = req.app.get('io');
+    if (io && notificationResult.rows[0]) {
+      io.to(`user_${reservation.supplier_id}`).emit('new_notification', notificationResult.rows[0]);
+    }
   }
 
   const io = req.app.get('io');
@@ -156,7 +175,10 @@ router.post('/:reservationId/before/review', protect, uploadHandoverImages, asyn
       reservationId,
       stage: 'before',
       result,
-      status: result === 'discrepancy' ? 'disputed' : reservation.status
+      status: result === 'discrepancy' ? 'disputed' : reservation.status,
+      title: result === 'discrepancy' ? 'اختلاف جديد في تقرير تسليم السيارة' : 'تم تأكيد مطابقة السيارة',
+      message: result === 'discrepancy' ? String(notes).trim() || 'أرفق العميل صوراً توضح اختلافاً في حالة السيارة.' : 'أكد العميل مطابقة السيارة مع تقرير التسليم.',
+      action_url: `/supplier/reservations/${reservationId}`,
     });
   }
 

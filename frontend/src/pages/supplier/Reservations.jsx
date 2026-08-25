@@ -40,6 +40,8 @@ export default function SupplierReservations() {
   const [selectedResForDispute, setSelectedResForDispute] = useState(null);
   const [disputeData, setDisputeData] = useState({ type: 'other', title: '', description: '' });
   const [submittingDispute, setSubmittingDispute] = useState(false);
+  const [selectedHandoverDispute, setSelectedHandoverDispute] = useState(null);
+  const [loadingDisputeDetails, setLoadingDisputeDetails] = useState(false);
 
   const openDisputeModal = (res) => {
     setSelectedResForDispute(res);
@@ -79,11 +81,36 @@ export default function SupplierReservations() {
   const fetchReservations = async () => {
     try {
       const res = await reservationsAPI.getMy();
-      setReservations(res.data.data);
+      const rows = res.data.data || [];
+      const disputedRows = await Promise.all(rows.filter((reservation) => reservation.status === 'disputed').map(async (reservation) => {
+        try {
+          const logsResponse = await handoverAPI.getLogs(reservation.id);
+          const beforeLog = (logsResponse.data?.data || []).find((log) => log.type === 'before');
+          return [reservation.id, beforeLog?.verification || null];
+        } catch {
+          return [reservation.id, null];
+        }
+      }));
+      const disputeMap = new Map(disputedRows);
+      setReservations(rows.map((reservation) => ({ ...reservation, handover_dispute: disputeMap.get(reservation.id) || null })));
     } catch (error) {
       toast.error('فشل جلب الحجوزات');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openHandoverDispute = async (reservation) => {
+    setLoadingDisputeDetails(true);
+    try {
+      const logsResponse = await handoverAPI.getLogs(reservation.id);
+      const beforeLog = (logsResponse.data?.data || []).find((log) => log.type === 'before');
+      if (!beforeLog?.verification) return toast.error('لا توجد تفاصيل تحقق محفوظة لهذا النزاع');
+      setSelectedHandoverDispute({ reservation, log: beforeLog, verification: beforeLog.verification });
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تحميل تفاصيل النزاع');
+    } finally {
+      setLoadingDisputeDetails(false);
     }
   };
 
@@ -227,6 +254,13 @@ export default function SupplierReservations() {
                   {res.status === 'active' && !isReportWindowOpen(res, 'after') && (
                     <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير الإرجاع قبل الموعد بساعة</span>
                   )}
+                  {res.status === 'disputed' && (
+                    <div style={{ background: 'linear-gradient(135deg, #fff1f2, #fff7ed)', border: '1px solid #fecdd3', borderRadius: '14px', padding: '12px', marginBottom: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: '#9f1239', fontWeight: 900, fontSize: '.86rem' }}><AlertTriangle size={16} /> اختلاف من العميل</div>
+                      <p style={{ margin: '7px 0', color: '#7f1d1d', fontSize: '.78rem', lineHeight: 1.55 }}>{res.handover_dispute?.notes || 'أرفق العميل صوراً أو ملاحظات حول حالة السيارة عند التسليم.'}</p>
+                      <button type="button" onClick={() => openHandoverDispute(res)} disabled={loadingDisputeDetails} style={{ width: '100%', background: '#9f1239', color: 'white', border: 0, padding: '8px 10px', borderRadius: '9px', fontWeight: 800, cursor: 'pointer', fontSize: '.78rem' }}>{loadingDisputeDetails ? 'جاري تحميل التفاصيل...' : 'عرض الملاحظات والصور'}</button>
+                    </div>
+                  )}
                   {res.status === 'returned' && (
                     <button onClick={() => handleAction(res.id, 'complete')} className="btn btn-success" style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> إغلاق الحجز وإتاحة السيارة</button>
                   )}
@@ -333,6 +367,20 @@ export default function SupplierReservations() {
                 {submittingHandover ? 'جاري الحفظ...' : 'حفظ تقرير التوثيق'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {selectedHandoverDispute && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 34, 48, .68)', zIndex: 1060, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div dir="rtl" style={{ background: 'white', borderRadius: '20px', maxWidth: '650px', width: '100%', maxHeight: '92vh', overflowY: 'auto', padding: '24px', boxShadow: '0 24px 70px rgba(0,0,0,.25)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderBottom: '1px solid #e6edf1', paddingBottom: 16, marginBottom: 18 }}>
+              <div><h2 style={{ margin: 0, color: '#173a52', fontSize: '1.2rem' }}>تفاصيل اختلاف العميل</h2><p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '.84rem' }}>{selectedHandoverDispute.reservation.make} {selectedHandoverDispute.reservation.model} — حجز متنازع عليه</p></div>
+              <button type="button" onClick={() => setSelectedHandoverDispute(null)} style={{ background: '#f1f5f9', border: 0, borderRadius: '50%', width: 36, height: 36, cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 14, padding: 14, color: '#7f1d1d', lineHeight: 1.8, fontSize: '.9rem' }}>{selectedHandoverDispute.verification.notes || 'لم يكتب العميل ملاحظات نصية، لكنه أرفق صوراً للاختلاف.'}</div>
+            {selectedHandoverDispute.verification.verification_images?.length > 0 && <div style={{ marginTop: 18 }}><h3 style={{ margin: '0 0 10px', color: '#173a52', fontSize: '.95rem' }}>صور الاختلاف المرفقة</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>{selectedHandoverDispute.verification.verification_images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : `http://localhost:5000/${image.image_url}`} alt="صورة اختلاف العميل" style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 12, border: '1px solid #fecdd3' }} />)}</div></div>}
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}><Link to={`/supplier/reservations/${selectedHandoverDispute.reservation.id}`} onClick={() => setSelectedHandoverDispute(null)} style={{ flex: 1, textAlign: 'center', background: '#173a52', color: 'white', textDecoration: 'none', borderRadius: 11, padding: 12, fontWeight: 900 }}>فتح تفاصيل الحجز</Link><button type="button" onClick={() => startChat(selectedHandoverDispute.reservation.id)} style={{ flex: 1, background: 'white', color: '#173a52', border: '1px solid #173a52', borderRadius: 11, padding: 12, fontWeight: 900, cursor: 'pointer' }}>مراسلة العميل</button></div>
           </div>
         </div>
       )}
