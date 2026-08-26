@@ -4,6 +4,7 @@ import { User, Bell, Lock, ShieldCheck, Save, CheckCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { authAPI } from '../services/api';
 
+import { getImageUrl } from '../utils/imageUtils';
 export default function UserSettings() {
   const { user, fetchMe } = useAuthStore();
   const [settings, setSettings] = useState({
@@ -195,7 +196,7 @@ export default function UserSettings() {
               <div className="flex gap-24 align-center mb-24 p-16 bg-base border-radius-md" style={{ border: '1px dashed var(--border)' }}>
                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', background: '#fff', border: '2px solid var(--primary)', flexShrink: 0 }}>
                   <img
-                    src={previewUrl || (brandLogo ? (brandLogo.startsWith('http') ? brandLogo : `http://localhost:5000/${brandLogo}`) : 'https://via.placeholder.com/80?text=Logo')}
+                    src={previewUrl || (brandLogo ? (brandLogo.startsWith('http') ? brandLogo : getImageUrl(brandLogo)) : 'https://via.placeholder.com/80?text=Logo')}
                     alt="شعار الشركة"
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />

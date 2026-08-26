@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import logo from '../assets/LOGO.png';
 // import { setAccessToken, clearAccessToken } from '../api/axios';
-import axios from "axios";
+import { api } from '../services/api';
 export default function Join() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -333,15 +333,9 @@ export default function Join() {
       // const response = await authAPI.registerVendor(formDataToSend);
       
       // For now, simulate API call
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await api.post('/auth/register', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data.user));

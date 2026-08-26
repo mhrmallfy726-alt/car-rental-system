@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
-const { query } = require('../config/database');
+const { query, getClient } = require('../config/database');
 const { uploadHandoverImages } = require('../middleware/upload');
 
 const REPORT_WINDOW_MS = 60 * 60 * 1000;
@@ -56,7 +56,7 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   if (duplicate.rows.length) return next(new AppError('تم توثيق هذه المرحلة مسبقاً', 409));
 
   const log = await query(
-    `INSERT INTO handover_logs (reservation_id, type, recorded_by, fuel_level, mileage, condition_notes, exterior_condition, interior_condition, gps_lat, gps_lng,images)
+    `INSERT INTO handover_logs (reservation_id, type, recorded_by, fuel_level, mileage, condition_notes, exterior_condition, interior_condition, gps_lat, gps_lng)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [reservationId, type, req.user.id, fuel, mil, condition_notes || '', exterior_condition, interior_condition, gps_lat || null, gps_lng || null]
   );
@@ -183,6 +183,83 @@ router.post('/:reservationId/before/review', protect, uploadHandoverImages, asyn
   }
 
   res.status(201).json({ success: true, data: verification.rows[0], message: result === 'matched' ? 'تم تأكيد مطابقة السيارة' : 'تم تسجيل الاختلاف وإبلاغ المورد' });
+}));
+
+router.put('/:reservationId/:stage/:verificationId/decision', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
+  const { reservationId, stage, verificationId } = req.params;
+  const { decision, notes = '' } = req.body;
+  if (!['before', 'after'].includes(stage)) return next(new AppError('المرحلة غير صحيحة', 400));
+  if (!['accepted', 'rejected'].includes(decision)) return next(new AppError('القرار يجب أن يكون accepted أو rejected', 400));
+
+  const reservationResult = await query(
+    'SELECT id, customer_id, supplier_id, status, handover_state FROM reservations WHERE id = $1 AND supplier_id = $2',
+    [reservationId, req.user.id]
+  );
+  if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود أو غير تابع لك', 404));
+
+  const verificationResult = await query(
+    `SELECT id, result, supplier_decision
+     FROM handover_verifications
+     WHERE id = $1 AND reservation_id = $2 AND stage = $3`,
+    [verificationId, reservationId, stage]
+  );
+  if (!verificationResult.rows.length) return next(new AppError('اعتراض التحقق غير موجود', 404));
+  if (verificationResult.rows[0].result !== 'discrepancy') return next(new AppError('لا يوجد اعتراض يحتاج إلى قرار', 400));
+  if (verificationResult.rows[0].supplier_decision) return next(new AppError('تم اتخاذ قرار لهذا الاعتراض مسبقاً', 409));
+
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    await client.query(
+      `UPDATE handover_verifications
+       SET supplier_decision = $1, supplier_decision_notes = $2, supplier_decided_at = NOW(), supplier_decided_by = $3
+       WHERE id = $4`,
+      [decision, String(notes).trim(), req.user.id, verificationId]
+    );
+
+    const nextStatus = decision === 'accepted'
+      ? (stage === 'before' ? 'active' : 'returned')
+      : 'disputed';
+    const nextState = decision === 'accepted'
+      ? (stage === 'before' ? 'with_customer' : 'returned')
+      : 'disputed';
+    await client.query(
+      'UPDATE reservations SET status = $1, handover_state = $2 WHERE id = $3',
+      [nextStatus, nextState, reservationId]
+    );
+
+    await client.query(
+      `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+       VALUES ($1, $2, $3, 'reservation', $4, 'reservation', $5)`,
+      [
+        reservationResult.rows[0].customer_id,
+        decision === 'accepted' ? 'تم اعتماد اعتراضك' : 'لم يعتمد المورد اعتراضك',
+        decision === 'accepted'
+          ? 'وافق المورد على الاختلاف المسجل، وتم تحديث حالة الحجز.'
+          : 'رفض المورد الاعتراض المسجل، وبقي الحجز قيد النزاع للمراجعة.',
+        reservationId,
+        `/my-reservations`,
+      ]
+    );
+    await client.query('COMMIT');
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${reservationResult.rows[0].customer_id}`).emit('handover_dispute_decision', {
+        reservationId,
+        stage,
+        decision,
+        status: nextStatus,
+        message: decision === 'accepted' ? 'تم اعتماد اعتراضك' : 'رفض المورد اعتراضك، والحجز قيد المراجعة',
+      });
+    }
+    res.json({ success: true, decision, status: nextStatus, handover_state: nextState });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }));
 
 router.get('/:reservationId', protect, asyncHandler(async (req, res, next) => {

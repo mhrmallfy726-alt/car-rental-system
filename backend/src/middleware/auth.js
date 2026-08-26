@@ -103,7 +103,7 @@ const protect = async (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'fallback_secret'
+      process.env.JWT_SECRET
     );
 
     if (decoded.account_type === 'employee') {
@@ -191,7 +191,7 @@ const optionalAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'fallback_secret'
+      process.env.JWT_SECRET
     );
 
     if (decoded.account_type === 'employee') {

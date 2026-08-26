@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const generateToken = (id, claims = {}) => {
   return jwt.sign(
     { id, ...claims },
-    process.env.JWT_SECRET || 'fallback_secret',
+    process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 };

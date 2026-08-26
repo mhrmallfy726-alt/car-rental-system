@@ -22,7 +22,9 @@ export default function SupplierRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
-  const API_URL = "http://localhost:5000";
+  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000')
+    .replace(/\/$/, '')
+    .replace(/\/api$/, '');
 
   const loadRequests = async () => {
 

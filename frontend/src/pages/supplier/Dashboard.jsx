@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, RefreshCw, Edit,Users} from 'lucide-react';
 
 import { format } from 'date-fns';
+import { getImageUrl } from '../../utils/imageUtils';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -159,7 +160,7 @@ export default function SupplierDashboard() {
                     {stats.discountedCars.map(car => (
                       <div key={car.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderRadius: '8px' }}>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`) : 'https://via.placeholder.com/40'}
+                          <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)) : 'https://via.placeholder.com/40'}
                             style={{ width: '40px', height: '30px', objectFit: 'contain', borderRadius: '4px', background: '#f8f9fa' }} />
                           <div>
                             <p style={{ fontSize: '0.85rem', fontWeight: 'bold', margin: 0 }}>{car.make} {car.model}</p>

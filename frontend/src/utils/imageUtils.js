@@ -3,7 +3,9 @@
 // يحوّل أي مسار (نسبي أو كامل) إلى URL صحيح
 // =============================================
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000')
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '');
 
 /**
  * تحويل مسار الصورة إلى URL كامل

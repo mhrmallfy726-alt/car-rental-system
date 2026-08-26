@@ -271,6 +271,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
 import logo from '../../assets/LOGO.png';
@@ -324,18 +325,11 @@ export default function Register() {
     }
   
     try {
-      const res = await fetch("http://localhost:5000/api/auth/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email: verifyEmail,
-          otp: otp
-        })
+      const response = await authAPI.verifyOTP({
+        email: verifyEmail,
+        otp,
       });
-  
-      const data = await res.json();
+      const data = response.data;
   
       if (data.success) {
         toast.success("تم إنشاء الحساب بنجاح ✅");

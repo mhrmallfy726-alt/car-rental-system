@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const API_ROOT = (import.meta.env.VITE_API_URL || '')
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '');
+
 export const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_ROOT ? `${API_ROOT}/api` : '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -30,6 +34,7 @@ api.interceptors.response.use(
 // ── Auth ──────────────────────────────────────
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
+  verifyOTP: (data) => api.post('/auth/verify-otp', data),
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
   uploadDocs: (data) => api.post('/auth/upload-documents', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -124,6 +129,8 @@ export const handoverAPI = {
     api.post(`/handover/${reservationId}/before/review`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+  decideDispute: (reservationId, stage, verificationId, data) =>
+    api.put(`/handover/${reservationId}/${stage}/${verificationId}/decision`, data),
 };
 
 // ── Finance ────────────────────────────────────

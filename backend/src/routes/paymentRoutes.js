@@ -118,10 +118,15 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Payment-first flow: pending reservations remain pending until the supplier approves them.
+  // Payment-first flow: payment never marks a reservation active.
+  // The supplier must approve it first, then the handover report moves it to active.
   if (r.status === 'approved') {
-    await query(`UPDATE reservations SET status = 'active' WHERE id = $1`, [reservation_id]);
-    await query(`UPDATE cars SET status = 'reserved' WHERE id = $1`, [r.car_id]);
+    await query(
+      `UPDATE reservations
+       SET status = 'awaiting_pickup', handover_state = 'awaiting_pickup'
+       WHERE id = $1 AND status = 'approved'`,
+      [reservation_id]
+    );
   }
 
   const supplierInfo = await query(
@@ -149,7 +154,13 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     }
   }
 
-  res.status(201).json({ success: true, data: payment.rows[0], reservation_status: r.status });
+  const latestReservation = await query('SELECT status, handover_state FROM reservations WHERE id = $1', [reservation_id]);
+  res.status(201).json({
+    success: true,
+    data: payment.rows[0],
+    reservation_status: latestReservation.rows[0]?.status || r.status,
+    handover_state: latestReservation.rows[0]?.handover_state || r.handover_state,
+  });
 }));
 
 router.get('/history', protect, asyncHandler(async (req, res) => {

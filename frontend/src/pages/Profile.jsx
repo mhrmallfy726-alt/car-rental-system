@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore';
 import { carsAPI } from '../services/api';
 import { User, Shield, Heart, Car, LogOut, ChevronLeft, MapPin, Mail, Phone, Calendar, CheckCircle, Clock, Settings } from 'lucide-react';
 
+import { getImageUrl } from '../utils/imageUtils';
 export default function Profile() {
   const { user, isCustomer, logout, fetchMe } = useAuthStore();
   const navigate = useNavigate();
@@ -168,7 +169,7 @@ export default function Profile() {
                       if (car.primary_image) {
                         imageUrl = car.primary_image.startsWith('http')
                           ? car.primary_image
-                          : `http://localhost:5000/${car.primary_image}`;
+                          : getImageUrl(car.primary_image);
                       }
                       return (
                         <div key={car.id} className="card p-16 flex gap-16 align-center hover-up">

@@ -4,6 +4,7 @@ import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import { Car, CheckCircle, LayoutDashboard, Users, ShieldAlert, Settings, RefreshCw, Image, Clock } from 'lucide-react';
 
+import { getImageUrl } from '../../utils/imageUtils';
 export default function AdminCars() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +152,7 @@ export default function AdminCars() {
                   <tr key={car.id} style={{ borderBottom: '1px solid #e9ecef' }}>
                     <td style={{ padding: '12px 16px' }}>
                       {car.primary_image ? (
-                        <img src={car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`} alt={car.make}
+                        <img src={car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)} alt={car.make}
                           style={{ width: '60px', height: '44px', objectFit: 'cover', borderRadius: '6px' }} />
                       ) : (
                         <div style={{ width: '60px', height: '44px', background: '#e9ecef', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

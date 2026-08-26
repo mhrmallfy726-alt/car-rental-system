@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore';
 import { LogOut, User, Menu, Car, X, LayoutDashboard, Search, Heart, Settings, Bell, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { notificationsAPI } from '../services/api';
+import SOCKET_URL from '../utils/socket';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import logo from '../assets/LOGO.png';
@@ -83,7 +84,7 @@ export default function Navbar() {
       setNotifications(response.data.data || []);
       setUnreadCount(response.data.unread || 0);
     }).catch((error) => console.error(error));
-    const socket = io('http://localhost:5000');
+    const socket = io(SOCKET_URL);
     socket.emit('join_room', user.id);
     socket.on('new_notification', (data) => {
       setNotifications((prev) => [data, ...prev]);

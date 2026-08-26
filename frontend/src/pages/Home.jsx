@@ -1,3 +1,4 @@
+import { getImageUrl } from '../utils/imageUtils';
 // import { useEffect, useState } from 'react';
 // import { Link, useNavigate } from 'react-router-dom';
 // import { carsAPI } from '../services/api';
@@ -28,7 +29,7 @@
 //   const imageUrl = (car) => {
 //     if (!car?.primary_image) return heroCar;
 //     if (car.primary_image.startsWith('http') || car.primary_image.startsWith('data:') || car.primary_image.includes('/src/')) return car.primary_image;
-//     return `http://localhost:5000/${car.primary_image}`;
+//     return getImageUrl(car.primary_image);
 //   };
 
 //   const submitSearch = (event) => {
@@ -263,7 +264,7 @@ export default function Home() {
                     <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#E3000F', color: 'white', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold', zIndex: 2 }}>
                       خصم {car.discount_percentage}%
                     </div>
-                    <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`) : 'https://via.placeholder.com/300x200'} alt={car.make} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)) : 'https://via.placeholder.com/300x200'} alt={car.make} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     {isCustomer() && (
                       <button
                         onClick={(e) => toggleFavorite(e, car.id)}

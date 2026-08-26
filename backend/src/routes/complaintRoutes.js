@@ -153,7 +153,7 @@ router.post('/:id/message', protect, uploadComplaintAttachment, asyncHandler(asy
     ...result.rows[0],
     sender_name: req.user.name,
     sender_role: req.user.role,
-    attachment_url: attachment ? `http://localhost:5000/${attachment}` : null
+    attachment_url: attachment
   };
 
   const io = req.app.get('io');
@@ -185,7 +185,7 @@ router.get('/:id/messages', protect, asyncHandler(async (req, res) => {
   // Add full URL for attachments
   const messagesWithUrls = result.rows.map(msg => ({
     ...msg,
-    attachment_url: msg.attachment_url ? `http://localhost:5000/${msg.attachment_url}` : null
+    attachment_url: msg.attachment_url
   }));
   res.json({ success: true, data: messagesWithUrls });
 }));

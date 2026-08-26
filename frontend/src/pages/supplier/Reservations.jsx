@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Calendar, LayoutDashboard, Car, Plus, CheckCircle, XCircle, Camera, Upload, X, Trash2, Eye, MessageSquare, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const getReservationEventDate = (reservation, type) => {
   const atValue = type === 'before' ? reservation.pickup_at : reservation.return_at;
@@ -114,6 +115,26 @@ export default function SupplierReservations() {
     }
   };
 
+  const handleHandoverDecision = async (decision) => {
+    if (!selectedHandoverDispute?.verification?.id) return;
+    const label = decision === 'accepted' ? 'اعتماد اعتراض العميل' : 'رفض اعتراض العميل';
+    if (!window.confirm(`هل تريد ${label}؟`)) return;
+    try {
+      const verification = selectedHandoverDispute.verification;
+      await handoverAPI.decideDispute(
+        selectedHandoverDispute.reservation.id,
+        verification.stage || 'before',
+        verification.id,
+        { decision, notes: decision === 'accepted' ? 'تم اعتماد الاعتراض بعد المراجعة.' : 'لم يثبت الاعتراض بعد المراجعة.' }
+      );
+      toast.success(decision === 'accepted' ? 'تم اعتماد اعتراض العميل' : 'تم رفض اعتراض العميل');
+      setSelectedHandoverDispute(null);
+      await fetchReservations();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تسجيل قرار الاعتراض');
+    }
+  };
+
   const handleAction = async (id, action) => {
     try {
       if (action === 'approve') await reservationsAPI.approve(id);
@@ -216,7 +237,7 @@ export default function SupplierReservations() {
           <div className="flex flex-col gap-16" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {reservations.map(res => (
               <div key={res.id} className="card" style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : `http://localhost:5000/${res.car_image}`) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'contain', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }} />
+                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : getImageUrl(res.car_image)) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'contain', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }} />
 
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '8px' }}>
@@ -379,8 +400,15 @@ export default function SupplierReservations() {
               <button type="button" onClick={() => setSelectedHandoverDispute(null)} style={{ background: '#f1f5f9', border: 0, borderRadius: '50%', width: 36, height: 36, cursor: 'pointer' }}><X size={18} /></button>
             </div>
             <div style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderRadius: 14, padding: 14, color: '#7f1d1d', lineHeight: 1.8, fontSize: '.9rem' }}>{selectedHandoverDispute.verification.notes || 'لم يكتب العميل ملاحظات نصية، لكنه أرفق صوراً للاختلاف.'}</div>
-            {selectedHandoverDispute.verification.verification_images?.length > 0 && <div style={{ marginTop: 18 }}><h3 style={{ margin: '0 0 10px', color: '#173a52', fontSize: '.95rem' }}>صور الاختلاف المرفقة</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>{selectedHandoverDispute.verification.verification_images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : `http://localhost:5000/${image.image_url}`} alt="صورة اختلاف العميل" style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 12, border: '1px solid #fecdd3' }} />)}</div></div>}
-            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}><Link to={`/supplier/reservations/${selectedHandoverDispute.reservation.id}`} onClick={() => setSelectedHandoverDispute(null)} style={{ flex: 1, textAlign: 'center', background: '#173a52', color: 'white', textDecoration: 'none', borderRadius: 11, padding: 12, fontWeight: 900 }}>فتح تفاصيل الحجز</Link><button type="button" onClick={() => startChat(selectedHandoverDispute.reservation.id)} style={{ flex: 1, background: 'white', color: '#173a52', border: '1px solid #173a52', borderRadius: 11, padding: 12, fontWeight: 900, cursor: 'pointer' }}>مراسلة العميل</button></div>
+            {selectedHandoverDispute.verification.verification_images?.length > 0 && <div style={{ marginTop: 18 }}><h3 style={{ margin: '0 0 10px', color: '#173a52', fontSize: '.95rem' }}>صور الاختلاف المرفقة</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>{selectedHandoverDispute.verification.verification_images.map((image) => <img key={image.id || image.image_url} src={getImageUrl(image.image_url)} alt="صورة اختلاف العميل" style={{ width: '100%', height: 100, objectFit: 'cover', borderRadius: 12, border: '1px solid #fecdd3' }} />)}</div></div>}
+            <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+              <Link to={`/supplier/reservations/${selectedHandoverDispute.reservation.id}`} onClick={() => setSelectedHandoverDispute(null)} style={{ flex: 1, minWidth: 150, textAlign: 'center', background: '#173a52', color: 'white', textDecoration: 'none', borderRadius: 11, padding: 12, fontWeight: 900 }}>فتح تفاصيل الحجز</Link>
+              <button type="button" onClick={() => startChat(selectedHandoverDispute.reservation.id)} style={{ flex: 1, minWidth: 150, background: 'white', color: '#173a52', border: '1px solid #173a52', borderRadius: 11, padding: 12, fontWeight: 900, cursor: 'pointer' }}>مراسلة العميل</button>
+              {!selectedHandoverDispute.verification.supplier_decision && <>
+                <button type="button" onClick={() => handleHandoverDecision('accepted')} style={{ flex: 1, minWidth: 150, background: '#15803d', color: 'white', border: 0, borderRadius: 11, padding: 12, fontWeight: 900, cursor: 'pointer' }}>اعتماد الاعتراض</button>
+                <button type="button" onClick={() => handleHandoverDecision('rejected')} style={{ flex: 1, minWidth: 150, background: '#b91c1c', color: 'white', border: 0, borderRadius: 11, padding: 12, fontWeight: 900, cursor: 'pointer' }}>رفض الاعتراض</button>
+              </>}
+            </div>
           </div>
         </div>
       )}

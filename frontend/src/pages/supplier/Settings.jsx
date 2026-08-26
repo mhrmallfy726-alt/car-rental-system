@@ -4,6 +4,7 @@ import { Settings, CreditCard, Building, ShieldCheck, Save, Upload, User, Check,
 import useAuthStore from '../../store/authStore';
 import { authAPI } from '../../services/api';
 
+import { getImageUrl } from '../../utils/imageUtils';
 export default function SupplierSettings() {
   const { user, fetchMe } = useAuthStore();
   const [activeTab, setActiveTab] = useState('company'); // 'company', 'payment', 'booking'
@@ -22,7 +23,7 @@ export default function SupplierSettings() {
   const [loading, setLoading] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(
-    user?.brand_logo ? (user.brand_logo.startsWith('http') ? user.brand_logo : `http://localhost:5000/${user.brand_logo}`) : null
+    user?.brand_logo ? (user.brand_logo.startsWith('http') ? user.brand_logo : getImageUrl(user.brand_logo)) : null
   );
   const [uploadingLogo, setUploadingLogo] = useState(false);
 

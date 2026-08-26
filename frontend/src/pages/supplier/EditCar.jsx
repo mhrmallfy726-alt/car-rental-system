@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Palette, DoorOpen, Gauge, User, ChevronLeft } from 'lucide-react';
 import { useRef } from 'react';
 
+import { getImageUrl } from '../../utils/imageUtils';
 export default function EditCar() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -227,7 +228,7 @@ export default function EditCar() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 {existingImages.map(img => (
                   <div key={img.id} style={{ position: 'relative', width: '120px', height: '90px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #dee2e6' }}>
-                    <img src={img.image_url.startsWith('http') ? img.image_url : `http://localhost:5000/${img.image_url}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={img.image_url.startsWith('http') ? img.image_url : getImageUrl(img.image_url)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <button type="button" onClick={() => removeExistingImage(img.id)} style={{ position: 'absolute', top: '4px', left: '4px', background: 'rgba(220,38,38,0.9)', color: 'white', border: 'none', borderRadius: '50%', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                   </div>
                 ))}

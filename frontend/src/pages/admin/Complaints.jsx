@@ -597,6 +597,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { io } from 'socket.io-client';
+import SOCKET_URL from '../../utils/socket';
 
 const STATUS_MAP = {
   open: { label: 'مفتوح', icon: AlertTriangle, color: '#dc3545' },
@@ -640,7 +641,7 @@ export default function AdminComplaints() {
     if (selectedComplaint) {
       fetchMessages(selectedComplaint.id);
 
-      const socket = io('http://localhost:5000');
+      const socket = io(SOCKET_URL);
       socket.emit('join_complaint_room', selectedComplaint.id);
 
       socket.on('receive_message', (newMsg) => {

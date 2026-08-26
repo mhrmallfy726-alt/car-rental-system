@@ -5,6 +5,7 @@ import AdvertisementBanner from '../components/AdvertisementBanner';
 import { Search, Filter, Star, User, Settings, CheckCircle, ShieldCheck, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '../utils/imageUtils';
 // import ActiveAdvertisements from '../components/ActiveAdvertisements';
 
 // import SearchFilter from "../components/SearchFilter";
@@ -328,7 +329,7 @@ export default function Cars() {
             ) : (
               <div id="cars-results" className="cars-grid-3d">
                 {cars.map((car, index) => {
-                  const carImage = car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : `http://localhost:5000/${car.primary_image}`) : 'https://via.placeholder.com/640x420';
+                  const carImage = car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)) : 'https://via.placeholder.com/640x420';
                   const discountedPrice = car.price_per_day * (1 - (car.discount_percentage || 0) / 100);
                   return (
                     <Link

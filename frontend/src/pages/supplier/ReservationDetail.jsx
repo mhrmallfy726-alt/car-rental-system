@@ -3,11 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { reservationsAPI, handoverAPI } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
 import toast from 'react-hot-toast';
-import { 
-  Calendar, Car, User, DollarSign, MapPin, 
-  ChevronRight, CheckCircle, XCircle, Camera, 
-  Clock, Shield, Info, ArrowLeft, MessageSquare, LayoutDashboard 
+import {
+  Calendar, Car, User, DollarSign, MapPin,
+  ChevronRight, CheckCircle, XCircle, Camera,
+  Clock, Shield, Info, ArrowLeft, MessageSquare, LayoutDashboard
 } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUtils';
 import { format } from 'date-fns';
 // import  reservatio} from './Reservations';
 
@@ -124,7 +125,7 @@ export default function SupplierReservationDetail() {
                       <p style={{ fontSize: '0.85rem', background: '#f8f9fa', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>{log.condition_notes || 'لا توجد ملاحظات إضافية'}</p>
                       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                         {log.images?.map((img, i) => (
-                          <img key={i} src={img.image_url.startsWith('http') ? img.image_url : `http://localhost:5000/${img.image_url}`} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px' }} />
+                          <img key={i} src={img.image_url.startsWith('http') ? img.image_url : getImageUrl(img.image_url)} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px' }} />
                         ))}
                       </div>
                     </div>
@@ -155,7 +156,7 @@ export default function SupplierReservationDetail() {
             {/* معلومات السيارة */}
             <div className="card" style={{ background: 'white', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontWeight: 'bold', marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}><Car size={18} /> السيارة</h3>
-              <img src={reservation.car_image ? (reservation.car_image.startsWith('http') ? reservation.car_image : `http://localhost:5000/${reservation.car_image}`) : 'https://via.placeholder.com/200'} style={{ width: '100%', height: '120px', objectFit: 'contain', borderRadius: '8px', marginBottom: '12px' }} />
+              <img src={reservation.car_image ? (reservation.car_image.startsWith('http') ? reservation.car_image : getImageUrl(reservation.car_image)) : 'https://via.placeholder.com/200'} style={{ width: '100%', height: '120px', objectFit: 'contain', borderRadius: '8px', marginBottom: '12px' }} />
               <div style={{ fontWeight: 'bold' }}>{reservation.make} {reservation.model}</div>
               <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>رقم اللوحة: {reservation.license_plate}</div>
             </div>

@@ -3,7 +3,9 @@ import { ArrowLeft, CarFront, Megaphone, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { advertisementsAPI } from '../services/api';
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000';
+const API_ORIGIN = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_ORIGIN || 'http://localhost:5000')
+  .replace(/\/$/, '')
+  .replace(/\/api$/, '');
 
 const typeLabels = {
   featured: 'إعلان مميز',

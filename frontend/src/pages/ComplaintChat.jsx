@@ -5,6 +5,8 @@ import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { MessageCircle, ArrowRight, Paperclip, X, Download, FileText } from 'lucide-react';
 import { io } from 'socket.io-client';
+import SOCKET_URL from '../utils/socket';
+import { getImageUrl } from '../utils/imageUtils';
 
 export default function ComplaintChat() {
   const { id } = useParams();
@@ -22,7 +24,7 @@ export default function ComplaintChat() {
   useEffect(() => {
     fetchChat();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(SOCKET_URL);
     socket.emit('join_complaint_room', id);
 
     socket.on('receive_message', (newMsg) => {
@@ -225,7 +227,7 @@ export default function ComplaintChat() {
                     )}
                     <p style={{ whiteSpace: 'preWrap', lineHeight: 1.5, margin: 0 }}>{msg.message}</p>
                     {msg.attachment_url && (
-                      <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" style={{
+                      <a href={getImageUrl(msg.attachment_url, '#')} target="_blank" rel="noopener noreferrer" style={{
                         display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px',
                         fontSize: '0.75rem', color: isMe ? '#fff' : '#0a58ca', textDecoration: 'underline'
                       }}>

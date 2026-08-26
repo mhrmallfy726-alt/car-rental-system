@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, CreditCard, XCircle, CheckCircle, Star, X, MessageSquare, AlertTriangle } from 'lucide-react';
 import '../../styles/customer-reservations.css';
 
+import { getImageUrl } from '../../utils/imageUtils';
 export default function MyReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -245,7 +246,7 @@ export default function MyReservations() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {reservations.map(res => (
               <div key={res.id} style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : `http://localhost:5000/${res.car_image}`) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '12px' }} />
+                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : getImageUrl(res.car_image)) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '12px' }} />
 
                 <div style={{ flex: 1, minWidth: '200px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '8px' }}>
@@ -328,7 +329,7 @@ export default function MyReservations() {
 
             {handoverReviewLog.condition_notes && <p style={{ background: '#fff8e1', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
             {handoverReviewLog.images?.length > 0 && (
-              <div style={{ margin: '18px 0' }}><h3 style={{ color: '#173a52', fontSize: '.98rem', marginBottom: 10 }}>صور الحالة عند التسليم</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>{handoverReviewLog.images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : `http://localhost:5000/${image.image_url}`} alt="صورة حالة السيارة" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, border: '1px solid #e2e8f0' }} />)}</div></div>
+              <div style={{ margin: '18px 0' }}><h3 style={{ color: '#173a52', fontSize: '.98rem', marginBottom: 10 }}>صور الحالة عند التسليم</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>{handoverReviewLog.images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : getImageUrl(image.image_url)} alt="صورة حالة السيارة" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, border: '1px solid #e2e8f0' }} />)}</div></div>
             )}
 
             <form onSubmit={submitHandoverReview} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
