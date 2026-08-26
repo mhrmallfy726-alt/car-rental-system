@@ -27,6 +27,9 @@ const financeRoutes = require('./src/routes/financeRoutes');
 const path = require("path");
 // const express = require("express");
 const app = express();
+// Railway يعمل خلف reverse proxy ويضيف X-Forwarded-For.
+// تفعيل الثقة في أول proxy يسمح لـ express-rate-limit بحساب عنوان العميل بشكل صحيح.
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 //تحقق من الايميل
 const testEmailRoutes = require('./src/routes/testEmailRoutes');
