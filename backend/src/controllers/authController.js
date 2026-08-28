@@ -780,7 +780,7 @@ const requestPasswordReset = asyncHandler(async (req, res, next) => {
 const verifyPasswordReset = asyncHandler(async (req, res, next) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const otp = String(req.body.otp || '').trim();
-  if (!email || !/^\\d{6}$/.test(otp)) return next(new AppError('البريد والرمز المكون من 6 أرقام مطلوبان', 400));
+  if (!email || !/^\d{6}$/.test(otp)) return next(new AppError('البريد والرمز المكون من 6 أرقام مطلوبان', 400));
   const tokenHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
   const result = await query(`SELECT t.id FROM password_reset_tokens t JOIN users u ON u.id = t.user_id WHERE LOWER(u.email) = $1 AND t.token_hash = $2 AND t.used_at IS NULL AND t.expires_at > NOW() LIMIT 1`, [email, tokenHash]);
   if (!result.rows.length) return next(new AppError('الرمز غير صحيح أو منتهي الصلاحية', 400));
@@ -791,7 +791,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const otp = String(req.body.otp || '').trim();
   const password = String(req.body.password || '');
-  if (!email || !/^\\d{6}$/.test(otp) || password.length < 8) return next(new AppError('أدخل البريد والرمز وكلمة مرور من 8 أحرف على الأقل', 400));
+  if (!email || !/^\d{6}$/.test(otp) || password.length < 8) return next(new AppError('أدخل البريد والرمز وكلمة مرور من 8 أحرف على الأقل', 400));
   const tokenHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
   const client = await require('../config/database').getClient();
   try {
