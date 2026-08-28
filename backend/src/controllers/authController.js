@@ -467,6 +467,7 @@ const ownerId =
       }
     },
     {
+      status: () => ({ json: () => {} }),
       json: () => {}
     }
   );
