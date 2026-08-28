@@ -7,7 +7,7 @@ WHERE COALESCE(discount_percentage, 0) <> 0;
 
 -- Disable old discount-specific ads; keep featured, main, urgent and other ads unchanged.
 UPDATE advertisements
-SET ad_type = 'featured', status = 'expired', updated_at = NOW()
+SET ad_type = 'featured', status = 'rejected', updated_at = NOW()
 WHERE ad_type = 'discount';
 
 -- Prevent creating a new discount advertisement through the database.

@@ -14,7 +14,7 @@ SET ad_type = 'featured', status = 'cancelled'
 WHERE ad_type = 'discount';
 
 UPDATE advertisements
-SET ad_type = 'featured', status = 'expired', updated_at = NOW()
+SET ad_type = 'featured', status = 'rejected', updated_at = NOW()
 WHERE ad_type = 'discount';
 
 COMMIT;
