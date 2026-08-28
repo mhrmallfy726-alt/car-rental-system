@@ -18,7 +18,6 @@ const STATUS_MAP = {
 };
 
 const AD_TYPE_MAP = {
-  discount: 'خصم',
   featured: 'إعلان مميز',
   main: 'إعلان رئيسي',
   urgent: 'إعلان عاجل',
@@ -53,8 +52,7 @@ export default function Admins() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    ad_type: 'discount',
-    discount: 0,
+    ad_type: 'featured',
     price: 0,
     duration: '3_days',
     start_date: '',
@@ -209,7 +207,6 @@ export default function Admins() {
       title: ad.title,
       description: ad.description,
       ad_type: ad.ad_type,
-      discount: ad.discount || 0,
       price: ad.price,
       duration: ad.duration,
       start_date: ad.start_date,
@@ -572,10 +569,6 @@ export default function Admins() {
                     <p style={{ fontSize: '0.75rem', color: '#6c757d', fontWeight: 'bold', marginBottom: '6px' }}>السعر</p>
                     <p style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>${selectedAd.price}</p>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '0.75rem', color: '#6c757d', fontWeight: 'bold', marginBottom: '6px' }}>نسبة الخصم</p>
-                    <p style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>{selectedAd.discount || 0}%</p>
-                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
@@ -910,31 +903,12 @@ export default function Admins() {
                         fontSize: '0.85rem',
                       }}
                     >
-                      <option value="discount">خصم</option>
                       <option value="featured">إعلان مميز</option>
                       <option value="main">إعلان رئيسي</option>
                       <option value="urgent">إعلان عاجل</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>نسبة الخصم %</label>
-                    <input
-                      type="number"
-                      name="discount"
-                      value={formData.discount}
-                      onChange={handleFormChange}
-                      min="0"
-                      max="100"
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #e9ecef',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem',
-                      }}
-                    />
-                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>

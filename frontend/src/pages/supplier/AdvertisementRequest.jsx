@@ -296,7 +296,7 @@ const endDateObject = parseDate(form.end_date);
                 {imagePreview && <img src={imagePreview} alt="معاينة صورة الإعلان" style={{ display: 'block', width: '100%', maxHeight: 190, objectFit: 'cover', marginTop: 10, borderRadius: 13 }} />}
               </label>
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>نوع الإعلان
-                <select name="ad_type" value={form.ad_type} onChange={updateField} style={fieldStyle}><option value="featured">إعلان مميز</option><option value="discount">خصم</option><option value="urgent">إعلان عاجل</option><option value="main">إعلان رئيسي</option></select>
+                <select name="ad_type" value={form.ad_type} onChange={updateField} style={fieldStyle}><option value="featured">إعلان مميز</option><option value="urgent">إعلان عاجل</option><option value="main">إعلان رئيسي</option></select>
               </label>
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>مكان الظهور
                 <select name="placement" value={form.placement} onChange={updateField} style={fieldStyle}><option value="cars">قائمة السيارات</option><option value="home">الصفحة الرئيسية</option><option value="car_detail">تفاصيل السيارة</option><option value="all_public">كل الصفحات العامة</option></select>

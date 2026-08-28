@@ -14,14 +14,12 @@ export default function AddCar() {
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
-  // إصلاح: إضافة discount_percentage والحقول الأخرى
   const [formData, setFormData] = useState({
     make: '', model: '', year: new Date().getFullYear(),
     category_id: '', location_id: '', color: '',
     license_plate: '', seats: 5, doors: 4,
     transmission: 'automatic', fuel_type: 'petrol',
-    price_per_day: '', description: '', mileage: 0,
-    discount_percentage: 0   // إضافة الحقل الناقص
+    price_per_day: '', description: '', mileage: 0
   });
 
   useEffect(() => {
@@ -44,7 +42,6 @@ export default function AddCar() {
     const { name, value } = e.target;
     // تحقق بسيط للحقول الرقمية لتجنب القيم السالبة
     if (name === 'price_per_day' && parseFloat(value) < 0) return;
-    if (name === 'discount_percentage' && (parseFloat(value) < 0 || parseFloat(value) > 100)) return;
     if (name === 'year') {
       const currentYear = new Date().getFullYear();
       if (value < 1980 || value > currentYear + 1) return; // +1 للسماح بموديلات العام القادم
@@ -164,12 +161,6 @@ export default function AddCar() {
               </div>
             </div>
 
-            {/* صف 5: نسبة الخصم */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>نسبة الخصم (%) <span style={{ color: '#6c757d', fontSize: '0.8rem' }}>(اختياري)</span></label>
-                <input type="number" name="discount_percentage" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} min="0" max="100" value={formData.discount_percentage} onChange={handleChange} placeholder="مثال: 15" />
-              </div>
-            </div>
 
             {/* صف 6: الحقول المضافة (المقاعد، الأبواب، اللون، نوع الوقود، المسافة) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>

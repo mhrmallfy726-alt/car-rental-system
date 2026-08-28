@@ -130,7 +130,7 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
   const {
     category_id, location_id, make, model, year, color,
     license_plate, seats, doors, transmission, fuel_type,
-    price_per_day, discount_percentage, description, mileage, features
+    price_per_day, description, mileage, features
   } = req.body;
 
   const result = await query(`
@@ -140,7 +140,7 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     RETURNING *
   `, [req.user.id, category_id, location_id, make, model, year, color,
       license_plate, seats || 5, doors || 4, transmission || 'automatic',
-      fuel_type || 'petrol', price_per_day, discount_percentage || 0, description, mileage || 0]);
+      fuel_type || 'petrol', price_per_day, 0, description, mileage || 0]);
 
   const car = result.rows[0];
 
@@ -209,16 +209,16 @@ router.put('/:id', protect, authorize('supplier'), asyncHandler(async (req, res,
   if (car.rows.length === 0) return next(new AppError('السيارة غير موجودة', 404));
   if (car.rows[0].supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
 
-  const { make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, discount_percentage, description, mileage, status } = req.body;
+  const { make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, description, mileage, status } = req.body;
 
   const result = await query(`
     UPDATE cars SET make = COALESCE($1, make), model = COALESCE($2, model), year = COALESCE($3, year),
       color = COALESCE($4, color), seats = COALESCE($5, seats), doors = COALESCE($6, doors),
       transmission = COALESCE($7, transmission), fuel_type = COALESCE($8, fuel_type),
-      price_per_day = COALESCE($9, price_per_day), discount_percentage = COALESCE($10, discount_percentage), description = COALESCE($11, description),
-      mileage = COALESCE($12, mileage), status = COALESCE($13, status)
-    WHERE id = $14 RETURNING *
-  `, [make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, discount_percentage, description, mileage, status, id]);
+      price_per_day = COALESCE($9, price_per_day), discount_percentage = 0, description = COALESCE($10, description),
+      mileage = COALESCE($11, mileage), status = COALESCE($12, status)
+    WHERE id = $13 RETURNING *
+  `, [make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, description, mileage, status, id]);
 
   res.json({ success: true, data: result.rows[0] });
 }));

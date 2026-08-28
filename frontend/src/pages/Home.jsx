@@ -96,7 +96,7 @@ import { getImageUrl } from '../utils/imageUtils';
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { carsAPI } from '../services/api';
-import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Flame, Car, Heart } from 'lucide-react';
+import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Car, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import SearchFilter from '../components/SearchFilter';
@@ -119,7 +119,6 @@ export default function Home() {
   
 
 
-  const [deals, setDeals] = useState([]);
   const { user, isAuthenticated, isCustomer } = useAuthStore();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const fetchFavorites = async () => {
@@ -133,12 +132,6 @@ export default function Home() {
     }
   };
   useEffect(() => {
-    // Fetch all cars and filter those with discount > 0 for the deals section
-    carsAPI.getAll().then(res => {
-      const discounted = res.data.data.filter(car => car.discount_percentage > 0).slice(0, 4);
-      setDeals(discounted);
-    }).catch(err => console.error(err));
-    
     fetchFavorites();
   }, [user]);
 
@@ -247,62 +240,6 @@ export default function Home() {
       <AdvertisementBanner placement="home" />
 
 
-      {/* Today's Deals - بدون إيموجي نار */}
-      {deals.length > 0 && (
-        <section style={{ padding: '60px 0', background: '#fff' }}>
-          <div className="container">
-            <div style={{ textAlign: 'center', marginBottom: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Flame size={28} color="#E3000F" />
-              <h2 style={{ fontSize: '2rem', margin: 0 }}>عروض اليوم المميزة</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-              {deals.map(car => (
-                <Link to={`/cars/${car.id}`} key={car.id} style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', display: 'block', transition: 'transform 0.2s, box-shadow 0.2s', background: '#fff', textDecoration: 'none' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                  <div style={{ position: 'relative', height: '200px', background: '#f5f5f5' }}>
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#E3000F', color: 'white', padding: '4px 10px', borderRadius: '4px', fontWeight: 'bold', zIndex: 2 }}>
-                      خصم {car.discount_percentage}%
-                    </div>
-                    <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)) : 'https://via.placeholder.com/300x200'} alt={car.make} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    {isCustomer() && (
-                      <button
-                        onClick={(e) => toggleFavorite(e, car.id)}
-                        style={{
-                          position: 'absolute',
-                          bottom: '10px',
-                          left: '10px',
-                          background: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '32px',
-                          height: '32px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'pointer',
-                          boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                          zIndex: 3
-                        }}
-                      >
-                        <Heart size={16} fill={favoriteIds.has(car.id) ? "#dc3545" : "none"} color={favoriteIds.has(car.id) ? "#dc3545" : "#666"} />
-                      </button>
-                    )}
-                  </div>
-                  <div style={{ padding: '15px' }}>
-                    <h3 style={{ fontSize: '1.2rem', marginBottom: '5px', color: '#1a1a1a' }}>{car.make} {car.model}</h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                      <span style={{ textDecoration: 'line-through', color: '#999' }}>${car.price_per_day}</span>
-                      <span style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#E3000F' }}>${(car.price_per_day * (1 - car.discount_percentage / 100)).toFixed(2)} <span style={{ fontSize: '0.8rem', color: '#666' }}>/يوم</span></span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Car Types Quick Links - مع أيقونات Lucide وروابط فعلية */}
       <section style={{ background: '#f8f9fa', padding: '60px 0', borderTop: '1px solid #eee' }}>
         <div className="container">
@@ -336,7 +273,7 @@ export default function Home() {
             <div>
               <div style={{ background: 'var(--primary)', color: 'white', width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 15px' }}>2</div>
               <h3>اختر العرض المناسب</h3>
-              <p style={{ color: '#666', marginTop: '10px' }}>اختر السيارة والمورد الذي يناسبك، وتأكد من قراءة التقييمات وشروط الخصم.</p>
+              <p style={{ color: '#666', marginTop: '10px' }}>اختر السيارة والمورد الذي يناسبك، وتأكد من قراءة التقييمات وشروط الحجز.</p>
             </div>
             <div>
               <div style={{ background: 'var(--primary)', color: 'white', width: '50px', height: '50px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 15px' }}>3</div>

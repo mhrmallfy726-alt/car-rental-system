@@ -180,6 +180,7 @@ const advertisementService  = {
       discount = 0,
       payment_status = 'pending',
     } = adData;
+    if (ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
   
     const result = await query(
       `INSERT INTO advertisements
@@ -340,6 +341,7 @@ const advertisementService  = {
   createAdvertisementRequest: async (supplierId, data) => {
     const car = await query('SELECT id FROM cars WHERE id = $1 AND supplier_id = $2', [data.car_id, supplierId]);
     if (!car.rows.length) throw new Error('السيارة غير موجودة ضمن سيارات المورد');
+    if (data.ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
     const placement = data.placement || 'cars';
     const image_url = data.image_url || null;
     const pricePerDay = Number(data.price_per_day ?? data.requested_budget ?? 0);
