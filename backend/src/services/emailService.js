@@ -1,21 +1,27 @@
-const otpGenerator = require("otp-generator");
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const otpGenerator = require('otp-generator');
+const nodemailer = require('nodemailer');
 const dns = require('dns');
+require('dotenv').config();
+
 dns.setDefaultResultOrder('ipv4first');
+
+const smtpPort = Number(process.env.SMTP_PORT || 587);
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: Number(process.env.SMTP_PORT || 587) === 465,
+  port: smtpPort,
+  secure: smtpPort === 465,
   family: 4,
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4, all: false }, callback);
+  },
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 15000,
+  connectionTimeout: 8000,
+  greetingTimeout: 8000,
+  socketTimeout: 8000,
 });
 
 const generateOTP = () => {
