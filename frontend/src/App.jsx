@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Landing from './pages/Landing';
 import About from './pages/About';
 import Login from './pages/auth/Login';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Register from './pages/auth/Register';
 import Cars from './pages/Cars';
 import CarDetail from './pages/CarDetail';
@@ -118,6 +119,7 @@ export default function App() {
         <Route path="/marketing" element={<MarketingChoice />} />
         <Route path="/MarketingChoice" element={<Navigate to="/marketing" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register" element={<Register />} />
         <Route path="/supplier/join" element={<VendorJoin />} />
         <Route path="/Vendor-Join" element={<Navigate to="/supplier/join" replace />} />
