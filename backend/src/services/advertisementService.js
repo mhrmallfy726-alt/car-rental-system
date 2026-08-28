@@ -181,7 +181,16 @@ const advertisementService  = {
       payment_status = 'pending',
     } = adData;
     if (ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
-  
+    console.log({
+      supplier_id,
+      car_id,
+      title,
+      description,
+      ad_type,
+      placement,
+      image_url,
+    });
+    
     const result = await query(
       `INSERT INTO advertisements
         (
