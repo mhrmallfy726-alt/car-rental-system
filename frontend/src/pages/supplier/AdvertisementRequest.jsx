@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CheckCircle2, Clock3, FileText, Megaphone, Send, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import {advertisementsAPI,carsAPI,} from '../../services/api';
+import { advertisementsAPI, carsAPI, paymentsAPI } from '../../services/api';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 const navy = '#173a52';
@@ -102,6 +102,8 @@ export default function AdvertisementRequest() {
   const [submitting, setSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [pricing, setPricing] = useState(null);
+  const [payingId, setPayingId] = useState(null);
   const today = getToday();
 const startDateObject = parseDate(form.start_date);
 const endDateObject = parseDate(form.end_date);
@@ -112,13 +114,15 @@ const endDateObject = parseDate(form.end_date);
     setLoading(true);
   
     try {
-      const [carsResponse, requestsResponse] = await Promise.all([
+      const [carsResponse, requestsResponse, pricingResponse] = await Promise.all([
         carsAPI.getMyCars(),
         advertisementsAPI.getMyRequests(),
+        advertisementsAPI.getPricing(),
       ]);
   
       setCars(carsResponse.data?.data || []);
       setRequests(requestsResponse.data?.data || []);
+      setPricing(pricingResponse.data?.data || null);
     } catch (error) {
       console.error('Advertisement load error:', error);
   
@@ -156,6 +160,7 @@ const endDateObject = parseDate(form.end_date);
   //         await advertisementsAPI.getMyRequests();
   
   //       setRequests(requestsResponse.data?.data || []);
+      setPricing(pricingResponse.data?.data || null);
   //     } catch (requestsError) {
   //       console.error('Requests error:', requestsError);
   //       setRequests([]);
@@ -232,13 +237,17 @@ const endDateObject = parseDate(form.end_date);
       toast.error('تاريخ النهاية غير صحيح');
       return;
     }
+    if (!pricing?.advertisement_price_per_day) return toast.error('تعذر تحميل سعر الإعلان من الإدارة');
     setSubmitting(true);
     try {
       const formData = new FormData();
 
       Object.entries({
         ...form,
-        requested_budget: Number(form.requested_budget || 0),
+        requested_budget: Number(pricing?.advertisement_price_per_day || 0),
+        price_per_day: Number(pricing?.advertisement_price_per_day || 0),
+        start_time: pricing?.advertisement_start_time || '',
+        end_time: pricing?.advertisement_end_time || '',
         duration_days: Number(form.duration_days),
         start_date: form.start_date,
         end_date: form.end_date,
@@ -261,6 +270,17 @@ const endDateObject = parseDate(form.end_date);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const payForAdvertisement = async (request) => {
+    if (!request.advertisement_id) return toast.error('الإعلان غير جاهز للدفع، يرجى تحديث الصفحة');
+    setPayingId(request.id);
+    try {
+      await paymentsAPI.advertisementCheckout({ advertisement_id: request.advertisement_id, currency: pricing?.currency || 'YER', payment_method: 'card' });
+      toast.success('تم الدفع وبدأ نشر الإعلان');
+      await loadData();
+    } catch (error) { toast.error(error.response?.data?.message || 'تعذر دفع الإعلان'); }
+    finally { setPayingId(null); }
   };
 
   return (
@@ -301,9 +321,13 @@ const endDateObject = parseDate(form.end_date);
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>مكان الظهور
                 <select name="placement" value={form.placement} onChange={updateField} style={fieldStyle}><option value="cars">قائمة السيارات</option><option value="home">الصفحة الرئيسية</option><option value="car_detail">تفاصيل السيارة</option><option value="all_public">كل الصفحات العامة</option></select>
               </label>
-              <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>الميزانية المقترحة
-                <input name="requested_budget" value={form.requested_budget} onChange={updateField} type="number" min="0" step="0.01" placeholder="0" style={fieldStyle} />
+              <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>سعر الإعلان اليومي
+                <input value={pricing?.advertisement_price_per_day || 'جاري التحميل...'} readOnly type="text" style={{ ...fieldStyle, background: '#f4f7f9' }} />
               </label>
+              <div style={{ color: navy, fontWeight: 800, fontSize: 14, paddingTop: 8 }}>إجمالي الطلب
+                <div style={{ ...fieldStyle, marginTop: 8, background: '#fbf7ec' }}>{pricing ? `${(Number(pricing.advertisement_price_per_day || 0) * Number(form.duration_days || 0)).toLocaleString()} ${pricing.currency || 'YER'}` : 'جاري الحساب...'}</div>
+              </div>
+              <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 11, background: '#eef7fb', color: navy, fontSize: 13 }}>وقت الظهور اليومي: <strong>{pricing?.advertisement_start_time || '--:--'} - {pricing?.advertisement_end_time || '--:--'}</strong></div>
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>المدة بالأيام 
               <input name="duration_days" type="number" min="1" max="365" value={form.duration_days} onChange={(event) => { const durationDays = Number(event.target.value); const endDate = calculateEndDate(form.start_date, durationDays); setForm((current) => ({ ...current, duration_days: durationDays, end_date: endDate })); }} style={fieldStyle} required />
               </label>
@@ -317,7 +341,7 @@ const endDateObject = parseDate(form.end_date);
           </form>
           <section style={{ background: '#fff', borderRadius: 20, border: '1px solid #e7eaee', boxShadow: '0 14px 36px rgba(23,58,82,0.07)', padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}><h2 style={{ margin: 0, color: navy, fontSize: 20 }}>طلباتك السابقة</h2><span style={{ color: gold, fontWeight: 900 }}>{requests.length}</span></div>
-            {loading ? <p style={{ color: muted }}>جاري التحميل...</p> : requests.length === 0 ? <div style={{ padding: '34px 10px', color: muted, textAlign: 'center', lineHeight: 1.8 }}>لا توجد طلبات إعلانية حتى الآن.<br />ابدأ من النموذج المجاور.</div> : <div style={{ display: 'grid', gap: 12 }}>{requests.map((request) => { const status = statusMap[request.status] || statusMap.pending; const Icon = status.icon; return <article key={request.id} style={{ padding: 14, borderRadius: 14, border: '1px solid #edf0f2', background: '#fcfcfd' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'start' }}><div><h3 style={{ margin: 0, color: navy, fontSize: 15 }}>{request.title}</h3><p style={{ margin: '5px 0 0', color: muted, fontSize: 12 }}>{request.car_make} {request.car_model}</p></div><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 8px', borderRadius: 999, color: status.color, background: status.background, fontSize: 11, fontWeight: 900 }}><Icon size={13} />{status.label}</span></div>{request.reviewer_note && <p style={{ margin: '10px 0 0', color: muted, lineHeight: 1.6, fontSize: 12 }}>ملاحظة الإدارة: {request.reviewer_note}</p>}</article>; })}</div>}
+            {loading ? <p style={{ color: muted }}>جاري التحميل...</p> : requests.length === 0 ? <div style={{ padding: '34px 10px', color: muted, textAlign: 'center', lineHeight: 1.8 }}>لا توجد طلبات إعلانية حتى الآن.<br />ابدأ من النموذج المجاور.</div> : <div style={{ display: 'grid', gap: 12 }}>{requests.map((request) => { const status = statusMap[request.status] || statusMap.pending; const Icon = status.icon; return <article key={request.id} style={{ padding: 14, borderRadius: 14, border: '1px solid #edf0f2', background: '#fcfcfd' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'start' }}><div><h3 style={{ margin: 0, color: navy, fontSize: 15 }}>{request.title}</h3><p style={{ margin: '5px 0 0', color: muted, fontSize: 12 }}>{request.car_make} {request.car_model}</p></div><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 8px', borderRadius: 999, color: status.color, background: status.background, fontSize: 11, fontWeight: 900 }}><Icon size={13} />{status.label}</span></div>{request.reviewer_note && <p style={{ margin: '10px 0 0', color: muted, lineHeight: 1.6, fontSize: 12 }}>ملاحظة الإدارة: {request.reviewer_note}</p>}{request.status === 'approved' && request.payment_status !== 'paid' && request.advertisement_id && <button type="button" onClick={() => payForAdvertisement(request)} disabled={payingId === request.id} style={{ marginTop: 12, border: 0, borderRadius: 10, padding: '10px 14px', background: navy, color: '#fff', fontWeight: 800 }}>{payingId === request.id ? 'جاري الدفع...' : `دفع ${Number(request.total_price || 0).toLocaleString()} ${pricing?.currency || 'YER'}`}</button>}</article>; })}</div>}
           </section>
         </div>
       </div>

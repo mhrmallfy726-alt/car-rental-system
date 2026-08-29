@@ -39,6 +39,9 @@ export default function FinanceCenter() {
         currency: 'YER',
         commission_rate: Number(settings.commission_rate || 0),
         settlement_mode: settings.settlement_mode,
+        advertisement_price_per_day: Number(settings.advertisement_price_per_day || 0),
+        advertisement_start_time: settings.advertisement_start_time,
+        advertisement_end_time: settings.advertisement_end_time,
       });
       setSettings(response.data?.data || settings);
       toast.success('تم حفظ إعدادات الإدارة المالية');
@@ -93,8 +96,8 @@ export default function FinanceCenter() {
 
       <section className="finance-settings-card">
         <div>
-          <h2>إعدادات التسوية</h2>
-          <p>اختر هل تُسجل تسوية المورد تلقائيًا أو تنتظر اعتماد الإدارة.</p>
+          <h2>إعدادات الإعلانات والدفع</h2>
+          <p>حدد سعر نشر الإعلان لليوم وفترة ظهوره اليومية. تظهر هذه القيم تلقائيًا للمورد.</p>
         </div>
         {settings && (
           <div className="finance-settings-form">
@@ -111,6 +114,18 @@ export default function FinanceCenter() {
                 value={settings.commission_rate}
                 onChange={(event) => setSettings({ ...settings, commission_rate: event.target.value })}
               />
+            </label>
+            <label>
+              سعر الإعلان لليوم
+              <input type="number" min="1" step="0.01" value={settings.advertisement_price_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_per_day: event.target.value })} />
+            </label>
+            <label>
+              يبدأ الظهور يوميًا
+              <input type="time" value={settings.advertisement_start_time || '08:00'} onChange={(event) => setSettings({ ...settings, advertisement_start_time: event.target.value })} />
+            </label>
+            <label>
+              ينتهي الظهور يوميًا
+              <input type="time" value={settings.advertisement_end_time || '22:00'} onChange={(event) => setSettings({ ...settings, advertisement_end_time: event.target.value })} />
             </label>
             <label>
               طريقة التسوية

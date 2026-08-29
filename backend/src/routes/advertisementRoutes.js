@@ -32,6 +32,7 @@ const { uploadAdvertisementImage } = require('../middleware/upload');
 const controller = require('../controllers/advertisementController');
 
 // Public slots: the component can render without requiring the visitor to log in.
+router.get('/pricing', controller.getAdvertisementPricing);
 router.get('/active', controller.getActiveAdvertisements);
 router.post('/:id/impression', controller.recordImpression);
 router.post('/:id/click', controller.recordClick);

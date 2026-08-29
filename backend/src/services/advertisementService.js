@@ -73,10 +73,14 @@ const REQUEST_SELECT = `
     c.model AS car_model,
     c.year AS car_year,
     (SELECT ci.image_url FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.is_primary DESC, ci.created_at ASC LIMIT 1) AS car_primary_image,
-    c.price_per_day AS car_price_per_day
+    c.price_per_day AS car_price_per_day,
+    a.id AS advertisement_id,
+    a.status AS advertisement_status,
+    a.payment_status AS advertisement_payment_status
   FROM advertisement_requests r
   JOIN users supplier ON supplier.id = r.supplier_id
   JOIN cars c ON c.id = r.car_id
+  LEFT JOIN advertisements a ON a.request_id = r.id
 `;
 
 const addDateFilter = (params, dateColumn, operator, value) => {
@@ -120,6 +124,7 @@ const advertisementService  = {
       `a.status = $1`,
       `(a.start_date IS NULL OR a.start_date <= CURRENT_DATE)`,
       `(a.end_date IS NULL OR a.end_date >= CURRENT_DATE)`,
+      `(a.start_time IS NULL OR a.end_time IS NULL OR (CURRENT_TIME >= a.start_time AND CURRENT_TIME < a.end_time))`,
     ];
   
     if (placement) {
@@ -293,6 +298,8 @@ const advertisementService  = {
     return result.rows[0] || null;
   },
 
+  getAdvertisementPricing: async () => financeService.getAdvertisementPricing(),
+
   getAdvertisementStats: async () => {
     const [ads, requests] = await Promise.all([
       query(`SELECT
@@ -353,9 +360,13 @@ const advertisementService  = {
     if (data.ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
     const placement = data.placement || 'cars';
     const image_url = data.image_url || null;
-    const pricePerDay = Number(data.price_per_day ?? data.requested_budget ?? 0);
+    const pricing = await financeService.getAdvertisementPricing();
+    const pricePerDay = Number(pricing.advertisement_price_per_day);
     const durationDays = Number(data.duration_days || 7);
+    if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365) throw new Error('مدة الإعلان يجب أن تكون بين يوم و365 يومًا');
     const totalPrice = pricePerDay * durationDays;
+    const startTime = data.start_time || pricing.advertisement_start_time;
+    const endTime = data.end_time || pricing.advertisement_end_time;
 
     const result = await query(
       `INSERT INTO advertisement_requests
@@ -372,9 +383,12 @@ const advertisementService  = {
           total_price,
           duration_days,
           start_date,
-          end_date
+          end_date,
+          start_time,
+          end_time,
+          payment_status
         )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 'unpaid')
        RETURNING *`,
       [
         supplierId,
@@ -390,6 +404,8 @@ const advertisementService  = {
         durationDays,
         data.start_date || null,
         data.end_date || null,
+        startTime,
+        endTime,
       ]
     );
     
@@ -414,164 +430,40 @@ const advertisementService  = {
 
   approveAdvertisementRequest: async (requestId, reviewerId, note = '') => {
     const client = await getClient();
-  
     try {
       await client.query('BEGIN');
-  
-      const requestResult = await client.query(
-        `SELECT *
-         FROM advertisement_requests
-         WHERE id = $1
-         FOR UPDATE`,
-        [requestId]
-      );
-  
-      if (!requestResult.rows.length) {
-        throw new Error('طلب الإعلان غير موجود');
-      }
-  
+      const requestResult = await client.query(`SELECT * FROM advertisement_requests WHERE id = $1 FOR UPDATE`, [requestId]);
+      if (!requestResult.rows.length) throw new Error('طلب الإعلان غير موجود');
       const request = requestResult.rows[0];
-  
-      if (request.status !== 'pending') {
-        throw new Error(
-          'لا يمكن اعتماد هذا الطلب في حالته الحالية'
-        );
-      }
-  
+      if (request.status !== 'pending') throw new Error('لا يمكن اعتماد هذا الطلب في حالته الحالية');
       const duration = Number(request.duration_days || 7);
-      const pricePerDay = Number(
-        request.price_per_day ?? request.requested_budget ?? 0
-      );
-      const totalPrice = Number(
-        request.total_price || pricePerDay * duration
-      );
-  
-      const adResult = await client.query(
-        `INSERT INTO advertisements
-          (
-            supplier_id,
-            car_id,
-            title,
-            description,
-            ad_type,
-            placement,
-            image_url,
-            price,
-            duration,
-            price_per_day,
-            total_price,
-            start_date,
-            end_date,
-            status,
-            featured,
-            is_pinned,
-            payment_status
-          )
-         VALUES
-          (
-            $1,
-            $2,
-            $3,
-            $4,
-            $5,
-            $6,
-            $7,
-            $8::numeric,
-            $9::int,
-            $10::numeric,
-            $11::numeric,
-            COALESCE($12::date, CURRENT_DATE),
-            COALESCE(
-              $13::date,
-              (
-                COALESCE($12::date, CURRENT_DATE)
-                + (($9::int - 1) * INTERVAL '1 day')
-              )::date
-            ),
-            'pending',
-            $14::boolean,
-            false,
-            'pending'
-          )
-         RETURNING *`,
-        [
-          request.supplier_id,
-          request.car_id,
-          request.title,
-          request.description,
-          request.ad_type,
-          request.placement || 'cars',
-          request.image_url || null,
-          totalPrice,
-          duration,
-          pricePerDay,
-          totalPrice,
-          request.start_date || null,
-          request.end_date || null,
-          request.ad_type === 'featured',
-        ]
-      );
-      
-      
-  
-      const payment = await financeService.createAdvertisementCharge(client, {
-        advertisementId: adResult.rows[0].id,
-        supplierId: request.supplier_id,
-        amount: totalPrice,
-        currency: 'YER',
-        title: request.title,
-      });
-
-      await client.query(
-        `UPDATE advertisements
-         SET status = 'active',
-             payment_status = 'paid',
-             payment_id = $1,
-             paid_at = NOW()
-         WHERE id = $2`,
-        [payment.id, adResult.rows[0].id],
-      );
-
-      await client.query(
-        `UPDATE advertisement_requests
-         SET status = $1,
-             reviewer_id = $2,
-             reviewer_note = $3,
-             reviewed_at = NOW()
-         WHERE id = $4`,
-        [
-          'approved',
-          reviewerId,
-          note || null,
-          requestId,
-        ]
-      );
-
-      await client.query(
-        `INSERT INTO notifications
-          (user_id, title, message, type, reference_id, reference_type)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          request.supplier_id,
-          'تم اعتماد إعلانك',
-          `تم اعتماد طلب الإعلان «${request.title}» ونشره بنجاح.`,
-          'system',
-          adResult.rows[0].id,
-          'advertisement',
-        ]
-      );
-  
+      const pricePerDay = Number(request.price_per_day || request.requested_budget || 0);
+      const totalPrice = Number(request.total_price || pricePerDay * duration);
+      if (!Number.isFinite(totalPrice) || totalPrice <= 0) throw new Error('لا يمكن اعتماد إعلان بدون قيمة مالية');
+      const adResult = await client.query(`
+        INSERT INTO advertisements
+          (request_id, supplier_id, car_id, title, description, ad_type, placement, image_url,
+           price, budget, duration, price_per_day, total_price, start_date, end_date,
+           start_time, end_time, status, featured, is_pinned, payment_status)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,$10,$11,$12,
+                COALESCE($13::date, CURRENT_DATE),
+                COALESCE($14::date, (COALESCE($13::date, CURRENT_DATE) + (($10::int - 1) * INTERVAL '1 day'))::date),
+                $15,$16,'pending',($6 = 'featured'),false,'unpaid')
+        RETURNING *`, [
+          request.id, request.supplier_id, request.car_id, request.title, request.description,
+          request.ad_type, request.placement || 'cars', request.image_url || null,
+          totalPrice, duration, pricePerDay, totalPrice, request.start_date || null,
+          request.end_date || null, request.start_time, request.end_time,
+        ]);
+      await client.query(`UPDATE advertisement_requests SET status='approved', reviewer_id=$1, reviewer_note=$2, reviewed_at=NOW() WHERE id=$3`, [reviewerId, note || null, requestId]);
+      await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [request.supplier_id, 'تم اعتماد طلب الإعلان', `تم اعتماد طلب «${request.title}». أكمل الدفع ليبدأ النشر.`, adResult.rows[0].id]);
       await client.query('COMMIT');
-  
       return adResult.rows[0];
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
-    } finally {
-      client.release();
-    }
+    } finally { client.release(); }
   },
-  
 
   rejectAdvertisementRequest: async (requestId, reviewerId, note = '') => {
     const result = await query(

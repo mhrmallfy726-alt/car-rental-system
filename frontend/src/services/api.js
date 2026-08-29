@@ -74,6 +74,7 @@ export const reservationsAPI = {
 export const paymentsAPI = {
   getCurrencies: () => api.get('/payments/currencies'),
   checkout: (data) => api.post('/payments/checkout', data),
+  advertisementCheckout: (data) => api.post('/payments/advertisement-checkout', data),
   getHistory: () => api.get('/payments/history'),
   getSavedCards: () => api.get('/payments/cards'),
   saveCard: (data) => api.post('/payments/cards', data),
@@ -211,6 +212,7 @@ export const adminAPI = {
     api.put(`/admin/supplier-requests/${id}/reject`, { reason }),
 };
 export const advertisementsAPI = {
+  getPricing: () => api.get('/advertisementController/pricing'),
   getActiveAdvertisements: (params = {}) =>
   api.get(
     '/advertisementController/active',

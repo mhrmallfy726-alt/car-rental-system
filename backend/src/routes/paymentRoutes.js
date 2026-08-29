@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
-const { query } = require('../config/database');
+const { query, getClient } = require('../config/database');
 const financeService = require('../services/financeService');
 const { listCurrencies, assertCurrency, convertFromYER } = require('../services/currencyService');
 const { sendTextMessage } = require('../services/whatsappService');
@@ -37,6 +37,38 @@ router.post('/cards', protect, asyncHandler(async (req, res, next) => {
     [req.user.id, card_holder_name, masked, token, expiry_month, expiry_year, brand, isDefault]
   );
   res.status(201).json({ success: true, data: result.rows[0] });
+}));
+
+router.post('/advertisement-checkout', protect, asyncHandler(async (req, res, next) => {
+  const { advertisement_id, payment_method = 'card', currency = 'YER', saved_card_id } = req.body;
+  if (!advertisement_id) return next(new AppError('رقم الإعلان مطلوب', 400));
+  assertCurrency(currency);
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const adResult = await client.query(`SELECT a.*, r.supplier_id AS request_supplier_id FROM advertisements a LEFT JOIN advertisement_requests r ON r.id = a.request_id WHERE a.id = $1 FOR UPDATE`, [advertisement_id]);
+    const ad = adResult.rows[0];
+    if (!ad) throw new AppError('الإعلان غير موجود', 404);
+    if (ad.supplier_id !== req.user.id && req.user.role !== 'admin') throw new AppError('لا تملك صلاحية دفع هذا الإعلان', 403);
+    if (ad.payment_status === 'paid') throw new AppError('تم دفع هذا الإعلان مسبقاً', 409);
+    if (!['pending', 'awaiting_payment'].includes(ad.status)) throw new AppError('الإعلان غير جاهز للدفع', 400);
+    if (saved_card_id) {
+      const card = await client.query('SELECT id FROM saved_cards WHERE id = $1 AND user_id = $2', [saved_card_id, req.user.id]);
+      if (!card.rows.length) throw new AppError('البطاقة غير صالحة', 400);
+    }
+    const baseAmountYER = Number(ad.total_price || ad.price || 0);
+    if (!Number.isFinite(baseAmountYER) || baseAmountYER <= 0) throw new AppError('قيمة الإعلان غير صالحة', 400);
+    const totalAmount = convertFromYER(baseAmountYER, currency);
+    const payment = await financeService.createAdvertisementCharge(client, { advertisementId: ad.id, supplierId: ad.supplier_id, amount: totalAmount, currency, title: ad.title });
+    await client.query(`UPDATE advertisements SET status='active', payment_status='paid', payment_id=$1, paid_at=NOW() WHERE id=$2`, [payment.id, ad.id]);
+    await client.query(`UPDATE advertisement_requests SET payment_status='paid', payment_id=$1 WHERE id=$2`, [payment.id, ad.request_id]);
+    await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [ad.supplier_id, 'تم دفع الإعلان وبدء نشره', `تم دفع إعلان «${ad.title}» وبدأ نشره حسب الوقت المحدد.`, ad.id]);
+    await client.query('COMMIT');
+    res.status(201).json({ success: true, data: payment, advertisement_status: 'active' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally { client.release(); }
 }));
 
 router.post('/checkout', protect, asyncHandler(async (req, res, next) => {

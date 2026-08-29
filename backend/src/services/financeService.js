@@ -12,7 +12,7 @@ const createAdvertisementCharge = async (client, {
 }) => {
   const numericAmount = Number(amount || 0);
   const paymentCurrency = assertCurrency(currency);
-  if (!advertisementId || !supplierId || numericAmount < 0) {
+  if (!advertisementId || !supplierId || !Number.isFinite(numericAmount) || numericAmount <= 0) {
     throw new Error('بيانات دفع الإعلان غير صالحة');
   }
 
@@ -46,7 +46,7 @@ const createAdvertisementCharge = async (client, {
       providerReference,
       JSON.stringify({
         simulated: true,
-        event: 'advertisement_approved',
+        event: 'advertisement_checkout',
         title: title || null,
       }),
     ],
@@ -73,10 +73,17 @@ const createAdvertisementCharge = async (client, {
   return paidPayment;
 };
 
+const getAdvertisementPricing = async () => {
+  const result = await query(`SELECT advertisement_price_per_day, advertisement_start_time, advertisement_end_time, currency FROM finance_settings WHERE id = 1`);
+  return result.rows[0];
+};
+
 const getSettings = async () => {
   const result = await query(
     `SELECT id, currency, commission_rate, settlement_mode,
-            ad_charge_policy, updated_by, updated_at
+            ad_charge_policy, advertisement_price_per_day,
+            advertisement_start_time, advertisement_end_time,
+            updated_by, updated_at
      FROM finance_settings
      WHERE id = 1`,
   );
@@ -89,6 +96,13 @@ const updateSettings = async (adminId, data = {}) => {
   const settlementMode = data.settlement_mode === 'automatic'
     ? 'automatic'
     : 'manual';
+  const adPricePerDay = Number(data.advertisement_price_per_day ?? 1000);
+  const adStartTime = data.advertisement_start_time || '08:00';
+  const adEndTime = data.advertisement_end_time || '22:00';
+  if (!Number.isFinite(adPricePerDay) || adPricePerDay <= 0) throw new Error('سعر الإعلان اليومي يجب أن يكون أكبر من صفر');
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(adStartTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(adEndTime) || adStartTime >= adEndTime) {
+    throw new Error('وقت بداية الإعلان يجب أن يسبق وقت النهاية');
+  }
 
   if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) {
     throw new Error('نسبة العمولة يجب أن تكون بين 0 و100');
@@ -99,11 +113,14 @@ const updateSettings = async (adminId, data = {}) => {
      SET currency = $1,
          commission_rate = $2,
          settlement_mode = $3,
-         updated_by = $4,
+         advertisement_price_per_day = $4,
+         advertisement_start_time = $5,
+         advertisement_end_time = $6,
+         updated_by = $7,
          updated_at = NOW()
      WHERE id = 1
      RETURNING *`,
-    [currency, commissionRate, settlementMode, adminId],
+    [currency, commissionRate, settlementMode, adPricePerDay, adStartTime, adEndTime, adminId],
   );
   return result.rows[0];
 };
@@ -218,6 +235,7 @@ const completePayout = async (adminId, payoutId, notes = '') => {
 
 module.exports = {
   createAdvertisementCharge,
+  getAdvertisementPricing,
   getSettings,
   updateSettings,
   getDashboard,

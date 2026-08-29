@@ -87,6 +87,10 @@ const uploadedImagePath = (req) => (
 );
 
 const advertisementController = {
+  getAdvertisementPricing: async (req, res) => {
+    try { res.json({ success: true, data: await advertisementService.getAdvertisementPricing() }); }
+    catch (error) { handleError(res, error, 'فشل جلب إعدادات الإعلان'); }
+  },
   getActiveAdvertisements: async (req, res) => {
     try {
       const data =
