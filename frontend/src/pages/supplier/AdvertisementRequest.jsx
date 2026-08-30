@@ -22,6 +22,7 @@ const initialForm = {
   ad_type: 'featured',
   placement: 'cars',
   requested_budget: '',
+  budget:'',
   duration_days: 7,
   start_date: '',
   end_date: '',
@@ -160,7 +161,7 @@ const endDateObject = parseDate(form.end_date);
   //         await advertisementsAPI.getMyRequests();
   
   //       setRequests(requestsResponse.data?.data || []);
-      setPricing(pricingResponse.data?.data || null);
+      // setPricing(pricingResponse.data?.data || null);
   //     } catch (requestsError) {
   //       console.error('Requests error:', requestsError);
   //       setRequests([]);
@@ -312,7 +313,7 @@ const endDateObject = parseDate(form.end_date);
                   onChange={handleImageChange}
                   style={fieldStyle}
                 />
-                <span style={{ display: 'block', marginTop: 7, color: muted, fontSize: 12 }}>اختر صورة من الهاتف أو الكمبيوتر، بحد أقصى 5 ميجابايت.</span>
+                <span style={{ display: 'block', marginTop: 7, color: muted, fontSize: 12 }}>اختر صورة بحد أقصى 5 ميجابايت.</span>
                 {imagePreview && <img src={imagePreview} alt="معاينة صورة الإعلان" style={{ display: 'block', width: '100%', maxHeight: 190, objectFit: 'cover', marginTop: 10, borderRadius: 13 }} />}
               </label>
               <label style={{ color: navy, fontWeight: 800, fontSize: 14 }}>نوع الإعلان

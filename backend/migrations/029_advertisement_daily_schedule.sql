@@ -34,13 +34,27 @@ ALTER TABLE advertisements
 ALTER TABLE advertisement_requests
   ADD CONSTRAINT advertisement_requests_placement_check
   CHECK (placement IN ('all_public', 'home', 'homepage', 'cars', 'search_results', 'car_detail', 'car_details'));
+ALTER TABLE advertisement_requests
+  DROP CONSTRAINT IF EXISTS advertisement_request_time_check;
+
+ALTER TABLE advertisements
+  DROP CONSTRAINT IF EXISTS advertisement_time_check;
 
 ALTER TABLE advertisement_requests
   ADD CONSTRAINT advertisement_request_time_check
-  CHECK (start_time IS NULL OR end_time IS NULL OR start_time < end_time);
+  CHECK (
+    start_time IS NULL
+    OR end_time IS NULL
+    OR start_time < end_time
+  );
+
 ALTER TABLE advertisements
   ADD CONSTRAINT advertisement_time_check
-  CHECK (start_time IS NULL OR end_time IS NULL OR start_time < end_time);
+  CHECK (
+    start_time IS NULL
+    OR end_time IS NULL
+    OR start_time < end_time
+  );
 
 UPDATE finance_settings
 SET advertisement_start_time = COALESCE(advertisement_start_time, '08:00'),

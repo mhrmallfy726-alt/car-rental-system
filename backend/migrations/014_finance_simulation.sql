@@ -56,8 +56,15 @@ SET price_per_day = COALESCE(NULLIF(price_per_day, 0), requested_budget, 0),
 WHERE price_per_day = 0 OR total_price = 0;
 
 UPDATE advertisements
-SET price_per_day = COALESCE(NULLIF(price_per_day, 0),
-                             CASE WHEN duration > 0 THEN price / duration ELSE price END),
+SET price_per_day = COALESCE(
+      NULLIF(price_per_day, 0),
+      CASE
+        WHEN NULLIF(BTRIM(duration::text), '') ~ '^[0-9]+(\.[0-9]+)?$'
+             AND BTRIM(duration::text)::numeric > 0
+        THEN price / BTRIM(duration::text)::numeric
+        ELSE price
+      END
+    ),
     total_price = COALESCE(NULLIF(total_price, 0), price)
 WHERE price_per_day = 0 OR total_price = 0;
 

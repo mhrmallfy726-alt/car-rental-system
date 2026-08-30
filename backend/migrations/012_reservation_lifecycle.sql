@@ -21,11 +21,11 @@ WHERE pickup_time IS NULL OR return_time IS NULL OR pickup_at IS NULL OR return_
 
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_handover_state_check;
 ALTER TABLE reservations ADD CONSTRAINT reservations_handover_state_check
-  CHECK (handover_state IN ('not_started', 'awaiting_pickup', 'with_customer', 'return_due', 'returned', 'closed'));
+  CHECK (handover_state IN ('pending_payment','not_started', 'awaiting_pickup', 'with_customer', 'return_due', 'returned', 'closed'));
 
 ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_status_lifecycle_check;
 ALTER TABLE reservations ADD CONSTRAINT reservations_status_lifecycle_check
-  CHECK (status IN ('pending', 'approved', 'rejected', 'cancelled', 'active', 'completed', 'disputed', 'awaiting_pickup', 'returned'));
+  CHECK (status IN ('pending_payment','pending', 'approved', 'rejected', 'cancelled', 'active', 'completed', 'disputed', 'awaiting_pickup', 'returned'));
 
 CREATE INDEX IF NOT EXISTS idx_reservations_pickup_at ON reservations(pickup_at);
 CREATE INDEX IF NOT EXISTS idx_reservations_return_at ON reservations(return_at);
