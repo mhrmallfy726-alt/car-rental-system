@@ -1,26 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-async function request(path, options = {}) {
-  const token = localStorage.getItem('accessToken');
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.message || 'حدث خطأ');
-  return data;
-}
+import { api } from './api';
 
 export const supplierContextAPI = {
-  getOptions: () => request('/supplier/context/options'),
-  select: (location_id) => request('/supplier/context/select', {
-    method: 'POST',
-    body: JSON.stringify({ location_id }),
-  }),
+  getOptions: async () => {
+    const response = await api.get('/supplier/context/options');
+    return response.data.data || [];
+  },
+  select: async (location_id) => {
+    const response = await api.post('/supplier/context/select', { location_id });
+    return response.data;
+  },
 };
 
 export function getSelectedShowroom() {
