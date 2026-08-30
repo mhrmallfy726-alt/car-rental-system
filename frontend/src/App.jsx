@@ -25,6 +25,7 @@ import SupplierSettings from './pages/supplier/Settings';
 import EditCar from './pages/supplier/EditCar';
 import SupplierReservationDetail from './pages/supplier/ReservationDetail';
 import SupplierFinance from './pages/supplier/Finance';
+import Showrooms from './pages/supplier/Showrooms';
 import EmployeeList from './pages/supplier/EmployeesList';
 import EmployeeForm from './pages/supplier/EmployeeForm';
 import EmployeeDetail from './pages/supplier/EmployeeDetail';
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/my-reservations" element={<PrivateRoute roles={['customer']}><MyReservations /></PrivateRoute>} />
           <Route path="/checkout/:reservationId" element={<PrivateRoute roles={['customer']}><Checkout /></PrivateRoute>} />
           <Route path="/supplier/dashboard" element={<PrivateRoute roles={['supplier']}><SupplierDashboard /></PrivateRoute>} />
+          <Route path="/supplier/showrooms" element={<PrivateRoute roles={['supplier']}><Showrooms /></PrivateRoute>} />
           <Route path="/supplier/cars" element={<PrivateRoute roles={['supplier']}><MyCars /></PrivateRoute>} />
           <Route path="/supplier/cars/add" element={<PrivateRoute roles={['supplier']}><AddCar /></PrivateRoute>} />
           <Route path="/supplier/cars/edit/:id" element={<PrivateRoute roles={['supplier']}><EditCar /></PrivateRoute>} />
