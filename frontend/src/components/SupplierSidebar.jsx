@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users } from 'lucide-react';
+import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet } from 'lucide-react';
 
 const supplierLinks = [
   { to: '/supplier/dashboard', label: 'لوحة المورد', icon: LayoutDashboard },
   { to: '/supplier/cars', label: 'سياراتي', icon: Car },
   { to: '/supplier/cars/add', label: 'إضافة سيارة', icon: Plus },
   { to: '/supplier/reservations', label: 'الحجوزات', icon: Calendar },
+  { to: '/supplier/finance', label: 'المحفظة والإيرادات', icon: Wallet },
   { to: '/supplier/employees', label: 'الموظفون', icon: Users },
   { to: '/supplier/advertisement-request', label: 'الإعلانات', icon: Megaphone },
   { to: '/supplier/settings', label: 'الإعدادات', icon: Settings },
@@ -19,7 +20,7 @@ export default function SupplierSidebar() {
       <div className="supplier-sidebar-brand">
         <span className="supplier-sidebar-kicker">RENTAL CIRCLE</span>
         <strong>مساحة المورد</strong>
-        <small>إدارة الأسطول والحجوزات</small>
+        <small>إدارة الأسطول والحجوزات والإيرادات</small>
       </div>
       <nav className="supplier-sidebar-nav">
         {supplierLinks.map(({ to, label, icon: Icon }) => {
