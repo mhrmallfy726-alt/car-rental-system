@@ -1,52 +1,19 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet, Store } from 'lucide-react';
+import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet, Store, ChevronDown } from 'lucide-react';
+import { supplierContextAPI, getSelectedShowroom, setSelectedShowroom } from '../services/supplierContext';
+import toast from 'react-hot-toast';
 
-const supplierLinks = [
-  { to: '/supplier/dashboard', label: 'لوحة المورد', icon: LayoutDashboard },
-  { to: '/supplier/showrooms', label: 'معارضي', icon: Store },
-  { to: '/supplier/cars', label: 'سياراتي', icon: Car },
-  { to: '/supplier/cars/add', label: 'إضافة سيارة', icon: Plus },
-  { to: '/supplier/reservations', label: 'الحجوزات', icon: Calendar },
-  { to: '/supplier/finance', label: 'المحفظة والإيرادات', icon: Wallet },
-  { to: '/supplier/employees', label: 'الموظفون', icon: Users },
-  { to: '/supplier/advertisement-request', label: 'الإعلانات', icon: Megaphone },
-  { to: '/supplier/settings', label: 'الإعدادات', icon: Settings },
-];
+const supplierLinks=[{to:'/supplier/dashboard',label:'لوحة المورد',icon:LayoutDashboard},{to:'/supplier/showrooms',label:'معارضي',icon:Store},{to:'/supplier/cars',label:'سياراتي',icon:Car},{to:'/supplier/cars/add',label:'إضافة سيارة',icon:Plus},{to:'/supplier/reservations',label:'الحجوزات',icon:Calendar},{to:'/supplier/finance',label:'المحفظة والإيرادات',icon:Wallet},{to:'/supplier/employees',label:'الموظفون',icon:Users},{to:'/supplier/advertisement-request',label:'الإعلانات',icon:Megaphone},{to:'/supplier/settings',label:'الإعدادات',icon:Settings}];
 
-export default function SupplierSidebar() {
-  const location = useLocation();
-
-  return (
-    <aside className="supplier-sidebar" aria-label="قائمة المورد">
-      <div className="supplier-sidebar-brand">
-        <span className="supplier-sidebar-kicker">RENTAL CIRCLE</span>
-        <strong>مساحة المورد</strong>
-        <small>إدارة الأسطول والحجوزات والإيرادات</small>
-      </div>
-      <nav className="supplier-sidebar-nav">
-        {supplierLinks.map(({ to, label, icon: Icon }) => {
-          const active = location.pathname === to || (to !== '/supplier/dashboard' && location.pathname.startsWith(`${to}/`));
-          return (
-            <Link key={to} to={to} className={`supplier-sidebar-link ${active ? 'is-active' : ''}`}>
-              <Icon size={18} />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
-      <style>{`
-        .supplier-sidebar { width: 248px; flex: 0 0 248px; min-height: 100vh; padding: 24px 14px; background: #fff; border-left: 1px solid #e7edf0; direction: rtl; }
-        .supplier-sidebar-brand { display: grid; gap: 5px; padding: 0 12px 22px; margin-bottom: 14px; border-bottom: 1px solid #edf1f3; color: #173a52; }
-        .supplier-sidebar-brand strong { font-size: 19px; font-weight: 950; }
-        .supplier-sidebar-brand small { color: #7b8b94; font-size: 11px; }
-        .supplier-sidebar-kicker { color: #b78a22; font-size: 9px; font-weight: 950; letter-spacing: 1.3px; }
-        .supplier-sidebar-nav { display: grid; gap: 5px; }
-        .supplier-sidebar-link { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 13px; border: 1px solid transparent; border-radius: 12px; color: #50636d; text-decoration: none; font-size: 13px; font-weight: 800; transition: background .18s ease, color .18s ease, transform .18s ease, border-color .18s ease; }
-        .supplier-sidebar-link:hover { color: #173a52; background: #f2f7f8; transform: translateX(-2px); }
-        .supplier-sidebar-link.is-active { color: #173a52; background: linear-gradient(135deg, #edf7f5, #f8fbfb); border-color: #cfe7e0; box-shadow: 0 7px 16px rgba(23,58,82,.07); }
-        .supplier-sidebar-link.is-active svg { color: #178263; }
-        @media (max-width: 900px) { .supplier-sidebar { display: none !important; } }
-      `}</style>
-    </aside>
-  );
+export default function SupplierSidebar(){
+ const location=useLocation(); const [showrooms,setShowrooms]=useState([]); const [selected,setSelected]=useState(getSelectedShowroom()); const [open,setOpen]=useState(false);
+ useEffect(()=>{supplierContextAPI.getOptions().then(list=>{setShowrooms(list);const current=getSelectedShowroom();if(current&&list.some(x=>x.id===current.id))setSelected(current);else if(list.length===1){setSelectedShowroom(list[0]);setSelected(list[0])}}).catch(()=>{})},[]);
+ const choose=async(item)=>{try{const r=await supplierContextAPI.select(item.id);setSelectedShowroom(r.showroom);setSelected(r.showroom);setOpen(false);toast.success(`المعرض الحالي: ${r.showroom.showroom_name||r.showroom.city}`)}catch(e){toast.error(e.response?.data?.message||'تعذر اختيار المعرض')}};
+ return <aside className="supplier-sidebar" aria-label="قائمة المورد">
+  <div className="supplier-sidebar-brand"><span className="supplier-sidebar-kicker">RENTAL CIRCLE</span><strong>مساحة المورد</strong><small>إدارة الأسطول والحجوزات والإيرادات</small></div>
+  {showrooms.length>0&&<div className="active-showroom"><small>المعرض الحالي</small><button type="button" onClick={()=>setOpen(v=>!v)}><span><Store size={16}/>{selected?.showroom_name||selected?.city||'اختر المعرض'}</span><ChevronDown size={15}/></button>{open&&<div className="showroom-menu">{showrooms.map(item=><button type="button" key={item.id} className={selected?.id===item.id?'selected':''} onClick={()=>choose(item)}><span>{item.showroom_name||`معرض ${item.city}`}</span><small>{item.city} · {item.car_count||0} سيارة</small></button>)}<Link to="/supplier/showrooms" onClick={()=>setOpen(false)}>+ إدارة المعارض</Link></div>}</div>}
+  <nav className="supplier-sidebar-nav">{supplierLinks.map(({to,label,icon:Icon})=>{const active=location.pathname===to||(to!=='/supplier/dashboard'&&location.pathname.startsWith(`${to}/`));return <Link key={to} to={to} className={`supplier-sidebar-link ${active?'is-active':''}`}><Icon size={18}/><span>{label}</span></Link>})}</nav>
+  <style>{`.supplier-sidebar{width:248px;flex:0 0 248px;min-height:100vh;padding:24px 14px;background:#fff;border-left:1px solid #e7edf0;direction:rtl}.supplier-sidebar-brand{display:grid;gap:5px;padding:0 12px 18px;margin-bottom:14px;border-bottom:1px solid #edf1f3;color:#173a52}.supplier-sidebar-brand strong{font-size:19px;font-weight:950}.supplier-sidebar-brand small{color:#7b8b94;font-size:11px}.supplier-sidebar-kicker{color:#b78a22;font-size:9px;font-weight:950;letter-spacing:1.3px}.active-showroom{position:relative;margin:0 0 12px;padding:10px;background:#f7fafb;border:1px solid #e3ebed;border-radius:14px}.active-showroom>small{display:block;color:#7a8a92;font-size:10px;margin-bottom:6px}.active-showroom>button{width:100%;border:0;background:transparent;display:flex;justify-content:space-between;align-items:center;color:#173a52;font-weight:900;cursor:pointer;padding:2px}.active-showroom>button span{display:flex;align-items:center;gap:7px;min-width:0}.active-showroom>button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.showroom-menu{position:absolute;z-index:100;top:calc(100% + 6px);right:0;left:0;background:#fff;border:1px solid #dfe8ea;border-radius:13px;box-shadow:0 15px 35px rgba(23,58,82,.15);padding:6px}.showroom-menu button,.showroom-menu a{width:100%;display:block;text-align:right;border:0;background:#fff;padding:9px;border-radius:9px;color:#173a52;text-decoration:none;cursor:pointer}.showroom-menu button:hover,.showroom-menu button.selected{background:#edf7f5}.showroom-menu button small{display:block;color:#7b8b94;margin-top:3px}.showroom-menu>a{color:#178263;font-weight:900;border-top:1px solid #edf1f3;margin-top:4px;border-radius:0}.supplier-sidebar-nav{display:grid;gap:5px}.supplier-sidebar-link{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 13px;border:1px solid transparent;border-radius:12px;color:#50636d;text-decoration:none;font-size:13px;font-weight:800;transition:.18s}.supplier-sidebar-link:hover{color:#173a52;background:#f2f7f8;transform:translateX(-2px)}.supplier-sidebar-link.is-active{color:#173a52;background:linear-gradient(135deg,#edf7f5,#f8fbfb);border-color:#cfe7e0;box-shadow:0 7px 16px rgba(23,58,82,.07)}.supplier-sidebar-link.is-active svg{color:#178263}@media(max-width:900px){.supplier-sidebar{display:none!important}}`}</style>
+ </aside>
 }
