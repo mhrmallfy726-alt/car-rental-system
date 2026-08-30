@@ -10,7 +10,6 @@ ALTER TABLE locations
   ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
--- Preserve ownership for existing locations that are used by only one supplier.
 UPDATE locations l
 SET supplier_id = x.supplier_id
 FROM (
@@ -60,7 +59,6 @@ CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_supplier ON showroom_subsc
 CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_showroom ON showroom_subscriptions(showroom_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_status ON showroom_subscriptions(status);
 
--- The existing payments table already supports non-reservation subjects through finance migration 014.
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS showroom_subscription_id UUID REFERENCES showroom_subscriptions(id) ON DELETE SET NULL;
 
 ALTER TABLE showroom_subscriptions
@@ -75,9 +73,7 @@ ALTER TABLE payments
     reservation_id IS NOT NULL OR advertisement_id IS NOT NULL OR showroom_subscription_id IS NOT NULL
   );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_active_showroom_subscription
-  ON showroom_subscriptions(showroom_id)
-  WHERE status = 'paid' AND expires_at > NOW();
+CREATE INDEX IF NOT EXISTS idx_payments_showroom_subscription ON payments(showroom_subscription_id);
 
 CREATE OR REPLACE FUNCTION showroom_subscription_updated_at()
 RETURNS TRIGGER AS $$
@@ -92,7 +88,6 @@ CREATE TRIGGER showroom_subscription_updated_at_trigger
 BEFORE UPDATE ON showroom_subscriptions
 FOR EACH ROW EXECUTE FUNCTION showroom_subscription_updated_at();
 
--- Keep legacy supplier_showrooms data connected to the canonical locations table when present.
 UPDATE locations l
 SET supplier_id = s.supplier_id,
     showroom_name = COALESCE(l.showroom_name, s.name),
