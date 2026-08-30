@@ -1,0 +1,34 @@
+name: Finance Changes Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check backend syntax
+        run: |
+          node --check backend/server.js
+          node --check backend/src/routes/paymentRoutes.js
+          node --check backend/src/routes/supplierFinanceRoutes.js
+          node --check backend/src/services/financeService.js
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
