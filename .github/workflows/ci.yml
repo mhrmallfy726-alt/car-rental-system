@@ -83,4 +83,5 @@ jobs:
           test -f backend/src/routes/supplierShowroomRoutes.js
           test -f backend/src/routes/supplierContextRoutes.js
           test -f backend/src/routes/showroomSubscriptionPaymentRoutes.js
-          test -f backend/migrations/033_showroom_subscription_settings.sql
+          test -f backend/migrations/031_supplier_showrooms.sql
+          test -f backend/migrations/033_supplier_showroom_subscriptions.sql
