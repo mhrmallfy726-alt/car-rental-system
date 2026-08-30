@@ -4,15 +4,23 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 
 const GEOAPIFY_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
+const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const GEOAPIFY_TILE_URL = GEOAPIFY_KEY
+  ? `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_KEY}`
+  : OSM_TILE_URL;
 
 async function reverseGeocode(latitude, longitude) {
-  if (!GEOAPIFY_KEY) {
-    return 'موقعي الحالي';
-  }
+  if (!GEOAPIFY_KEY) return 'موقعي الحالي';
 
-  const response = await fetch(
-    `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&lang=ar&apiKey=${GEOAPIFY_KEY}`
-  );
+  const url = new URL('https://api.geoapify.com/v1/geocode/reverse');
+  url.searchParams.set('lat', latitude);
+  url.searchParams.set('lon', longitude);
+  url.searchParams.set('lang', 'ar');
+  url.searchParams.set('apiKey', GEOAPIFY_KEY);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error(`Reverse geocoding failed: ${response.status}`);
+
   const data = await response.json();
   return data.features?.[0]?.properties?.formatted || 'موقعي الحالي';
 }
@@ -21,7 +29,8 @@ function ChangeView({ center }) {
   const map = useMap();
 
   useEffect(() => {
-    map.setView(center, Math.max(map.getZoom(), 13));
+    if (!Array.isArray(center) || center.length !== 2) return;
+    map.setView(center, Math.max(map.getZoom(), 13), { animate: true });
   }, [center, map]);
 
   return null;
@@ -66,11 +75,7 @@ export default function LocationPicker({ position, onLocationChange }) {
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          const name = await reverseGeocode(
-            coords.latitude,
-            coords.longitude
-          );
-
+          const name = await reverseGeocode(coords.latitude, coords.longitude);
           onLocationChange({
             name,
             latitude: coords.latitude,
@@ -108,7 +113,7 @@ export default function LocationPicker({ position, onLocationChange }) {
       <div className="location-picker-toolbar">
         <div>
           <strong>حدد موقع الاستلام</strong>
-          <span>انقر على الخريطة أو استخدم موقعك الحالي</span>
+          <span>ابحث عن مدينة أو انقر على الخريطة أو استخدم موقعك الحالي</span>
         </div>
 
         <button
@@ -117,11 +122,7 @@ export default function LocationPicker({ position, onLocationChange }) {
           onClick={useCurrentLocation}
           disabled={locating}
         >
-          {locating ? (
-            <Loader2 size={16} className="spin" />
-          ) : (
-            <LocateFixed size={16} />
-          )}
+          {locating ? <Loader2 size={16} className="spin" /> : <LocateFixed size={16} />}
           {locating ? 'جاري التحديد...' : 'استخدم موقعي'}
         </button>
       </div>
@@ -134,13 +135,15 @@ export default function LocationPicker({ position, onLocationChange }) {
       >
         <ChangeView center={position} />
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution={
+            GEOAPIFY_KEY
+              ? 'Powered by Geoapify | © OpenStreetMap contributors'
+              : '&copy; OpenStreetMap contributors'
+          }
+          url={GEOAPIFY_TILE_URL}
+          maxZoom={20}
         />
-        <LocationMarker
-          position={position}
-          onLocationChange={onLocationChange}
-        />
+        <LocationMarker position={position} onLocationChange={onLocationChange} />
       </MapContainer>
 
       {locationError && (
