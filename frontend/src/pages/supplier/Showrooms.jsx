@@ -1,104 +1,36 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Building2, CreditCard, MapPin, Plus, X, CalendarDays } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SupplierSidebar from '../../components/SupplierSidebar';
-import { supplierShowroomsAPI, carsAPI } from '../../services/api';
+import LocationPicker from '../../components/LocationPicker';
+import { supplierShowroomsAPI, paymentsAPI } from '../../services/api';
+
+const CITY_CENTERS = {'صنعاء':[15.3694,44.1910],'أمانة العاصمة':[15.3694,44.1910],'عدن':[12.7855,45.0187],'تعز':[13.5795,44.0209],'الحديدة':[14.7978,42.9545],'إب':[13.9667,44.1833],'ذمار':[14.5425,44.4051],'حجة':[15.6917,43.6031],'عمران':[15.6594,43.9439],'صعدة':[16.94,43.7614],'مأرب':[15.4625,45.3258],'شبوة':[14.53,47.7],'أبين':[13.63,45.03],'الضالع':[13.717,44.731],'لحج':[13.058,44.883],'البيضاء':[14.086,45.334],'الجوف':[16.79,45.3],'المحويت':[15.47,43.54],'ريمة':[14.63,43.71],'المهرة':[16.25,52.18],'حضرموت':[16.06,49],'سقطرى':[12.5,53.98]};
 
 export default function Showrooms() {
-  const [showrooms, setShowrooms] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [name, setName] = useState('');
-  const [locationId, setLocationId] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  const load = async () => {
-    try {
-      const [showroomRes, locationRes] = await Promise.all([
-        supplierShowroomsAPI.getAll(),
-        carsAPI.getLocations(),
-      ]);
-      setShowrooms(showroomRes.data.data || []);
-      setLocations(locationRes.data.data || []);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر تحميل المعارض');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
-
-  const createShowroom = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) return toast.error('أدخل اسم المعرض');
-    setSaving(true);
-    try {
-      await supplierShowroomsAPI.create({
-        name: name.trim(),
-        location_id: locationId || null,
-        address: address.trim() || null,
-        phone: phone.trim() || null,
-      });
-      toast.success('تم إنشاء المعرض بنجاح');
-      setName(''); setLocationId(''); setAddress(''); setPhone('');
-      await load();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر إنشاء المعرض');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const disableShowroom = async (id) => {
-    if (!window.confirm('هل تريد تعطيل هذا المعرض؟')) return;
-    try {
-      await supplierShowroomsAPI.disable(id);
-      toast.success('تم تعطيل المعرض');
-      await load();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر تعطيل المعرض');
-    }
-  };
-
-  return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      <SupplierSidebar />
-      <main className="dashboard-content" style={{ flex: 1, padding: 30 }} dir="rtl">
-        <h1>معارضي</h1>
-        <p style={{ color: '#667085' }}>حساب مورد واحد يمكنه إدارة عدة معارض، بينما يبقى البريد الإلكتروني للحساب واحداً.</p>
-
-        <form onSubmit={createShowroom} style={{ background: '#fff', padding: 24, borderRadius: 14, margin: '24px 0', display: 'grid', gap: 14, maxWidth: 850 }}>
-          <h2 style={{ margin: 0 }}>إضافة معرض جديد</h2>
-          <input required value={name} onChange={e => setName(e.target.value)} placeholder="اسم المعرض — يجب ألا يتكرر" />
-          <select value={locationId} onChange={e => setLocationId(e.target.value)}>
-            <option value="">اختر المدينة</option>
-            {locations.map(l => <option key={l.id} value={l.id}>{l.city}</option>)}
-          </select>
-          <input value={address} onChange={e => setAddress(e.target.value)} placeholder="العنوان التفصيلي" />
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="هاتف المعرض" dir="ltr" />
-          <button type="submit" disabled={saving}>{saving ? 'جاري الحفظ...' : 'إضافة المعرض'}</button>
-        </form>
-
-        {loading ? <p>جاري التحميل...</p> : (
-          <div style={{ display: 'grid', gap: 14 }}>
-            {showrooms.length === 0 && <p>لا توجد معارض مضافة حتى الآن.</p>}
-            {showrooms.map(showroom => (
-              <div key={showroom.id} style={{ background: '#fff', padding: 20, borderRadius: 14, display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
-                <div>
-                  <h3 style={{ margin: 0 }}>{showroom.name}</h3>
-                  <div>{showroom.location_city || 'لم تحدد المدينة'}</div>
-                  {showroom.address && <small>{showroom.address}</small>}
-                  {showroom.phone && <div dir="ltr">{showroom.phone}</div>}
-                  <small>{showroom.is_active ? 'نشط' : 'معطل'}</small>
-                </div>
-                {showroom.is_active && <button type="button" onClick={() => disableShowroom(showroom.id)}>تعطيل</button>}
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
-  );
+  const [showrooms,setShowrooms]=useState([]),[cities,setCities]=useState([]),[pricing,setPricing]=useState(null);
+  const [open,setOpen]=useState(false),[paying,setPaying]=useState(false),[saving,setSaving]=useState(false),[pending,setPending]=useState(null);
+  const [form,setForm]=useState({name:'',city:'',address:'',plan:'monthly',location:null,showMap:false});
+  const load=async()=>{try{const [s,c,p]=await Promise.all([supplierShowroomsAPI.getAll(),supplierShowroomsAPI.getCities(),supplierShowroomsAPI.getPricing()]);setShowrooms(s.data.data||[]);setCities(c.data.data||[]);setPricing(p.data.data);}catch(e){toast.error(e.response?.data?.message||'تعذر تحميل بيانات المعارض')}};
+  useEffect(()=>{load()},[]);
+  const center=useMemo(()=>CITY_CENTERS[form.city]||[15.3694,44.191],[form.city]);
+  const amount=Number(form.plan==='annual'?pricing?.annual_price:pricing?.monthly_price||0),currency=pricing?.currency||'YER';
+  const create=async(e)=>{e.preventDefault();if(!form.name.trim())return toast.error('أدخل اسم المعرض');if(!form.city)return toast.error('اختر المدينة');if(!form.location)return toast.error('حدد موقع المعرض من الخريطة ثم أكده');setSaving(true);try{const r=await supplierShowroomsAPI.create({name:form.name.trim(),city:form.city,address:form.address.trim()||null,latitude:form.location.latitude,longitude:form.location.longitude,plan:form.plan});setPending(r.data.data);toast.success('تم إنشاء طلب الاشتراك، أكمل الدفع لتفعيل المعرض')}catch(e){toast.error(e.response?.data?.message||'تعذر إنشاء المعرض')}finally{setSaving(false)}};
+  const pay=async()=>{if(!pending?.subscription?.id)return;setPaying(true);try{await paymentsAPI.showroomSubscriptionCheckout({subscription_id:pending.subscription.id,payment_method:'card'});toast.success('تم الدفع وتفعيل المعرض بنجاح');setPending(null);setOpen(false);setForm({name:'',city:'',address:'',plan:'monthly',location:null,showMap:false});await load()}catch(e){toast.error(e.response?.data?.message||'تعذر إتمام الاشتراك')}finally{setPaying(false)}};
+  const disable=async(id)=>{if(!window.confirm('هل تريد تعطيل هذا المعرض؟ لن يتم حذف سياراته.'))return;try{await supplierShowroomsAPI.disable(id);toast.success('تم تعطيل المعرض');load()}catch(e){toast.error(e.response?.data?.message||'تعذر تعطيل المعرض')}};
+  return <div className="showrooms-page" dir="rtl"><SupplierSidebar/><main className="showrooms-main">
+    <section className="showrooms-hero"><div><span>إدارة الفروع</span><h1>معارضي</h1><p>حساب مورد واحد، بريد واحد، ومعارض متعددة يمكنك الانتقال بينها بدون تسجيل خروج.</p></div><button className="primary" onClick={()=>setOpen(true)}><Plus size={18}/> إضافة معرض</button></section>
+    {pending&&<section className="payment-banner"><div><CreditCard size={22}/><div><strong>يوجد اشتراك بانتظار الدفع</strong><small>{pending.showroom?.name} — {pending.subscription?.plan==='annual'?'سنوي':'شهري'} — {pending.subscription?.amount} {pending.subscription?.currency}</small></div></div><button onClick={pay} disabled={paying}>{paying?'جاري الدفع...':'دفع وتفعيل المعرض'}</button></section>}
+    {showrooms.length===0?<div className="empty"><Building2 size={42}/><h3>لا توجد معارض نشطة</h3><p>أضف أول معرض لحسابك ثم اختر موقعه من الخريطة.</p><button className="primary" onClick={()=>setOpen(true)}>إضافة معرض</button></div>:<div className="showroom-grid">{showrooms.map(s=><article className="showroom-card" key={s.id}><div className="card-top"><div className="icon"><Building2 size={23}/></div><span className={`status ${s.subscription_status==='active'&&s.is_active?'active':'pending'}`}>{s.subscription_status==='active'&&s.is_active?'نشط':'غير نشط'}</span></div><h2>{s.name}</h2><div className="city"><MapPin size={16}/>{s.city}</div><div className="stats"><span><b>{s.car_count||0}</b> سيارة</span><span>{s.subscription_plan==='annual'?'سنوي':'شهري'}</span></div>{s.subscription_expires_at&&<small className="expiry"><CalendarDays size={14}/> ينتهي {new Date(s.subscription_expires_at).toLocaleDateString('ar-YE')}</small>}<div className="card-actions"><button onClick={()=>{localStorage.setItem('supplierShowroom',JSON.stringify(s));toast.success('تم اختيار المعرض الحالي')}}>دخول للمعرض</button>{s.is_active&&<button className="danger" onClick={()=>disable(s.id)}>تعطيل</button>}</div></article>)}</div>}
+    {open&&<div className="modal-backdrop"><div className="modal"><div className="modal-head"><div><span>معرض جديد</span><h2>إضافة معرض</h2></div><button className="icon-btn" onClick={()=>setOpen(false)}><X/></button></div><form onSubmit={create}>
+      <label>اسم المعرض<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="مثال: معرض النور" required/></label>
+      <label>المدينة / المحافظة<select value={form.city} onChange={e=>setForm({...form,city:e.target.value,location:null})} required><option value="">اختر المدينة</option>{cities.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
+      <label>العنوان التفصيلي <span>اختياري</span><input value={form.address} onChange={e=>setForm({...form,address:e.target.value})} placeholder="الشارع أو الحي"/></label>
+      <div className="map-button-area"><div><strong>موقع المعرض</strong><small>{form.location?'تم تحديد الموقع ✓':'لم يتم تحديد الموقع بعد'}</small></div><button type="button" className="map-btn" onClick={()=>{if(!form.city)return toast.error('اختر المدينة أولاً');setForm({...form,showMap:true})}}><MapPin size={18}/> تحديد الموقع على الخريطة</button></div>
+      {form.showMap&&<div className="map-modal"><div className="map-modal-head"><strong>حدد موقع المعرض داخل {form.city}</strong><button type="button" className="icon-btn" onClick={()=>setForm({...form,showMap:false})}><X size={18}/></button></div><LocationPicker position={form.location?[form.location.latitude,form.location.longitude]:center} onLocationChange={loc=>setForm({...form,location:loc})}/><div className="map-confirm"><span>{form.location?'✓ تم تحديد الموقع، وسيتم التحقق منه داخل المدينة':'اضغط على موقع المعرض في الخريطة'}</span><button type="button" onClick={()=>{if(!form.location)return toast.error('حدد الموقع أولاً');setForm({...form,showMap:false})}}>تأكيد الموقع</button></div></div>}
+      <div className="plans"><label className={`plan ${form.plan==='monthly'?'selected':''}`}><input type="radio" checked={form.plan==='monthly'} onChange={()=>setForm({...form,plan:'monthly'})}/><span>شهري</span><b>{pricing?.monthly_price??'—'} {currency}</b></label><label className={`plan ${form.plan==='annual'?'selected':''}`}><input type="radio" checked={form.plan==='annual'} onChange={()=>setForm({...form,plan:'annual'})}/><span>سنوي</span><b>{pricing?.annual_price??'—'} {currency}</b></label></div>
+      <div className="price-line"><span>رسوم الاشتراك</span><strong>{amount} {currency}</strong></div><button className="submit" disabled={saving||!pricing?.enabled}>{saving?'جاري إنشاء الطلب...':'إنشاء الطلب والمتابعة للدفع'}</button>
+    </form></div></div>}
+    <style>{styles}</style></main></div>;
 }
+const styles=`.showrooms-page{min-height:100vh;background:#f5f8fa;display:flex;color:#173a52}.showrooms-main{flex:1;padding:34px;max-width:1400px;margin:0 auto;width:100%}.showrooms-hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.showrooms-hero span,.modal-head span{color:#178263;font-size:12px;font-weight:900}.showrooms-hero h1{margin:5px 0;font-size:32px}.showrooms-hero p{margin:0;color:#6d7d86}.primary,.submit,.payment-banner button{border:0;background:#178263;color:#fff;border-radius:12px;padding:12px 18px;font-weight:900;display:inline-flex;align-items:center;gap:8px;cursor:pointer}.showroom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}.showroom-card,.empty{background:#fff;border:1px solid #e5ecef;border-radius:20px;padding:22px;box-shadow:0 8px 28px rgba(23,58,82,.06)}.card-top{display:flex;justify-content:space-between;align-items:center}.icon{width:48px;height:48px;border-radius:14px;background:#edf7f5;color:#178263;display:grid;place-items:center}.status{padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900}.status.active{background:#e8f7ef;color:#177245}.status.pending{background:#fff4df;color:#9b6714}.showroom-card h2{margin:18px 0 8px;font-size:20px}.city,.expiry{display:flex;align-items:center;gap:6px;color:#667984;font-size:13px}.stats{display:flex;gap:22px;border-top:1px solid #edf1f3;border-bottom:1px solid #edf1f3;margin:18px 0;padding:14px 0;color:#6b7b84}.stats b{color:#173a52;font-size:17px}.expiry{margin-bottom:15px}.card-actions{display:flex;gap:8px}.card-actions button{flex:1;border:1px solid #d8e2e5;background:#fff;border-radius:10px;padding:10px;font-weight:800;color:#173a52;cursor:pointer}.card-actions .danger{color:#a94442}.empty{text-align:center;padding:70px 20px}.empty svg{color:#178263}.empty h3{margin:15px 0 6px}.empty p{color:#70818a}.payment-banner{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#fffaf0;border:1px solid #f0d79e;border-radius:16px;padding:15px 18px;margin-bottom:20px}.payment-banner>div{display:flex;align-items:center;gap:12px}.payment-banner svg{color:#a16b12}.payment-banner small{display:block;color:#756a58;margin-top:4px}.modal-backdrop{position:fixed;inset:0;background:rgba(10,25,35,.58);z-index:1000;display:grid;place-items:center;padding:18px;overflow:auto}.modal{background:#fff;width:min(760px,100%);max-height:94vh;overflow:auto;border-radius:22px;box-shadow:0 30px 90px rgba(0,0,0,.25);padding:24px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.modal-head h2{margin:3px 0 0}.icon-btn{border:0;background:#f3f6f7;border-radius:10px;width:38px;height:38px;display:grid;place-items:center;cursor:pointer;color:#52646c}.modal form{display:grid;gap:15px}.modal form>label{display:grid;gap:7px;font-weight:800;font-size:13px}.modal label span{font-weight:500;color:#89969c}.modal input,.modal select{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d9e3e6;border-radius:11px;background:#fff;font:inherit}.map-button-area{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px dashed #bfd2d4;border-radius:14px;background:#f9fcfc}.map-button-area small{display:block;color:#778890;margin-top:4px}.map-btn{border:0;background:#edf7f5;color:#146f57;padding:10px 13px;border-radius:10px;font-weight:900;cursor:pointer}.map-modal{border:1px solid #dfe8ea;border-radius:15px;overflow:hidden}.map-modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f6f9fa}.map-modal .location-picker-shell{padding:0}.map-modal .location-picker-toolbar{padding:12px}.map-confirm{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;background:#fff}.map-confirm span{font-size:12px;color:#647780}.map-confirm button{border:0;background:#173a52;color:#fff;border-radius:9px;padding:9px 14px;font-weight:800}.plans{display:grid;grid-template-columns:1fr 1fr;gap:10px}.plan{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:9px;border:1px solid #dce6e8;border-radius:13px;padding:13px;cursor:pointer}.plan.selected{border-color:#178263;background:#f0faf7;box-shadow:0 0 0 2px rgba(23,130,99,.08)}.plan input{accent-color:#178263}.plan b{font-size:13px}.price-line{display:flex;justify-content:space-between;padding:15px 0;border-top:1px solid #edf1f3;font-size:14px}.price-line strong{font-size:19px;color:#178263}.submit{justify-content:center}.submit:disabled{opacity:.6;cursor:not-allowed}@media(max-width:900px){.showrooms-main{padding:20px}.showrooms-hero{align-items:stretch;flex-direction:column}.primary{justify-content:center}.payment-banner{align-items:stretch;flex-direction:column}.plans{grid-template-columns:1fr}.modal{padding:17px}.map-button-area{align-items:stretch;flex-direction:column}.map-btn{width:100%}.map-confirm{align-items:stretch;flex-direction:column}}`;
