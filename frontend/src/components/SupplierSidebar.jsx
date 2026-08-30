@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet } from 'lucide-react';
+import { Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet, Store } from 'lucide-react';
 
 const supplierLinks = [
   { to: '/supplier/dashboard', label: 'لوحة المورد', icon: LayoutDashboard },
+  { to: '/supplier/showrooms', label: 'معارضي', icon: Store },
   { to: '/supplier/cars', label: 'سياراتي', icon: Car },
   { to: '/supplier/cars/add', label: 'إضافة سيارة', icon: Plus },
   { to: '/supplier/reservations', label: 'الحجوزات', icon: Calendar },
