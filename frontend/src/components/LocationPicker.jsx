@@ -4,10 +4,10 @@ import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 
 const GEOAPIFY_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
-const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-const GEOAPIFY_TILE_URL = GEOAPIFY_KEY
-  ? `https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_KEY}`
-  : OSM_TILE_URL;
+
+const TILE_URL = GEOAPIFY_KEY
+  ? `https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${GEOAPIFY_KEY}`
+  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 async function reverseGeocode(latitude, longitude) {
   if (!GEOAPIFY_KEY) return 'موقعي الحالي';
@@ -22,7 +22,7 @@ async function reverseGeocode(latitude, longitude) {
   if (!response.ok) throw new Error(`Reverse geocoding failed: ${response.status}`);
 
   const data = await response.json();
-  return data.features?.[0]?.properties?.formatted || 'موقعي الحالي';
+  return data.features?.[0]?.properties?.formatted || 'الموقع المحدد على الخريطة';
 }
 
 function ChangeView({ center }) {
@@ -30,6 +30,8 @@ function ChangeView({ center }) {
 
   useEffect(() => {
     if (!Array.isArray(center) || center.length !== 2) return;
+
+    map.invalidateSize();
     map.setView(center, Math.max(map.getZoom(), 13), { animate: true });
   }, [center, map]);
 
@@ -127,24 +129,31 @@ export default function LocationPicker({ position, onLocationChange }) {
         </button>
       </div>
 
-      <MapContainer
-        center={position}
-        zoom={12}
-        scrollWheelZoom
-        className="location-map"
-      >
-        <ChangeView center={position} />
-        <TileLayer
-          attribution={
-            GEOAPIFY_KEY
-              ? 'Powered by Geoapify | © OpenStreetMap contributors'
-              : '&copy; OpenStreetMap contributors'
-          }
-          url={GEOAPIFY_TILE_URL}
+      <div className="location-map-wrapper">
+        <MapContainer
+          center={position}
+          zoom={12}
+          minZoom={3}
           maxZoom={20}
-        />
-        <LocationMarker position={position} onLocationChange={onLocationChange} />
-      </MapContainer>
+          scrollWheelZoom
+          className="location-map"
+          style={{ width: '100%', height: '420px', minHeight: '420px' }}
+        >
+          <ChangeView center={position} />
+          <TileLayer
+            attribution={
+              GEOAPIFY_KEY
+                ? 'Powered by Geoapify | © OpenStreetMap contributors'
+                : '&copy; OpenStreetMap contributors'
+            }
+            url={TILE_URL}
+            maxZoom={20}
+            tileSize={256}
+            detectRetina
+          />
+          <LocationMarker position={position} onLocationChange={onLocationChange} />
+        </MapContainer>
+      </div>
 
       {locationError && (
         <p className="location-picker-error" role="alert">
