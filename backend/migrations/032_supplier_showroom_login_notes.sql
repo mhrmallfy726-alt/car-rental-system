@@ -1,0 +1,4 @@
+-- Supplier multi-showroom model uses existing users + locations + cars.
+-- The supplier account remains one user/email. Cars are associated to a showroom through cars.location_id.
+-- This migration intentionally adds no showroom table.
+-- 031 adds locations.showroom_name and its unique index.
