@@ -52,6 +52,14 @@ export const carsAPI = {
   toggleFavorite: (id) => api.post(`/cars/${id}/favorite`),
 };
 
+export const supplierShowroomsAPI = {
+  getAll: () => api.get('/supplier/showrooms'),
+  getOne: (id) => api.get(`/supplier/showrooms/${id}`),
+  create: (data) => api.post('/supplier/showrooms', data),
+  update: (id, data) => api.put(`/supplier/showrooms/${id}`, data),
+  disable: (id) => api.delete(`/supplier/showrooms/${id}`),
+};
+
 export const reservationsAPI = {
   create: (data) => api.post('/reservations', data),
   getMy: () => api.get('/reservations/my'),
