@@ -28,8 +28,8 @@ const resolveAssetUrl = (value) => {
 };
 
 const getCarTarget = (advertisement) => {
-  if (advertisement.link_url) return advertisement.link_url;
   if (advertisement.car_id) return `/cars/${advertisement.car_id}`;
+  // if (advertisement.link_url) return advertisement.link_url;
   return '/cars';
 };
 

@@ -23,7 +23,7 @@ const getReferencePath = (notification, user) => {
       if (user?.role === 'supplier') return `/supplier/reservations/${notification.reference_id}`;
       if (user?.role === 'employee') return '/employee/dashboard';
       if (user?.role === 'admin') return '/admin/dashboard';
-      return '/my-reservations';
+      return '/';
     case 'car':
       return `/cars/${notification.reference_id}`;
     case 'advertisement':

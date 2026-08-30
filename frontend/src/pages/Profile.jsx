@@ -199,8 +199,7 @@ export default function Profile() {
         .profile-content { flex: 1; }
         
         @media (max-width: 992px) {
-          .profile-layout { flex-direction: column; }
-          .profile-sidebar { width: 100%; }
+          .profile-sidebar { display:none !important; }
         }
       `}} />
       </div>
