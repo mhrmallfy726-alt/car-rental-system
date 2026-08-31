@@ -21,7 +21,7 @@ import AdvertisementBanner from '../components/AdvertisementBanner';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
-// import SearchFilter from '../components/SearchFilter';
+import LocationPicker from '../components/LocationPicker';
 
 export default function CarDetail() {
   const { id } = useParams();
@@ -293,7 +293,21 @@ export default function CarDetail() {
               تعديل البحث
             </button>
           </div>
-
+          <LocationPicker
+position={[
+Number(searchParams.latitude) || 15.3694,
+Number(searchParams.longitude) || 44.1910,
+]}
+onLocationChange={(location) => {
+setSearchParams(prev => ({
+...prev,
+location: location.name,
+latitude: location.latitude,
+longitude: location.longitude,
+radius: 10,
+}));
+}}
+/>
           <div className="car-search-summary-grid">
             {searchParams.location && (
               <div className="car-search-summary-item">
@@ -499,7 +513,21 @@ export default function CarDetail() {
                 />
                 موقع الاستلام
               </span>
-
+              <LocationPicker
+position={[
+Number(searchParams.latitude) || 15.3694,
+Number(searchParams.longitude) || 44.1910,
+]}
+onLocationChange={(location) => {
+setSearchParams(prev => ({
+...prev,
+location: location.name,
+latitude: location.latitude,
+longitude: location.longitude,
+radius: 10,
+}));
+}}
+/>
               <input
                 required
                 value={booking.pickup_location}

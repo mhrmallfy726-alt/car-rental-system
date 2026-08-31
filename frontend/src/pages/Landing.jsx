@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import LocationSearch from '../components/LocationPicker';
+
 import {
   Car, Shield, Star, Clock, Users, TrendingUp, ChevronRight,
   CheckCircle2, ArrowLeft, MapPin, CreditCard, Headphones,
@@ -8,6 +10,7 @@ import {
 } from 'lucide-react';
 // import MarketingChoice from './marketing/MarketingChoice';
 export default function Landing() {
+  const locationSearch = useLocation().search;
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState({});
   const sectionElements = {};

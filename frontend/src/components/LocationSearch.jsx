@@ -1,3 +1,4 @@
+
 import AsyncSelect from 'react-select/async';
 import { useMemo } from 'react';
 
@@ -13,10 +14,14 @@ export default function LocationSearch({ value, onChange }) {
         value: value.name || value.value || '',
         latitude: value.latitude,
         longitude: value.longitude,
+        city: value.city || '',
       };
     }
 
-    return { label: value, value };
+    return {
+      label: value,
+      value,
+    };
   }, [value]);
 
   const loadOptions = async (inputValue) => {
@@ -26,15 +31,22 @@ export default function LocationSearch({ value, onChange }) {
 
     try {
       const lang = /[\u0600-\u06FF]/.test(text) ? 'ar' : 'en';
-      const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete');
+
+      const url = new URL(
+        'https://api.geoapify.com/v1/geocode/autocomplete'
+      );
+
       url.searchParams.set('text', text);
       url.searchParams.set('limit', '8');
       url.searchParams.set('lang', lang);
       url.searchParams.set('apiKey', GEOAPIFY_KEY);
 
       const response = await fetch(url.toString());
+
       if (!response.ok) {
-        throw new Error(`Geoapify autocomplete failed: ${response.status}`);
+        throw new Error(
+          `Geoapify autocomplete failed: ${response.status}`
+        );
       }
 
       const data = await response.json();
@@ -42,16 +54,44 @@ export default function LocationSearch({ value, onChange }) {
       return (data.features || [])
         .filter((feature) => {
           const properties = feature.properties || {};
-          return Number.isFinite(Number(properties.lat)) && Number.isFinite(Number(properties.lon));
+
+          return (
+            Number.isFinite(Number(properties.lat)) &&
+            Number.isFinite(Number(properties.lon))
+          );
         })
         .map((feature) => {
-          const properties = feature.properties;
-          const label = properties.formatted || properties.name || text;
+          const properties = feature.properties || {};
+
+          /*
+           * Geoapify يمكن أن يرجع اسم المدينة
+           * في city أو municipality أو county.
+           *
+           * نأخذ city أولاً ثم البدائل.
+           */
+          const city =
+            properties.city ||
+            properties.municipality ||
+            properties.town ||
+            properties.village ||
+            properties.county ||
+            '';
+
+          const label =
+            properties.formatted ||
+            properties.name ||
+            text;
+
           return {
             label,
             value: label,
+
+            // الموقع
             latitude: Number(properties.lat),
             longitude: Number(properties.lon),
+
+            // المدينة المستخرجة من الموقع
+            city,
           };
         });
     } catch (error) {
@@ -68,6 +108,7 @@ export default function LocationSearch({ value, onChange }) {
         defaultOptions={false}
         value={selectedValue}
         isClearable
+
         noOptionsMessage={({ inputValue }) =>
           inputValue.trim().length < 2
             ? 'اكتب اسم المدينة أو الحي'
@@ -75,25 +116,50 @@ export default function LocationSearch({ value, onChange }) {
               ? 'لا توجد نتائج مطابقة'
               : 'أضف VITE_GEOAPIFY_API_KEY إلى ملف .env'
         }
+
         loadingMessage={() => 'جاري البحث عن المواقع...'}
+
         placeholder="ابحث عن مدينة أو حي..."
+
         onChange={(selected) => {
           if (!selected) {
             onChange?.(null);
             return;
           }
 
+          /*
+           * نرسل كل بيانات الموقع إلى الصفحة الأب:
+           *
+           * name
+           * city
+           * latitude
+           * longitude
+           */
           onChange?.({
             name: selected.label,
+            city: selected.city || '',
             latitude: selected.latitude,
             longitude: selected.longitude,
           });
         }}
+
         styles={{
-          menu: (base) => ({ ...base, zIndex: 3000 }),
-          menuPortal: (base) => ({ ...base, zIndex: 3000 }),
+          menu: (base) => ({
+            ...base,
+            zIndex: 100,
+          }),
+
+          menuPortal: (base) => ({
+            ...base,
+            zIndex: 200,
+          }),
         }}
-        menuPortalTarget={typeof document !== 'undefined' ? document.body : undefined}
+
+        menuPortalTarget={
+          typeof document !== 'undefined'
+            ? document.body
+            : undefined
+        }
       />
     </div>
   );

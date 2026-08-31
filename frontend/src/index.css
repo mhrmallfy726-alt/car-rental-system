@@ -1464,3 +1464,322 @@ textarea:focus-visible {
 
 /* Finance center */
 .finance-page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:28px}.finance-page-head h1{margin:6px 0;color:#173a52;font-size:clamp(26px,4vw,38px);font-weight:950}.finance-page-head p{margin:0;color:#6c7a86}.finance-eyebrow{color:#b38a20;font-size:13px;font-weight:900}.finance-simulation-badge{padding:9px 14px;border:1px solid #e8d18b;border-radius:999px;color:#7b5e09;background:#fff8dc;font-size:12px;font-weight:900}.finance-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px}.finance-summary-card,.finance-settings-card,.finance-table-card{border:1px solid #e6ebef;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(23,58,82,.07)}.finance-summary-card{padding:20px}.finance-summary-card span{display:block;color:#71808a;font-size:13px;font-weight:700}.finance-summary-card strong{display:block;margin-top:10px;color:#173a52;font-size:23px;font-weight:950}.finance-settings-card{display:flex;justify-content:space-between;gap:22px;align-items:flex-end;padding:22px;margin-bottom:20px}.finance-settings-card h2,.finance-table-card h2{margin:0;color:#173a52;font-size:19px;font-weight:950}.finance-settings-card p{margin:7px 0 0;color:#71808a;font-size:13px}.finance-settings-form{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}.finance-settings-form label{display:grid;gap:6px;color:#173a52;font-size:12px;font-weight:800}.finance-settings-form input,.finance-settings-form select{min-width:140px;padding:11px 12px;border:1px solid #dbe3e8;border-radius:11px;color:#173a52;background:#fff;font:inherit}.finance-primary-button,.finance-small-button{border:0;border-radius:11px;color:#fff;background:#173a52;font:inherit;font-weight:800;cursor:pointer}.finance-primary-button{padding:12px 16px}.finance-small-button{padding:8px 10px;font-size:11px}.finance-primary-button:disabled{opacity:.6;cursor:not-allowed}.finance-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.finance-table-card{overflow:hidden}.finance-table-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid #edf1f3}.finance-table-head span{color:#b38a20;font-size:12px;font-weight:900}.finance-table-list{padding:4px 20px}.finance-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid #f0f3f4}.finance-row:last-child{border-bottom:0}.finance-row strong,.finance-row small{display:block}.finance-row strong{color:#173a52;font-size:14px}.finance-row small{margin-top:5px;color:#85929a;font-size:11px}.finance-row-amount{display:flex;align-items:flex-end;gap:9px;flex-direction:column}.finance-row-amount b{color:#173a52;white-space:nowrap;font-size:13px}.finance-status{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:900}.finance-status-paid{color:#18704b;background:#e8f8ef}.finance-status-pending{color:#9a6800;background:#fff4d2}.finance-empty{padding:24px 0;color:#85929a;font-size:13px;text-align:center}@media(max-width:900px){.finance-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.finance-settings-card{display:grid}.finance-columns{grid-template-columns:1fr}}@media(max-width:560px){.finance-page-head{display:grid}.finance-summary-grid{grid-template-columns:1fr}.finance-settings-form{display:grid;grid-template-columns:1fr;width:100%}.finance-settings-form label input,.finance-settings-form label select,.finance-primary-button{width:100%;box-sizing:border-box}.finance-row{align-items:flex-start}.finance-row-amount{align-items:flex-end}}
+
+
+
+/* =========================
+   Location Picker
+========================= */
+
+.location-picker-shell {
+  width: 100%;
+}
+
+.selected-location-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.selected-location-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.location-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.selected-location-info strong {
+  display: block;
+  color: #1e293b;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.selected-location-info small {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.choose-map-button {
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 16px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.choose-map-button:hover {
+  opacity: 0.9;
+}
+
+/* =========================
+   Modal
+========================= */
+
+.location-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.location-modal {
+  width: min(700px, 90%);
+  height: min(600px, 90vh);
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   Modal Header
+========================= */
+
+.location-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.location-modal-header h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.location-modal-header span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.location-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.location-modal-close:hover {
+  background: #e2e8f0;
+}
+
+/* =========================
+   Map
+========================= */
+
+.location-modal-map {
+  position: relative;
+  flex: 1;
+  min-height: 350px;
+}
+
+.location-modal-map .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* GPS button */
+
+.map-gps-button {
+  position: absolute;
+  z-index: 1000;
+  right: 15px;
+  top: 15px;
+
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #1e293b;
+
+  padding: 10px 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.18);
+
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.map-gps-button:hover {
+  background: #f8fafc;
+}
+
+.map-gps-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.location-modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.location-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #2563eb;
+  margin-bottom: 13px;
+}
+
+.location-preview strong {
+  display: block;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.location-preview small {
+  display: block;
+  color: #64748b;
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.location-modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.cancel-location-button,
+.confirm-location-button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cancel-location-button {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.confirm-location-button {
+  background: #2563eb;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.confirm-location-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   Error
+========================= */
+
+.location-picker-error {
+  margin: 10px 20px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+/* =========================
+   Loading
+========================= */
+
+.spin {
+  animation: location-spin 1s linear infinite;
+}
+
+@keyframes location-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 600px) {
+  .selected-location-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .choose-map-button {
+    justify-content: center;
+  }
+
+  .location-modal-overlay {
+    padding: 0;
+  }
+
+  .location-modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .location-modal-map {
+    min-height: 300px;
+  }
+
+  .location-modal-actions {
+    width: 100%;
+  }
+
+  .cancel-location-button,
+  .confirm-location-button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+

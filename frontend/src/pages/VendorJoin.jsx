@@ -7,6 +7,8 @@ import {
   Image as ImageIcon, FileCheck, Clock, DollarSign
 } from 'lucide-react';
 import logo from '../assets/LOGO.png';
+import LocationPicker from '../components/LocationPicker';
+
 // import { setAccessToken, clearAccessToken } from '../api/axios';
 import { api } from '../services/api';
 export default function Join() {
@@ -612,110 +614,187 @@ textTransform: "uppercase",
                 </div>
               </div>
 
-              {/* Divider */}
-              <div style={{ borderTop: '1px solid #e9ecef', margin: '24px 0' }} />
+          {/* Divider */}
+<div
+  style={{
+    borderTop: '1px solid #e9ecef',
+    margin: '24px 0',
+  }}
+/>
 
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Building size={20} style={{ color: '#0F766E' }} />
-                معلومات المعرض
-              </h2>
+<h2
+  style={{
+    fontSize: '1.1rem',
+    fontWeight: 'bold',
+    marginBottom: '20px',
+    color: '#1a1a1a',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  }}
+>
+  <Building
+    size={20}
+    style={{ color: '#0F766E' }}
+  />
 
-              {/* Showroom Name */}
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
-                  اسم المعرض *
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Building size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6c757d' }} />
-                  <input
-                    type="text"
-                    name="showroomName"
-                    placeholder="معرض أحمد للسيارات"
-                    value={formData.showroomName}
-                    onChange={handleChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px 40px 10px 12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                      transition: 'border-color 0.2s'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = '#0F766E'}
-                    onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  />
-                </div>
-              </div>
+  معلومات المعرض
+</h2>
 
-              {/* City & Address */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
-                    المدينة *
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6c757d' }} />
-                    <select
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '10px 40px 10px 12px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        fontSize: '0.9rem',
-                        outline: 'none',
-                        background: 'white',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#0F766E'}
-                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                    >
-                      <option value="">اختر المدينة</option>
-                      <option value="riyadh">الرياض</option>
-                      <option value="jeddah">جدة</option>
-                      <option value="dammam">الدمام</option>
-                      <option value="medina">المدينة</option>
-                      <option value="mecca">مكة</option>
-                      <option value="khobar">الخبر</option>
-                      <option value="abha">أبها</option>
-                      <option value="tabuk">تبوك</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
-                    العنوان *
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6c757d' }} />
-                    <input
-                      type="text"
-                      name="address"
-                      placeholder="شارع الملك فهد، الحي الشرقي"
-                      value={formData.address}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '10px 40px 10px 12px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '8px',
-                        fontSize: '0.9rem',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#0F766E'}
-                      onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+{/* اسم المعرض */}
+<div style={{ marginBottom: '16px' }}>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: '8px',
+      fontWeight: '600',
+      fontSize: '0.85rem',
+      color: '#1a1a1a',
+    }}
+  >
+    اسم المعرض *
+  </label>
+
+  <div style={{ position: 'relative' }}>
+    <Building
+      size={18}
+      style={{
+        position: 'absolute',
+        right: '12px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        color: '#6c757d',
+      }}
+    />
+
+    <input
+      type="text"
+      name="showroomName"
+      placeholder="معرض أحمد للسيارات"
+      value={formData.showroomName}
+      onChange={handleChange}
+      style={{
+        width: '100%',
+        padding: '10px 40px 10px 12px',
+        border: '1px solid #d1d5db',
+        borderRadius: '8px',
+        fontSize: '0.9rem',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+      }}
+      onFocus={(e) =>
+        (e.target.style.borderColor = '#0F766E')
+      }
+      onBlur={(e) =>
+        (e.target.style.borderColor = '#d1d5db')
+      }
+    />
+  </div>
+</div>
+
+{/* موقع المعرض */}
+<div style={{ marginBottom: '16px' }}>
+  <label
+    style={{
+      display: 'block',
+      marginBottom: '8px',
+      fontWeight: '600',
+      fontSize: '0.85rem',
+      color: '#1a1a1a',
+    }}
+  >
+    موقع المعرض *
+  </label>
+
+  <LocationPicker
+    position={
+      formData.latitude && formData.longitude
+        ? [
+            Number(formData.latitude),
+            Number(formData.longitude),
+          ]
+        : null
+    }
+    mode="showroom"
+    onLocationChange={(location) => {
+      setFormData((prev) => ({
+        ...prev,
+        city: location.city || '',
+        address: location.name || '',
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }));
+    }}
+     />
+</div>
+
+{/* بيانات الموقع التي تم تحديدها */}
+{formData.latitude && formData.longitude && (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '16px',
+      marginBottom: '16px',}} >
+    <div>
+      <label
+        style={{
+          display: 'block',
+          marginBottom: '8px',
+          fontWeight: '600',
+          fontSize: '0.85rem',
+          color: '#1a1a1a',
+        }}
+      >
+        المدينة
+      </label>
+
+      <input
+        type="text"
+        value={formData.city || ''}
+        readOnly
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          border: '1px solid #d1d5db',
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          background: '#f8f9fa',
+        }}
+      />
+    </div>
+
+    <div>
+      <label
+        style={{
+          display: 'block',
+          marginBottom: '8px',
+          fontWeight: '600',
+          fontSize: '0.85rem',
+          color: '#1a1a1a',
+        }}
+      >
+        العنوان
+      </label>
+
+      <input
+        type="text"
+        value={formData.address || ''}
+        readOnly
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          border: '1px solid #d1d5db',
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          background: '#f8f9fa',
+        }}
+      />
+       </div> 
+      </div>
+        )}
+      </div>
           )}
-
           {/* STEP 2: Rental Settings */}
           {currentStep === 2 && (
             <div style={{ animation: 'slideIn 0.3s ease-out' }}>

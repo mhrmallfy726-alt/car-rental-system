@@ -182,6 +182,7 @@ export default function Cars() {
             <form className="cars-hero-search" onSubmit={handleSearchSubmit}>
               <Search size={18} />
               <input value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="ابحث عن مدينة أو موقع الاستلام" aria-label="البحث عن موقع الاستلام" />
+              
               <button type="submit">بحث</button>
             </form>
             <div className="cars-hero-actions">

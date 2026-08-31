@@ -14,6 +14,22 @@ return (
     <form onSubmit={handleSearch} className="hero-search-container fade-in" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '20px' }}>
 <div className="search-grid">
   <div className="input-wrapper">
+  <LocationPicker
+  position={[
+    Number(searchParams.latitude) || 15.3694,
+    Number(searchParams.longitude) || 44.1910,
+  ]}
+  mode="pickup"
+  onLocationChange={(location) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      location: location.name,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      radius: 10,
+    }));
+  }}
+/>
     <label>موقع الاستلام</label>
     <div style={{ position: 'relative' }}>
       <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
@@ -29,6 +45,7 @@ radius: 10,
 }));
 }}
 />             </div>
+
   </div>
 
   <div className="input-wrapper">
@@ -114,21 +131,6 @@ maxPrice: e.target.value,
   </div>
   
 </div>
-<LocationPicker
-position={[
-Number(searchParams.latitude) || 15.3694,
-Number(searchParams.longitude) || 44.1910,
-]}
-onLocationChange={(location) => {
-setSearchParams(prev => ({
-...prev,
-location: location.name,
-latitude: location.latitude,
-longitude: location.longitude,
-radius: 10,
-}));
-}}
-/>
 </form>
 </>
   );
