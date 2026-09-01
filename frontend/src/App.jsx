@@ -1,4 +1,5 @@
 import { Toaster } from 'react-hot-toast';
+import { sanitizeFieldValue, validateForm } from './utils/inputValidation';
 import useAuthStore from './store/authStore';
 import Navbar from './components/Navbar';
 import SearchPage from './pages/Search';
@@ -40,6 +41,7 @@ import SupplierRequests from './pages/admin/SupplierRequests';
 import EmployeeDashboard from './pages/employee/DashboardEMP';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import Home from './pages/Home';
+
 import Showrooms from "./pages/supplier/Showrooms";
 const getDashboardPath = (user) => {
   if (!user) return '/';
@@ -57,6 +59,19 @@ const LegacyCarRedirect = () => {
 const LegacyEmployeeRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/supplier/employees/${id}`} replace />;
+};
+const handleInputChangeCapture = (event) => {
+  const target = event.target;
+  if (!target || !['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+  if (['file', 'checkbox', 'radio', 'date', 'time'].includes(target.type)) return;
+
+  const sanitized = sanitizeFieldValue(target, target.value);
+  if (sanitized !== target.value) target.value = sanitized;
+  target.setCustomValidity?.('');
+};
+
+const handleSubmitCapture = (event) => {
+  if (!validateForm(event.target)) event.preventDefault();
 };
 
 const SearchRequiredRoute = ({ children }) => {
@@ -92,7 +107,12 @@ export default function App() {
     <>
       <Toaster position="top-right" toastOptions={{ style: { background: '#1a1a2e', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }, duration: 4000 }} />
       <Navbar />
-      <div className="rc-app-shell">
+      <div
+  className="rc-app-shell"
+  onChangeCapture={handleInputChangeCapture}
+  onSubmitCapture={handleSubmitCapture}
+>
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Navigate to="/" replace />} />
