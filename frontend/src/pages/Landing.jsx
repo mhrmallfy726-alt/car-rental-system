@@ -15,6 +15,7 @@ export default function Landing() {
   const [visibleSections, setVisibleSections] = useState({});
   const sectionElements = {};
 
+  
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
