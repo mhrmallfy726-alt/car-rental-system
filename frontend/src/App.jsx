@@ -1,7 +1,7 @@
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import Navbar from './components/Navbar';
-import Landing from './pages/Landing';
+import SearchPage from './pages/Search';
 import About from './pages/About';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -40,7 +40,7 @@ import SupplierRequests from './pages/admin/SupplierRequests';
 import EmployeeDashboard from './pages/employee/DashboardEMP';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import Home from './pages/Home';
-
+import Showrooms from "./pages/supplier/Showrooms";
 const getDashboardPath = (user) => {
   if (!user) return '/';
   if (user.account_type === 'employee' || user.role === 'employee') return '/employee/dashboard';
@@ -57,6 +57,24 @@ const LegacyCarRedirect = () => {
 const LegacyEmployeeRedirect = () => {
   const { id } = useParams();
   return <Navigate to={`/supplier/employees/${id}`} replace />;
+};
+
+const SearchRequiredRoute = ({ children }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const hasRequiredData = Boolean(
+    params.get('location') &&
+    params.get('startDate') &&
+    params.get('endDate') &&
+    (params.get('pickupTime') || params.get('pickup_time')) &&
+    (params.get('returnTime') || params.get('return_time'))
+  );
+
+  if (!hasRequiredData) {
+    return <Navigate to={`/search${location.search}`} replace state={{ from: location.pathname }} />;
+  }
+
+  return children;
 };
 
 const PrivateRoute = ({ children, roles }) => {
@@ -86,7 +104,8 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/supplier/join" element={<VendorJoin />} />
           <Route path="/Vendor-Join" element={<Navigate to="/supplier/join" replace />} />
-          <Route path="/cars" element={<Cars />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/cars" element={<SearchRequiredRoute><Cars /></SearchRequiredRoute>} />
           <Route path="/cars/:id" element={<CarDetail />} />
           <Route path="/car/:id" element={<LegacyCarRedirect />} />
           <Route path="/supplier-benefits" element={<MarketingRole role="supplier" />} />
@@ -111,6 +130,7 @@ export default function App() {
           <Route path="/supplier/employees/new" element={<PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>} />
           <Route path="/supplier/advertisement-request" element={<PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>} />
           <Route path="/supplier/employees" element={<PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>} />
+          <Route path="/supplier/showrooms" element={<Showrooms />} />
           <Route path="/pages/supplier/employees/:id" element={<LegacyEmployeeRedirect />} />
           <Route path="/supplier/EmployeeForm" element={<Navigate to="/supplier/employees/new" replace />} />
           <Route path="/supplier/AdvertisementRequest" element={<Navigate to="/supplier/advertisement-request" replace />} />

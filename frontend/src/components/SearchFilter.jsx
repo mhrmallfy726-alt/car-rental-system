@@ -1,5 +1,5 @@
-import LocationPicker from "./LocationPicker";
-import LocationSearch from "./LocationSearch";
+import LocationPicker from './LocationPicker';
+import LocationSearch from './LocationSearch';
 import { MapPin, Search } from "lucide-react";
 
 

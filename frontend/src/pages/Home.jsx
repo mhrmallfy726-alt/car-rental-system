@@ -99,7 +99,6 @@ import { carsAPI } from '../services/api';
 import { Search, MapPin, Calendar, Check, Shield, Star, Zap, Phone, Mail, Map, Car, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
-import SearchFilter from '../components/SearchFilter';
 import AdvertisementBanner from '../components/AdvertisementBanner';
 
 export default function Home() {
@@ -200,13 +199,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Search Widget - مُحسن بتراكب جزئي */}
+      {/* Search Widget */}
       <div className="container" style={{ position: 'relative', marginTop: '-50px', zIndex: 5 }}>
-      <SearchFilter
-  searchParams={searchParams}
-  setSearchParams={setSearchParams}
-  handleSearch={handleSearch}
-/>
+        <button
+          type="button"
+          className="search-entry-card"
+          onClick={() => navigate('/search')}
+          style={{ width: '100%', border: '0', cursor: 'pointer', textAlign: 'right' }}
+        >
+          <span className="search-entry-icon"><Search size={22} /></span>
+          <span>
+            <strong>ابحث عن سيارة تناسب رحلتك</strong>
+            <small>حدد موقع الاستلام والتاريخ والوقت للعثور على السيارات المتاحة</small>
+          </span>
+          <span className="search-entry-action">ابدأ البحث</span>
+        </button>
       </div>
 
       {/* Trust Elements - ألوان موحدة */}
