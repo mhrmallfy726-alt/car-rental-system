@@ -3,12 +3,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { query, getClient } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
-const employeeRoutes = require('../controllers/employeeController');
-const { app } = require('../../server');
 
-// ========================
-// Helpers
-// ========================
 const getAuthenticatedSupplierId = (reqUser) => {
   if (reqUser?.role !== 'supplier') return null;
   return String(reqUser.supplier_id || reqUser.id || '');
@@ -20,7 +15,27 @@ const ensureSupplierScope = (reqSupplierId, reqUser) => {
   return true;
 };
 
-// حماية الراوتات: جميعها تتطلب تسجيل دخول ودور supplier أو admin
+const JOB_ROLES = {
+  team_manager: 'مدير فريق',
+  advertisements: 'موظف إدارة الإعلانات والأداء',
+  reservations: 'موظف إدارة الحجوزات',
+  finance: 'موظف الإدارة المالية',
+  fleet: 'موظف إدارة أسطول السيارات',
+};
+
+const defaultPermissionNamesByJobRole = {
+  team_manager: [
+    'view_cars', 'manage_cars', 'view_fleet_performance',
+    'view_reservations', 'manage_reservations', 'view_customers',
+    'view_advertisements', 'manage_advertisements', 'view_ad_performance',
+    'view_finance', 'manage_finance', 'manage_team', 'view_team_performance'
+  ],
+  advertisements: ['view_advertisements', 'manage_advertisements', 'view_ad_performance'],
+  reservations: ['view_reservations', 'manage_reservations', 'view_customers'],
+  finance: ['view_finance', 'manage_finance'],
+  fleet: ['view_cars', 'manage_cars', 'view_fleet_performance'],
+};
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -41,8 +56,16 @@ router.post('/login', async (req, res) => {
 
     const jwt = require('jsonwebtoken');
     const secret = process.env.JWT_SECRET || 'fallback_secret';
-    const token = jwt.sign({ id: employee.id, employee_id: employee.id, account_type: 'employee', role: 'employee', supplier_id: employee.supplier_id }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({
+      id: employee.id,
+      employee_id: employee.id,
+      account_type: 'employee',
+      role: 'employee',
+      job_role: employee.job_role || 'fleet',
+      supplier_id: employee.supplier_id
+    }, secret, { expiresIn: '7d' });
 
+    const jobRole = JOB_ROLES[employee.job_role] ? employee.job_role : 'fleet';
     res.json({
       success: true,
       token,
@@ -52,6 +75,8 @@ router.post('/login', async (req, res) => {
         email: employee.email,
         phone_number: employee.phone_number,
         role: employee.role,
+        job_role: jobRole,
+        job_role_label: JOB_ROLES[jobRole],
         supplier_id: employee.supplier_id,
         must_change_password: employee.must_change_password,
         is_online: true,
@@ -86,7 +111,7 @@ router.put('/change-password', async (req, res) => {
 
     const hashed = await hashPassword(new_password);
     const updated = await query(
-      'UPDATE employees SET password = $1, must_change_password = FALSE, updated_at = NOW() WHERE id = $2 RETURNING id, full_name, email, role, must_change_password',
+      'UPDATE employees SET password = $1, must_change_password = FALSE, updated_at = NOW() WHERE id = $2 RETURNING id, full_name, email, role, job_role, must_change_password',
       [hashed, req.user.id]
     );
     res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح', data: updated.rows[0] });
@@ -122,7 +147,7 @@ router.get('/', async (req, res) => {
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const result = await query(
-      'SELECT id, full_name, phone_number, email, role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
+      'SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
       [supplier_id]
     );
     res.json({ success: true, data: result.rows });
@@ -145,7 +170,7 @@ router.get('/permissions/list', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const result = await query('SELECT id, full_name, phone_number, email, role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE id = $1', [id]);
+    const result = await query('SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE id = $1', [id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const emp = result.rows[0];
     if (!ensureSupplierScope(emp.supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
@@ -156,14 +181,9 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-const defaultPermissionNamesByRole = {
-  employee: ['view_cars', 'view_reservations'],
-  manager: ['view_cars', 'manage_cars', 'view_reservations', 'manage_reservations', 'view_customers', 'manage_advertisements', 'view_finance', 'manage_team'],
-};
-
 router.post('/', async (req, res) => {
   try {
-    const { full_name, phone_number, email, password, role, permission_ids } = req.body;
+    const { full_name, phone_number, email, password, role, job_role, permission_ids } = req.body;
     const supplier_id = req.user.role === 'supplier'
       ? getAuthenticatedSupplierId(req.user)
       : (req.body.supplier_id ? String(req.body.supplier_id) : null);
@@ -173,23 +193,27 @@ router.post('/', async (req, res) => {
     const exists = await query('SELECT id FROM employees WHERE email = $1', [email]);
     if (exists.rows.length > 0) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل' });
 
+    const normalizedJobRole = Object.prototype.hasOwnProperty.call(JOB_ROLES, job_role) ? job_role : null;
+    if (!normalizedJobRole) return res.status(400).json({ success: false, message: 'يجب اختيار الوظيفة التخصصية للموظف' });
+
+    // Technical role is kept only for authentication/backward compatibility.
+    const technicalRole = normalizedJobRole === 'team_manager' ? 'manager' : 'employee';
     const hashed = await hashPassword(password);
-    const normalizedRole = role === 'manager' ? 'manager' : role === 'employee' ? 'employee' : null;
-    if (!normalizedRole) return res.status(400).json({ success: false, message: 'الدور يجب أن يكون موظفاً أو مدير فريق' });
 
     const insert = await query(
-      `INSERT INTO employees (full_name, phone_number, email, password, role, supplier_id)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, full_name, email, role, supplier_id, status, created_at`,
-      [full_name, phone_number || null, email, hashed, normalizedRole, supplier_id]
+      `INSERT INTO employees (full_name, phone_number, email, password, role, job_role, supplier_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       RETURNING id, full_name, email, role, job_role, supplier_id, status, created_at`,
+      [full_name, phone_number || null, email, hashed, technicalRole, normalizedJobRole, supplier_id]
     );
 
     const requestedPermissionIds = Array.isArray(permission_ids)
-      ? permission_ids.filter((id) => Number.isInteger(Number(id))).map(Number)
+      ? [...new Set(permission_ids.filter((id) => Number.isInteger(Number(id))).map(Number))]
       : [];
     let selectedPermissionIds = requestedPermissionIds;
 
     if (selectedPermissionIds.length === 0) {
-      const defaultNames = defaultPermissionNamesByRole[normalizedRole] || defaultPermissionNamesByRole.employee;
+      const defaultNames = defaultPermissionNamesByJobRole[normalizedJobRole];
       const defaultPermissions = await query('SELECT id FROM permissions WHERE name = ANY($1::text[])', [defaultNames]);
       selectedPermissionIds = defaultPermissions.rows.map((permission) => permission.id);
     } else {
@@ -212,8 +236,8 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const { full_name, phone_number, role, status } = req.body;
-    if (role !== undefined && !['employee', 'manager'].includes(role)) return res.status(400).json({ success: false, message: 'الدور يجب أن يكون موظفاً أو مدير فريق' });
+    const { full_name, phone_number, job_role, status } = req.body;
+    if (job_role !== undefined && !Object.prototype.hasOwnProperty.call(JOB_ROLES, job_role)) return res.status(400).json({ success: false, message: 'الوظيفة التخصصية غير صالحة' });
 
     const normalizedStatus = status === undefined ? undefined : String(status).trim().toLowerCase();
     if (normalizedStatus !== undefined && !['active', 'inactive'].includes(normalizedStatus)) return res.status(400).json({ success: false, message: 'حالة الموظف غير صالحة' });
@@ -228,13 +252,13 @@ router.put('/:id', async (req, res) => {
     let idx = 1;
     if (full_name !== undefined) { sets.push(`full_name = $${idx++}`); vals.push(full_name); }
     if (phone_number !== undefined) { sets.push(`phone_number = $${idx++}`); vals.push(phone_number || null); }
-    if (role !== undefined) { sets.push(`role = $${idx++}`); vals.push(role); }
+    if (job_role !== undefined) { sets.push(`job_role = $${idx++}`); vals.push(job_role); }
     if (normalizedStatus !== undefined) { sets.push(`status = $${idx++}`); vals.push(normalizedStatus); }
 
     if (sets.length === 0) return res.status(400).json({ success: false, message: 'لا حقول للتحديث' });
 
     vals.push(id);
-    const sql = `UPDATE employees SET ${sets.join(', ')} WHERE id = $${idx} RETURNING id, full_name, email, role, status, supplier_id, created_at`;
+    const sql = `UPDATE employees SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${idx} RETURNING id, full_name, email, role, job_role, status, supplier_id, created_at`;
     const updated = await query(sql, vals);
     res.json({ success: true, data: updated.rows[0] });
   } catch (err) {
