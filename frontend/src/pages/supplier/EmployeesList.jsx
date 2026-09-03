@@ -1,128 +1,86 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Edit3, Eye, Mail, Phone, Plus, Search, ShieldCheck, Trash2, UserRound, UsersRound, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BriefcaseBusiness, Edit3, Eye, Mail, Phone, Plus, Search, Trash2, UsersRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import useAuthStore from '../../store/authStore';
-import { createEmployee, deleteEmployee, listEmployees, listPermissions, updateEmployee } from '../../services/employees';
+import { createEmployee, deleteEmployee, listEmployees, updateEmployee } from '../../services/employees';
 
-const emptyForm = { full_name: '', email: '', phone_number: '', password: '', role: 'employee', status: 'active', permission_ids: [] };
-
-const permissionPresets = {
-  employee: ['view_cars', 'view_reservations'],
-  manager: ['view_cars', 'manage_cars', 'view_reservations', 'manage_reservations', 'view_customers', 'manage_advertisements', 'view_finance', 'manage_team'],
-};
+const JOB_ROLES = [
+  { value: 'team_manager', label: 'مدير فريق' },
+  { value: 'advertisements', label: 'موظف إدارة الإعلانات والأداء' },
+  { value: 'reservations', label: 'موظف إدارة الحجوزات' },
+  { value: 'finance', label: 'موظف الإدارة المالية' },
+  { value: 'fleet', label: 'موظف إدارة أسطول السيارات' },
+];
+const roleLabel = (value) => JOB_ROLES.find((role) => role.value === value)?.label || 'تخصص غير محدد';
+const emptyForm = { full_name: '', email: '', phone_number: '', password: '', job_role: 'fleet', status: 'active' };
 
 export default function EmployeesList() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const [employees, setEmployees] = useState([]);
-  const [form, setForm] = useState(emptyForm);
-  const [editForm, setEditForm] = useState(emptyForm);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  const [availablePermissions, setAvailablePermissions] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyForm);
 
-  const loadEmployees = useCallback(async () => {
-    if (!user?.id) return;
-    setLoading(true);
+  const load = async () => {
     try {
-      const [response, permissionsResponse] = await Promise.all([listEmployees(user.supplier_id || user.id), listPermissions()]);
+      setLoading(true);
+      const response = await listEmployees();
       setEmployees(response.data || []);
-      setAvailablePermissions(permissionsResponse.data || []);
     } catch (error) {
       toast.error(error.response?.data?.message || 'تعذر تحميل فريق العمل');
-    } finally {
-      setLoading(false);
-    }
-    }, [user]);
-  useEffect(() => {
-    const timer = window.setTimeout(loadEmployees, 0);
-    return () => window.clearTimeout(timer);
-  }, [loadEmployees]);
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
 
-  const filteredEmployees = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    if (!needle) return employees;
-    return employees.filter((employee) => [employee.full_name, employee.email, employee.phone_number, employee.role].filter(Boolean).some((value) => value.toLowerCase().includes(needle)));
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return employees;
+    return employees.filter((employee) => [employee.full_name, employee.email, employee.phone_number, roleLabel(employee.job_role)].filter(Boolean).some((value) => String(value).toLowerCase().includes(q)));
   }, [employees, search]);
 
+  const openCreate = () => { setEditing(null); setForm(emptyForm); setShowForm(true); };
+  const openEdit = (employee) => { setEditing(employee); setForm({ full_name: employee.full_name || '', email: employee.email || '', phone_number: employee.phone_number || '', password: '', job_role: employee.job_role || 'fleet', status: employee.status === 'inactive' ? 'inactive' : 'active' }); setShowForm(true); };
+  const change = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
-  const handleCreate = async (event) => {
-    event.preventDefault();
-    if (!form.full_name || !form.email || !form.password) return toast.error('أكمل الاسم والبريد وكلمة المرور');
-    setSaving(true);
-    try {
-      await createEmployee({ ...form, permission_ids: form.permission_ids || [] });
-      toast.success('تم إنشاء حساب الموظف');
-      setForm(emptyForm);
-      setShowCreate(false);
-      await loadEmployees();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر إنشاء الموظف');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const openEdit = (employee) => {
-    setSelectedEmployee(employee);
-    setEditForm({ full_name: employee.full_name || '', email: employee.email || '', phone_number: employee.phone_number || '', password: '', role: employee.role || 'employee', status: employee.status || 'active' });
-    setShowEdit(true);
-  };
-
-  const handleEdit = async (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     setSaving(true);
     try {
-      await updateEmployee(selectedEmployee.id, { full_name: editForm.full_name, phone_number: editForm.phone_number, role: editForm.role, status: editForm.status });
-      toast.success('تم تحديث بيانات الموظف');
-      setShowEdit(false);
-      await loadEmployees();
+      if (editing) {
+        await updateEmployee(editing.id, { full_name: form.full_name, phone_number: form.phone_number, job_role: form.job_role, status: form.status });
+        toast.success('تم تحديث المسؤولية الوظيفية');
+      } else {
+        await createEmployee(form);
+        toast.success('تم إنشاء عضو الفريق');
+      }
+      setShowForm(false);
+      await load();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر تحديث الموظف');
-    } finally {
-      setSaving(false);
-    }
+      toast.error(error.response?.data?.message || 'تعذر حفظ بيانات الموظف');
+    } finally { setSaving(false); }
   };
 
-  const handleDelete = async (employee) => {
-    if (!window.confirm(`هل تريد حذف حساب ${employee.full_name}؟`)) return;
-    try {
-      await deleteEmployee(employee.id);
-      toast.success('تم حذف الموظف');
-      await loadEmployees();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر حذف الموظف');
-    }
+  const remove = async (employee) => {
+    if (!window.confirm(`هل تريد حذف ${employee.full_name}؟`)) return;
+    try { await deleteEmployee(employee.id); toast.success('تم حذف العضو'); await load(); }
+    catch (error) { toast.error(error.response?.data?.message || 'تعذر حذف العضو'); }
   };
 
-  return <main className="employees-page" dir="rtl"><div className="employees-wrap"><header className="employees-header"><div><span className="employees-kicker">TEAM ACCESS / SUPPLIER SPACE</span><h1>فريق العمل</h1><p>أدر الحسابات، الأدوار، والصلاحيات من مساحة واحدة واضحة.</p></div><button type="button" className="employees-primary" onClick={() => setShowCreate(true)}><Plus size={17} /> إضافة موظف</button></header><section className="employees-overview"><div className="employees-overview-icon"><UsersRound size={22} /></div><div><strong>{employees.length}</strong><span>أعضاء في فريقك</span></div><div className="employees-overview-divider" /><div><strong>{employees.filter((employee) => employee.status === 'active').length}</strong><span>حساب نشط</span></div><div className="employees-overview-note"><ShieldCheck size={16} /> الصلاحيات قابلة للتعديل لكل حساب</div></section><div className="employees-toolbar"><div className="employees-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث بالاسم أو البريد أو الدور" /></div><span className="employees-results">{filteredEmployees.length} نتيجة</span></div><section className="employees-table-card"><div className="employees-table-head"><span>الموظف</span><span>التواصل</span><span>الدور</span><span>حالة الاتصال</span><span>استقبال الطلبات</span><span>الإجراءات</span></div>{loading ? <div className="employees-empty"><div className="employees-loader" /> جارٍ تحميل فريق العمل...</div> : filteredEmployees.length === 0 ? <div className="employees-empty"><UserRound size={27} /><strong>{search ? 'لا توجد نتائج مطابقة' : 'لم تضف موظفين بعد'}</strong><span>{search ? 'جرّب كلمة بحث مختلفة.' : 'ابدأ بإضافة أول عضو إلى فريقك.'}</span></div> : <div className="employees-table-body">{filteredEmployees.map((employee) => <div className="employees-row" key={employee.id} style={{gridTemplateColumns:'1.2fr 1.3fr .7fr .7fr .7fr 130px'}}><div className="employees-person"><span className="employees-avatar">{employee.full_name?.charAt(0) || 'م'}</span><div><strong>{employee.full_name}</strong><small>{employee.is_online ? 'متصل الآن' : 'غير متصل'}</small></div></div><div className="employees-contact"><span><Mail size={13} /> {employee.email}</span><span><Phone size={13} /> {employee.phone_number || 'غير مضاف'}</span></div><span className="employees-role"><BriefcaseBusiness size={14} />{employee.role === 'manager' ? 'مدير فريق' : 'موظف'}</span><span className={`employees-status ${employee.is_online ? 'active' : 'inactive'}`}>{employee.is_online ? 'متصل' : 'غير متصل'}</span><span className={`employees-status ${employee.is_accepting_orders ? 'active' : 'inactive'}`} style={{background: employee.is_accepting_orders ? '#e5fbf6' : '#fff1f5', color: employee.is_accepting_orders ? '#0b8a73' : '#b33b5c'}}>{employee.is_accepting_orders ? 'يستقبل طلبات' : 'متوقف'}</span><div className="employees-actions"><button type="button" onClick={() => navigate(`/supplier/employees/${employee.id}`)} title="التفاصيل والصلاحيات"><Eye size={16} /></button><button type="button" onClick={() => openEdit(employee)} title="تعديل"><Edit3 size={16} /></button><button type="button" onClick={() => handleDelete(employee)} className="danger" title="حذف"><Trash2 size={16} /></button></div></div>)}</div>}</section><div className="employees-mobile-hint"><ShieldCheck size={15} /> من الأفضل مراجعة صلاحيات كل موظف قبل تفعيل حسابه.</div></div><style>{`
-.employees-page{min-height:100vh;padding:118px 20px 60px;color:#163348;background:linear-gradient(150deg,#f6fbfc,#eef5f6)}.employees-wrap{width:min(1180px,100%);margin:auto}.employees-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px}.employees-kicker{display:block;color:#0c8a70;font-size:9px;font-weight:950;letter-spacing:1.6px}.employees-header h1{margin:8px 0 5px;color:#173a52;font-size:31px;letter-spacing:-1px}.employees-header p{margin:0;color:#7e98a4;font-size:12px}.employees-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:11px;padding:11px 15px;color:#061923;background:linear-gradient(135deg,#4df5c7,#c8ffed);font:inherit;font-size:11px;font-weight:950;cursor:pointer;box-shadow:0 8px 20px rgba(77,245,199,.15);transition:all .2s ease}.employees-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 22px rgba(77,245,199,.34)}.employees-primary:disabled{opacity:.6;cursor:wait}.employees-overview{display:flex;align-items:center;gap:14px;margin-bottom:17px;padding:16px 18px;border:1px solid #dce9ed;border-radius:18px;background:linear-gradient(100deg,#0b2d43,#104253);color:#eaf4f6;box-shadow:0 15px 32px rgba(16,60,79,.11)}.employees-overview-icon{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(77,245,199,.42);border-radius:13px;color:#4df5c7;background:rgba(77,245,199,.1)}.employees-overview strong{display:block;color:#fff;font-size:21px;line-height:1}.employees-overview span{display:block;margin-top:4px;color:rgba(230,243,246,.6);font-size:9px}.employees-overview-divider{height:30px;width:1px;margin:0 4px;background:rgba(255,255,255,.15)}.employees-overview-note{display:inline-flex;align-items:center;gap:6px;margin-right:auto;color:#4df5c7;font-size:10px;font-weight:850}.employees-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:12px}.employees-search{display:flex;align-items:center;gap:9px;width:min(440px,100%);padding:0 13px;border:1px solid #dce8ec;border-radius:12px;background:#fff;color:#8aa1ab;box-shadow:0 5px 15px rgba(20,59,78,.03)}.employees-search input{width:100%;border:0;outline:0;padding:12px 0;color:#284b5c;background:transparent;font:inherit;font-size:11px}.employees-search input::placeholder{color:#a8b5bb}.employees-results{color:#8da1aa;font-size:10px;font-weight:850}.employees-table-card{overflow:hidden;border:1px solid #dce8ec;border-radius:18px;background:#fff;box-shadow:0 10px 26px rgba(20,59,78,.05)}.employees-table-head,.employees-row{display:grid;grid-template-columns:1.35fr 1.45fr .8fr .65fr 140px;align-items:center;gap:14px}.employees-table-head{padding:13px 18px;color:#8da1aa;background:#f7fafb;border-bottom:1px solid #e8f0f2;font-size:9px;font-weight:950}.employees-row{min-height:76px;padding:12px 18px;border-bottom:1px solid #edf3f4;transition:background .2s ease}.employees-row:last-child{border-bottom:0}.employees-row:hover{background:#fbfefd}.employees-person{display:flex;align-items:center;gap:10px;min-width:0}.employees-avatar{width:35px;height:35px;display:grid;flex:0 0 auto;place-items:center;border-radius:12px;color:#08705f;background:linear-gradient(135deg,#dbfff6,#b9f9e9);font-size:13px;font-weight:950}.employees-person strong{display:block;overflow:hidden;color:#29495a;text-overflow:ellipsis;white-space:nowrap;font-size:11px}.employees-person small{display:block;margin-top:4px;color:#9aabb2;font-size:8px}.employees-contact{display:grid;gap:5px;min-width:0;color:#8a9da6;font-size:9px}.employees-contact span{display:flex;align-items:center;gap:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.employees-contact svg{color:#76a69f;flex:0 0 auto}.employees-role{display:inline-flex;align-items:center;gap:5px;color:#6b5ab3;font-size:10px;font-weight:850}.employees-status{width:max-content;padding:5px 8px;border-radius:99px;font-size:9px;font-weight:950}.employees-status.active{color:#08745f;background:#e4fbf5}.employees-status.inactive{color:#ae3d60;background:#ffedf3}.employees-actions{display:flex;gap:5px}.employees-actions button{width:30px;height:30px;display:grid;place-items:center;border:1px solid #e2eaed;border-radius:9px;color:#6d8793;background:#fff;cursor:pointer;transition:all .2s ease}.employees-actions button:hover{color:#08816b;border-color:#91e5d3;background:#f0fcf9;transform:translateY(-1px)}.employees-actions button.danger:hover{color:#bc4b6b;border-color:#f1b7c6;background:#fff1f5}.employees-empty{display:grid;justify-items:center;gap:8px;padding:64px 20px;color:#9aadb4;text-align:center;font-size:11px}.employees-empty svg{color:#93daca}.employees-empty strong{color:#5b7887;font-size:13px}.employees-empty span{font-size:10px}.employees-loader{width:26px;height:26px;border:3px solid #dbefeb;border-top-color:#0c9e83;border-radius:50%;animation:employeesSpin .8s linear infinite}.employees-mobile-hint{display:flex;align-items:center;gap:6px;margin-top:12px;color:#7f969f;font-size:10px}.employees-mobile-hint svg{color:#0c8a70}.employees-modal-backdrop{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;padding:20px;background:rgba(4,18,30,.68);backdrop-filter:blur(8px)}.employees-modal{width:min(600px,100%);max-height:calc(100vh - 40px);overflow:auto;padding:24px;border:1px solid rgba(77,245,199,.2);border-radius:20px;color:#173a52;background:#fff;box-shadow:0 25px 80px rgba(0,0,0,.3)}.employees-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding-bottom:17px;border-bottom:1px solid #eaf1f3}.employees-modal-head h2{margin:7px 0 0;color:#173a52;font-size:20px}.employees-modal-head button{width:32px;height:32px;display:grid;place-items:center;border:1px solid #e4ecee;border-radius:10px;color:#6d8793;background:#fff;cursor:pointer}.employees-modal-head button:hover{color:#bc4b6b;border-color:#f0bbc9}.employees-form{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding-top:20px}.employees-field{display:grid;gap:7px}.employees-field span{color:#527183;font-size:10px;font-weight:850}.employees-field input,.employees-field select{width:100%;box-sizing:border-box;border:1px solid #d8e5e9;border-radius:10px;padding:11px 12px;outline:0;color:#294b5b;background:#fbfdfe;font:inherit;font-size:11px}.employees-field input:focus,.employees-field select:focus{border-color:#70d8c2;box-shadow:0 0 0 3px rgba(77,245,199,.12)}.employees-permission-picker{grid-column:1/-1;margin:0;padding:13px;border:1px solid #dce9ed;border-radius:12px}.employees-permission-picker legend{padding:0 6px;color:#31586a;font-size:11px;font-weight:900}.employees-permission-picker>small{display:block;margin-bottom:10px;color:#8aa0aa;font-size:9px}.employees-permission-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.employees-permission-option{display:flex;align-items:flex-start;gap:8px;padding:9px;border:1px solid #e5edef;border-radius:10px;cursor:pointer}.employees-permission-option:has(input:checked){border-color:#8fe5d2;background:#f1fcf9}.employees-permission-option input{margin-top:3px;accent-color:#0b8a73}.employees-permission-option strong{display:block;color:#31586a;font-size:10px}.employees-permission-option small{display:block;margin-top:3px;color:#91a2aa;font-size:8px;line-height:1.4}.employees-modal-actions{display:flex;grid-column:1/-1;justify-content:flex-start;gap:9px;margin-top:5px;padding-top:16px;border-top:1px solid #edf3f4}.employees-cancel{border:1px solid #dce6e9;border-radius:11px;padding:10px 14px;color:#65808d;background:#fff;font:inherit;font-size:11px;font-weight:850;cursor:pointer}.employees-cancel:hover{background:#f5fafb}@keyframes employeesSpin{to{transform:rotate(360deg)}}@media(max-width:900px){.employees-table-head{display:none}.employees-row{grid-template-columns:1fr auto;gap:10px;padding:15px}.employees-contact{grid-column:1/-1;grid-row:2}.employees-role{grid-column:1;grid-row:3}.employees-status{grid-column:2;grid-row:3;justify-self:end}.employees-actions{grid-column:2;grid-row:1}.employees-overview-note{display:none}}@media(max-width:600px){.employees-page{padding:97px 14px 42px}.employees-header{align-items:flex-start;flex-direction:column}.employees-primary{width:100%}.employees-overview{flex-wrap:wrap}.employees-toolbar{align-items:flex-start;flex-direction:column}.employees-search{width:100%}.employees-results{align-self:flex-start}.employees-form{grid-template-columns:1fr}.employees-modal-actions{grid-column:auto}.employees-modal-actions .employees-primary{width:auto}}
-`}</style><CreateEmployeeModal open={showCreate} form={form} setForm={setForm} saving={saving} permissions={availablePermissions} onClose={() => setShowCreate(false)} onSubmit={handleCreate} /><EditEmployeeModal open={showEdit} form={editForm} setForm={setEditForm} saving={saving} onClose={() => setShowEdit(false)} onSubmit={handleEdit} /></main>;
+  return <main dir="rtl" style={styles.page}><div style={styles.wrap}>
+    <header style={styles.header}><div><span style={styles.kicker}>TEAM MANAGEMENT</span><h1 style={styles.title}>فريق العمل</h1><p style={styles.muted}>أضف أعضاء الفريق وحدد مسؤوليتهم الوظيفية بوضوح.</p></div><button style={styles.primary} onClick={openCreate}><Plus size={17} /> إضافة عضو</button></header>
+    <section style={styles.summary}><UsersRound size={22} /><div><strong>{employees.length}</strong><span>أعضاء الفريق</span></div><div><strong>{employees.filter((e) => e.status === 'active').length}</strong><span>حسابات نشطة</span></div></section>
+    <div style={styles.toolbar}><div style={styles.search}><Search size={17} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث بالاسم أو البريد أو المسؤولية" /></div><span>{filtered.length} نتيجة</span></div>
+    <section style={styles.table}>
+      <div style={styles.head}><span>عضو الفريق</span><span>التواصل</span><span>المسؤولية الوظيفية</span><span>الحالة</span><span>الإجراءات</span></div>
+      {loading ? <div style={styles.empty}>جارٍ تحميل الفريق...</div> : filtered.length === 0 ? <div style={styles.empty}>لا يوجد أعضاء مطابقون.</div> : filtered.map((employee) => <div key={employee.id} style={styles.row}><div style={styles.person}><span style={styles.avatar}>{employee.full_name?.charAt(0) || 'م'}</span><div><strong>{employee.full_name}</strong><small>{employee.is_online ? 'متصل الآن' : 'غير متصل'}</small></div></div><div style={styles.contact}><span><Mail size={13} />{employee.email}</span><span><Phone size={13} />{employee.phone_number || 'غير مضاف'}</span></div><span style={styles.role}><BriefcaseBusiness size={14} />{roleLabel(employee.job_role)}</span><span style={employee.status === 'active' ? styles.active : styles.inactive}>{employee.status === 'active' ? 'نشط' : 'موقوف'}</span><div style={styles.actions}><button title="التفاصيل والصلاحيات" onClick={() => navigate(`/supplier/employees/${employee.id}`)}><Eye size={16} /></button><button title="تعديل" onClick={() => openEdit(employee)}><Edit3 size={16} /></button><button title="حذف" onClick={() => remove(employee)}><Trash2 size={16} /></button></div></div>)}
+    </section>
+    {showForm && <div style={styles.backdrop}><form onSubmit={submit} style={styles.modal}><div style={styles.modalHead}><h2>{editing ? 'تعديل عضو الفريق' : 'إضافة عضو إلى الفريق'}</h2><button type="button" onClick={() => setShowForm(false)}>×</button></div><label>الاسم<input name="full_name" value={form.full_name} onChange={change} required /></label><label>البريد الإلكتروني<input name="email" type="email" value={form.email} onChange={change} required disabled={Boolean(editing)} /></label><label>رقم الهاتف<input name="phone_number" value={form.phone_number} onChange={change} /></label>{!editing && <label>كلمة المرور<input name="password" type="password" value={form.password} onChange={change} minLength={8} required /></label>}<label>المسؤولية الوظيفية<select name="job_role" value={form.job_role} onChange={change}>{JOB_ROLES.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}</select></label><label>حالة الحساب<select name="status" value={form.status} onChange={change}><option value="active">نشط</option><option value="inactive">موقوف</option></select></label><div style={styles.formActions}><button type="button" style={styles.cancel} onClick={() => setShowForm(false)}>إلغاء</button><button type="submit" style={styles.primary} disabled={saving}>{saving ? 'جارٍ الحفظ...' : 'حفظ'}</button></div></form></div>}
+  </div></main>;
 }
 
-function Field({ label, name, value, onChange, type = 'text', placeholder }) {
-  return <label className="employees-field"><span>{label}</span><input name={name} type={type} value={value} onChange={onChange} placeholder={placeholder} required={['full_name', 'email'].includes(name)} /></label>;
-}
-
-function CreateEmployeeModal({ open, form, setForm, saving, permissions, onClose, onSubmit }) {
-  if (!open) return null;
-  return <div className="employees-modal-backdrop"><div className="employees-modal" dir="rtl"><div className="employees-modal-head"><div><span className="employees-kicker">NEW MEMBER</span><h2>إضافة موظف</h2></div><button type="button" onClick={onClose}><X size={19} /></button></div><form onSubmit={onSubmit} className="employees-form"><Field label="الاسم الكامل" name="full_name" value={form.full_name} onChange={(event) => setForm((current) => ({ ...current, full_name: event.target.value }))} placeholder="مثال: أحمد محمد" /><Field label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="name@example.com" /><Field label="رقم الهاتف" name="phone_number" value={form.phone_number} onChange={(event) => setForm((current) => ({ ...current, phone_number: event.target.value }))} placeholder="اختياري" /><Field label="كلمة المرور المؤقتة" name="password" type="password" value={form.password} onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))} placeholder="8 أحرف على الأقل" /><SelectField label="الدور" name="role" value={form.role} onChange={(event) => { const role = event.target.value; const defaultNames = permissionPresets[role] || permissionPresets.employee; const defaultIds = permissions.filter((permission) => defaultNames.includes(permission.name)).map((permission) => permission.id); setForm((current) => ({ ...current, role, permission_ids: defaultIds })); }} options={[['employee', 'موظف'], ['manager', 'مدير فريق']]} /><PermissionPicker permissions={permissions} selected={form.permission_ids || []} onChange={(permissionId) => setForm((current) => ({ ...current, permission_ids: current.permission_ids?.includes(permissionId) ? current.permission_ids.filter((id) => id !== permissionId) : [...(current.permission_ids || []), permissionId] }))} /><div className="employees-modal-actions"><button type="button" className="employees-cancel" onClick={onClose}>إلغاء</button><button type="submit" className="employees-primary" disabled={saving}>{saving ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}</button></div></form></div></div>;
-}
-
-function PermissionPicker({ permissions, selected, onChange }) {
-  return <fieldset className="employees-permission-picker"><legend>الصلاحيات الأولية</legend><small>يمكن للمورد تعديلها لاحقاً من صفحة تفاصيل الموظف.</small><div className="employees-permission-options">{permissions.map((permission) => <label key={permission.id} className="employees-permission-option"><input type="checkbox" checked={selected.includes(permission.id)} onChange={() => onChange(permission.id)} /><span><strong>{permission.name}</strong><small>{permission.description || 'صلاحية تشغيلية'}</small></span></label>)}</div></fieldset>;
-}
-
-function EditEmployeeModal({ open, form, setForm, saving, onClose, onSubmit }) {
-  if (!open) return null;
-  return <div className="employees-modal-backdrop"><div className="employees-modal" dir="rtl"><div className="employees-modal-head"><div><span className="employees-kicker">UPDATE MEMBER</span><h2>تعديل بيانات الموظف</h2></div><button type="button" onClick={onClose}><X size={19} /></button></div><form onSubmit={onSubmit} className="employees-form"><Field label="الاسم الكامل" name="full_name" value={form.full_name} onChange={(event) => setForm((current) => ({ ...current, full_name: event.target.value }))} /><Field label="البريد الإلكتروني" name="email" type="email" value={form.email} onChange={() => {}} /><Field label="رقم الهاتف" name="phone_number" value={form.phone_number} onChange={(event) => setForm((current) => ({ ...current, phone_number: event.target.value }))} /><SelectField label="الدور" name="role" value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} options={[['employee', 'موظف'], ['manager', 'مدير فريق']]} /><SelectField label="الحالة" name="status" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))} options={[['active', 'نشط'], ['inactive', 'موقوف']]} /><div className="employees-modal-actions"><button type="button" className="employees-cancel" onClick={onClose}>إلغاء</button><button type="submit" className="employees-primary" disabled={saving}>{saving ? 'جارٍ الحفظ...' : 'حفظ التعديلات'}</button></div></form></div></div>;
-}
-
-function SelectField({ label, name, value, onChange, options }) {
-  return <label className="employees-field"><span>{label}</span><select name={name} value={value} onChange={onChange}>{options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}</select></label>;
-}
+const styles = {
+  page:{minHeight:'100vh',padding:'115px 20px 60px',background:'#f4f8f9',color:'#173a52'},wrap:{maxWidth:1180,margin:'0 auto'},header:{display:'flex',justifyContent:'space-between',alignItems:'flex-end',gap:20,marginBottom:18},kicker:{color:'#0b8a73',fontSize:10,fontWeight:900},title:{margin:'7px 0',fontSize:31},muted:{margin:0,color:'#78909b'},primary:{display:'inline-flex',alignItems:'center',gap:7,border:0,borderRadius:11,padding:'11px 16px',background:'#173a52',color:'#fff',fontWeight:900,cursor:'pointer'},summary:{display:'flex',alignItems:'center',gap:18,padding:18,borderRadius:18,background:'#fff',border:'1px solid #e1eaed',marginBottom:15},summaryIcon:{},summaryDiv:{},toolbar:{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:12,color:'#81949d',fontSize:12},search:{display:'flex',alignItems:'center',gap:8,width:'min(480px,100%)',padding:'0 12px',border:'1px solid #dce7eb',borderRadius:12,background:'#fff'},table:{background:'#fff',border:'1px solid #dce7eb',borderRadius:18,overflow:'hidden'},head:{display:'grid',gridTemplateColumns:'1.2fr 1.35fr 1.35fr .6fr 130px',gap:12,padding:'13px 17px',background:'#f7fafb',color:'#8498a1',fontSize:10,fontWeight:900},row:{display:'grid',gridTemplateColumns:'1.2fr 1.35fr 1.35fr .6fr 130px',alignItems:'center',gap:12,padding:'13px 17px',borderTop:'1px solid #edf2f4'},person:{display:'flex',alignItems:'center',gap:9},avatar:{width:36,height:36,display:'grid',placeItems:'center',borderRadius:11,background:'#dff9f2',color:'#087f68',fontWeight:900},personSmall:{},contact:{display:'grid',gap:4,color:'#8397a0',fontSize:10},contactSpan:{},role:{display:'flex',alignItems:'center',gap:6,color:'#6656a5',fontSize:10,fontWeight:800},active:{width:'max-content',padding:'5px 9px',borderRadius:99,background:'#e4fbf5',color:'#08745f',fontSize:9,fontWeight:900},inactive:{width:'max-content',padding:'5px 9px',borderRadius:99,background:'#ffedf3',color:'#ae3d60',fontSize:9,fontWeight:900},actions:{display:'flex',gap:5},empty:{padding:55,textAlign:'center',color:'#8da0a8'},backdrop:{position:'fixed',inset:0,zIndex:1200,display:'grid',placeItems:'center',padding:20,background:'rgba(5,22,34,.65)'},modal:{width:'min(560px,100%)',maxHeight:'calc(100vh - 40px)',overflow:'auto',display:'grid',gap:14,padding:24,borderRadius:20,background:'#fff'},modalHead:{display:'flex',justifyContent:'space-between',alignItems:'center'},formActions:{display:'flex',gap:9,justifyContent:'flex-start'},cancel:{border:'1px solid #d9e4e8',background:'#fff',padding:'11px 16px',borderRadius:11,cursor:'pointer'},
+};
