@@ -38,11 +38,11 @@ import AdminSettings from './pages/admin/AdminSettings';
 import Adminadvertisement from './pages/admin/AdvertisementCenter';
 import FinanceCenter from './pages/admin/FinanceCenter';
 import SupplierRequests from './pages/admin/SupplierRequests';
-import EmployeeDashboard from './pages/employee/DashboardEMP';
+import EmployeeRoleDashboard from './pages/employee/EmployeeRoleDashboard';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import Home from './pages/Home';
+import Showrooms from './pages/supplier/Showrooms';
 
-import Showrooms from "./pages/supplier/Showrooms";
 const getDashboardPath = (user) => {
   if (!user) return '/';
   if (user.account_type === 'employee' || user.role === 'employee') return '/employee/dashboard';
@@ -51,123 +51,19 @@ const getDashboardPath = (user) => {
   return '/my-reservations';
 };
 
-const LegacyCarRedirect = () => {
-  const { id } = useParams();
-  return <Navigate to={`/cars/${id}`} replace />;
-};
-
-const LegacyEmployeeRedirect = () => {
-  const { id } = useParams();
-  return <Navigate to={`/supplier/employees/${id}`} replace />;
-};
-const handleInputChangeCapture = (event) => {
-  const target = event.target;
-  if (!target || !['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
-  if (['file', 'checkbox', 'radio', 'date', 'time'].includes(target.type)) return;
-
-  const sanitized = sanitizeFieldValue(target, target.value);
-  if (sanitized !== target.value) target.value = sanitized;
-  target.setCustomValidity?.('');
-};
-
-const handleSubmitCapture = (event) => {
-  if (!validateForm(event.target)) event.preventDefault();
-};
-
-const SearchRequiredRoute = ({ children }) => {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const hasRequiredData = Boolean(
-    params.get('location') &&
-    params.get('startDate') &&
-    params.get('endDate') &&
-    (params.get('pickupTime') || params.get('pickup_time')) &&
-    (params.get('returnTime') || params.get('return_time'))
-  );
-
-  if (!hasRequiredData) {
-    return <Navigate to={`/search${location.search}`} replace state={{ from: location.pathname }} />;
-  }
-
-  return children;
-};
-
-const PrivateRoute = ({ children, roles }) => {
-  const { user, token } = useAuthStore();
-  const location = useLocation();
-  if (!token || !user) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}${location.hash}` }} />;
-  const isEmployeeAccount = user.account_type === 'employee' || user.role === 'employee';
-  const roleAllowed = !roles || roles.includes(user.role) || (roles.includes('employee') && isEmployeeAccount);
-  if (!roleAllowed) return <Navigate to={getDashboardPath(user)} replace state={{ deniedFrom: location.pathname }} />;
-  return children;
-};
+const LegacyCarRedirect = () => { const { id } = useParams(); return <Navigate to={`/cars/${id}`} replace />; };
+const LegacyEmployeeRedirect = () => { const { id } = useParams(); return <Navigate to={`/supplier/employees/${id}`} replace />; };
+const handleInputChangeCapture = (event) => { const target = event.target; if (!target || !['INPUT', 'TEXTAREA'].includes(target.tagName)) return; if (['file', 'checkbox', 'radio', 'date', 'time'].includes(target.type)) return; const sanitized = sanitizeFieldValue(target, target.value); if (sanitized !== target.value) target.value = sanitized; target.setCustomValidity?.(''); };
+const handleSubmitCapture = (event) => { if (!validateForm(event.target)) event.preventDefault(); };
+const SearchRequiredRoute = ({ children }) => { const location = useLocation(); const params = new URLSearchParams(location.search); const hasRequiredData = Boolean(params.get('location') && params.get('startDate') && params.get('endDate') && (params.get('pickupTime') || params.get('pickup_time')) && (params.get('returnTime') || params.get('return_time'))); if (!hasRequiredData) return <Navigate to={`/search${location.search}`} replace state={{ from: location.pathname }} />; return children; };
+const PrivateRoute = ({ children, roles }) => { const { user, token } = useAuthStore(); const location = useLocation(); if (!token || !user) return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}${location.hash}` }} />; const isEmployeeAccount = user.account_type === 'employee' || user.role === 'employee'; const roleAllowed = !roles || roles.includes(user.role) || (roles.includes('employee') && isEmployeeAccount); if (!roleAllowed) return <Navigate to={getDashboardPath(user)} replace state={{ deniedFrom: location.pathname }} />; return children; };
 
 export default function App() {
-  return (
-    <>
-      <Toaster position="top-right" toastOptions={{ style: { background: '#1a1a2e', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }, duration: 4000 }} />
-      <Navbar />
-      <div
-  className="rc-app-shell"
-  onChangeCapture={handleInputChangeCapture}
-  onSubmitCapture={handleSubmitCapture}
->
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Navigate to="/" replace />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/marketing" element={<MarketingChoice />} />
-          <Route path="/MarketingChoice" element={<Navigate to="/marketing" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/supplier/join" element={<VendorJoin />} />
-          <Route path="/Vendor-Join" element={<Navigate to="/supplier/join" replace />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/cars" element={<SearchRequiredRoute><Cars /></SearchRequiredRoute>} />
-          <Route path="/cars/:id" element={<CarDetail />} />
-          <Route path="/car/:id" element={<LegacyCarRedirect />} />
-          <Route path="/supplier-benefits" element={<MarketingRole role="supplier" />} />
-          <Route path="/renter-benefits" element={<MarketingRole role="renter" />} />
-          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/settings" element={<PrivateRoute><UserSettings /></PrivateRoute>} />
-          <Route path="/complaints/:id" element={<PrivateRoute><ComplaintChat /></PrivateRoute>} />
-          <Route path="/notifications/:id" element={<PrivateRoute><NotificationDetail /></PrivateRoute>} />
-          <Route path="/employee/dashboard" element={<PrivateRoute roles={['employee']}><EmployeeDashboard /></PrivateRoute>} />
-          <Route path="/my-reservations" element={<PrivateRoute roles={['customer']}><MyReservations /></PrivateRoute>} />
-          <Route path="/checkout/:reservationId" element={<PrivateRoute roles={['customer']}><Checkout /></PrivateRoute>} />
-          <Route path="/supplier/dashboard" element={<PrivateRoute roles={['supplier']}><SupplierDashboard /></PrivateRoute>} />
-          <Route path="/supplier/cars" element={<PrivateRoute roles={['supplier']}><MyCars /></PrivateRoute>} />
-          <Route path="/supplier/cars/add" element={<PrivateRoute roles={['supplier']}><AddCar /></PrivateRoute>} />
-          <Route path="/supplier/cars/edit/:id" element={<PrivateRoute roles={['supplier']}><EditCar /></PrivateRoute>} />
-          <Route path="/supplier/reservations" element={<PrivateRoute roles={['supplier']}><SupplierReservations /></PrivateRoute>} />
-          <Route path="/supplier/reservations/:id" element={<PrivateRoute roles={['supplier']}><SupplierReservationDetail /></PrivateRoute>} />
-          <Route path="/supplier/finance" element={<PrivateRoute roles={['supplier']}><SupplierFinance /></PrivateRoute>} />
-          <Route path="/supplier/settings" element={<PrivateRoute roles={['supplier']}><SupplierSettings /></PrivateRoute>} />
-          <Route path="/supplier/login" element={<Login />} />
-          <Route path="/supplier/employees/:id" element={<PrivateRoute roles={['supplier']}><EmployeeDetail /></PrivateRoute>} />
-          <Route path="/supplier/employees/new" element={<PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>} />
-          <Route path="/supplier/advertisement-request" element={<PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>} />
-          <Route path="/supplier/employees" element={<PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>} />
-          <Route path="/supplier/showrooms" element={<Showrooms />} />
-          <Route path="/pages/supplier/employees/:id" element={<LegacyEmployeeRedirect />} />
-          <Route path="/supplier/EmployeeForm" element={<Navigate to="/supplier/employees/new" replace />} />
-          <Route path="/supplier/AdvertisementRequest" element={<Navigate to="/supplier/advertisement-request" replace />} />
-          <Route path="/supplier/EmployeeList" element={<Navigate to="/supplier/employees" replace />} />
-          <Route path="/admin/dashboard" element={<PrivateRoute roles={['admin']}><AdminDashboard /></PrivateRoute>} />
-          <Route path="/admin/users" element={<PrivateRoute roles={['admin']}><AdminUsers /></PrivateRoute>} />
-          <Route path="/admin/complaints" element={<PrivateRoute roles={['admin']}><AdminComplaints /></PrivateRoute>} />
-          <Route path="/admin/advertisement-center" element={<PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>} />
-          <Route path="/admin/advertisements" element={<Navigate to="/admin/advertisement-center" replace />} />
-          <Route path="/admin/advertisementCenter" element={<Navigate to="/admin/advertisement-center" replace />} />
-          <Route path="/admin/cars" element={<PrivateRoute roles={['admin']}><AdminCars /></PrivateRoute>} />
-          <Route path="/admin/finance" element={<PrivateRoute roles={['admin']}><FinanceCenter /></PrivateRoute>} />
-          <Route path="/admin/settings" element={<PrivateRoute roles={['admin']}><AdminSettings /></PrivateRoute>} />
-          <Route path="/admin/supplier-requests" element={<PrivateRoute roles={['admin']}><SupplierRequests /></PrivateRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </>
-  );
+  return <><Toaster position="top-right" toastOptions={{ style: { background: '#1a1a2e', color: '#f1f5f9', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px' }, duration: 4000 }} /><Navbar /><div className="rc-app-shell" onChangeCapture={handleInputChangeCapture} onSubmitCapture={handleSubmitCapture}><Routes>
+    <Route path="/" element={<Home />} /><Route path="/home" element={<Navigate to="/" replace />} /><Route path="/about" element={<About />} /><Route path="/marketing" element={<MarketingChoice />} /><Route path="/MarketingChoice" element={<Navigate to="/marketing" replace />} /><Route path="/login" element={<Login />} /><Route path="/forgot-password" element={<ForgotPassword />} /><Route path="/register" element={<Register />} /><Route path="/supplier/join" element={<VendorJoin />} /><Route path="/Vendor-Join" element={<Navigate to="/supplier/join" replace />} /><Route path="/search" element={<SearchPage />} /><Route path="/cars" element={<SearchRequiredRoute><Cars /></SearchRequiredRoute>} /><Route path="/cars/:id" element={<CarDetail />} /><Route path="/car/:id" element={<LegacyCarRedirect />} /><Route path="/supplier-benefits" element={<MarketingRole role="supplier" />} /><Route path="/renter-benefits" element={<MarketingRole role="renter" />} /><Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} /><Route path="/settings" element={<PrivateRoute><UserSettings /></PrivateRoute>} /><Route path="/complaints/:id" element={<PrivateRoute><ComplaintChat /></PrivateRoute>} /><Route path="/notifications/:id" element={<PrivateRoute><NotificationDetail /></PrivateRoute>} />
+    <Route path="/employee/dashboard" element={<PrivateRoute roles={['employee']}><EmployeeRoleDashboard /></PrivateRoute>} />
+    <Route path="/my-reservations" element={<PrivateRoute roles={['customer']}><MyReservations /></PrivateRoute>} /><Route path="/checkout/:reservationId" element={<PrivateRoute roles={['customer']}><Checkout /></PrivateRoute>} />
+    <Route path="/supplier/dashboard" element={<PrivateRoute roles={['supplier']}><SupplierDashboard /></PrivateRoute>} /><Route path="/supplier/cars" element={<PrivateRoute roles={['supplier']}><MyCars /></PrivateRoute>} /><Route path="/supplier/cars/add" element={<PrivateRoute roles={['supplier']}><AddCar /></PrivateRoute>} /><Route path="/supplier/cars/edit/:id" element={<PrivateRoute roles={['supplier']}><EditCar /></PrivateRoute>} /><Route path="/supplier/reservations" element={<PrivateRoute roles={['supplier']}><SupplierReservations /></PrivateRoute>} /><Route path="/supplier/reservations/:id" element={<PrivateRoute roles={['supplier']}><SupplierReservationDetail /></PrivateRoute>} /><Route path="/supplier/finance" element={<PrivateRoute roles={['supplier']}><SupplierFinance /></PrivateRoute>} /><Route path="/supplier/settings" element={<PrivateRoute roles={['supplier']}><SupplierSettings /></PrivateRoute>} /><Route path="/supplier/login" element={<Login />} /><Route path="/supplier/employees/:id" element={<PrivateRoute roles={['supplier']}><EmployeeDetail /></PrivateRoute>} /><Route path="/supplier/employees/new" element={<PrivateRoute roles={['supplier']}><EmployeeForm /></PrivateRoute>} /><Route path="/supplier/advertisement-request" element={<PrivateRoute roles={['supplier']}><AdvertisementRequest /></PrivateRoute>} /><Route path="/supplier/employees" element={<PrivateRoute roles={['supplier']}><EmployeeList /></PrivateRoute>} /><Route path="/supplier/showrooms" element={<Showrooms />} /><Route path="/pages/supplier/employees/:id" element={<LegacyEmployeeRedirect />} /><Route path="/supplier/EmployeeForm" element={<Navigate to="/supplier/employees/new" replace />} /><Route path="/supplier/AdvertisementRequest" element={<Navigate to="/supplier/advertisement-request" replace />} /><Route path="/supplier/EmployeeList" element={<Navigate to="/supplier/employees" replace />} />
+    <Route path="/admin/dashboard" element={<PrivateRoute roles={['admin']}><AdminDashboard /></PrivateRoute>} /><Route path="/admin/users" element={<PrivateRoute roles={['admin']}><AdminUsers /></PrivateRoute>} /><Route path="/admin/complaints" element={<PrivateRoute roles={['admin']}><AdminComplaints /></PrivateRoute>} /><Route path="/admin/advertisement-center" element={<PrivateRoute roles={['admin']}><Adminadvertisement /></PrivateRoute>} /><Route path="/admin/advertisements" element={<Navigate to="/admin/advertisement-center" replace />} /><Route path="/admin/advertisementCenter" element={<Navigate to="/admin/advertisement-center" replace />} /><Route path="/admin/cars" element={<PrivateRoute roles={['admin']}><AdminCars /></PrivateRoute>} /><Route path="/admin/finance" element={<PrivateRoute roles={['admin']}><FinanceCenter /></PrivateRoute>} /><Route path="/admin/settings" element={<PrivateRoute roles={['admin']}><AdminSettings /></PrivateRoute>} /><Route path="/admin/supplier-requests" element={<PrivateRoute roles={['admin']}><SupplierRequests /></PrivateRoute>} /><Route path="*" element={<Navigate to="/" replace />} />
+  </Routes></div></>;
 }
