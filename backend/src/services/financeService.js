@@ -16,8 +16,8 @@ const createAdvertisementCharge = async (client, { advertisementId, supplierId, 
   return paidPayment;
 };
 
-const getAdvertisementPricing = async () => (await query(`SELECT advertisement_price_per_day,advertisement_start_time,advertisement_end_time,currency FROM finance_settings WHERE id=1`)).rows[0];
-const getSettings = async () => (await query(`SELECT id,currency,commission_rate,settlement_mode,ad_charge_policy,advertisement_price_per_day,advertisement_start_time,advertisement_end_time,updated_by,updated_at FROM finance_settings WHERE id=1`)).rows[0];
+const getAdvertisementPricing = async () => (await query(`SELECT advertisement_price_per_day, advertisement_price_home_per_day, advertisement_price_cars_per_day, advertisement_price_car_detail_per_day, advertisement_price_all_public_per_day, advertisement_start_time, advertisement_end_time, currency FROM finance_settings WHERE id=1`)).rows[0];
+const getSettings = async () => (await query(`SELECT id,currency,commission_rate,settlement_mode,ad_charge_policy,advertisement_price_per_day,advertisement_price_home_per_day,advertisement_price_cars_per_day,advertisement_price_car_detail_per_day,advertisement_price_all_public_per_day,advertisement_start_time,advertisement_end_time,updated_by,updated_at FROM finance_settings WHERE id=1`)).rows[0];
 
 const updateSettings = async (adminId, data = {}) => {
   const currency = assertCurrency(data.currency || DEFAULT_CURRENCY);
@@ -29,7 +29,14 @@ const updateSettings = async (adminId, data = {}) => {
   if (!Number.isFinite(adPricePerDay) || adPricePerDay <= 0) throw new Error('سعر الإعلان اليومي يجب أن يكون أكبر من صفر');
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(adStartTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(adEndTime) || adStartTime >= adEndTime) throw new Error('وقت بداية الإعلان يجب أن يسبق وقت النهاية');
   if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate > 100) throw new Error('نسبة العمولة يجب أن تكون بين 0 و100');
-  return (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_start_time=$5,advertisement_end_time=$6,updated_by=$7,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, adStartTime, adEndTime, adminId])).rows[0];
+  const homePrice = Number(data.advertisement_price_home_per_day ?? (adPricePerDay * 2));
+  const carsPrice = Number(data.advertisement_price_cars_per_day ?? adPricePerDay);
+  const carDetailPrice = Number(data.advertisement_price_car_detail_per_day ?? (adPricePerDay * 1.5));
+  const allPublicPrice = Number(data.advertisement_price_all_public_per_day ?? (adPricePerDay * 2.5));
+  for (const [value, label] of [[homePrice, 'الرئيسية'], [carsPrice, 'السيارات'], [carDetailPrice, 'تفاصيل السيارة'], [allPublicPrice, 'جميع الصفحات']]) {
+    if (!Number.isFinite(value) || value <= 0) throw new Error(`سعر إعلان ${label} يجب أن يكون أكبر من صفر`);
+  }
+  return (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_price_home_per_day=$5,advertisement_price_cars_per_day=$6,advertisement_price_car_detail_per_day=$7,advertisement_price_all_public_per_day=$8,advertisement_start_time=$9,advertisement_end_time=$10,updated_by=$11,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, homePrice, carsPrice, carDetailPrice, allPublicPrice, adStartTime, adEndTime, adminId])).rows[0];
 };
 
 const getDashboard = async () => {
