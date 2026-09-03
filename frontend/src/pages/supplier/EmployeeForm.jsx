@@ -1,448 +1,175 @@
-import React, { useState, useEffect } from "react";
-import {
-  createEmployee,
-  getEmployee,
-  updateEmployee,
-} from "../../services/employees";
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Save } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { createEmployee, getEmployee, updateEmployee } from '../../services/employees';
 
-import { useNavigate, useParams } from "react-router-dom";
+const EMPTY_FORM = {
+  full_name: '',
+  phone_number: '',
+  email: '',
+  password: '',
+  role: 'employee',
+  status: 'active',
+};
 
-import {
-  User,
-  Phone,
-  Mail,
-  Lock,
-  Shield,
-  CheckCircle,
-  Save,
-  ArrowLeft,
-} from "lucide-react";
-
-export default function EmployeeForm({ editMode }) {
+export default function EmployeeForm({ editMode = false }) {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    full_name: "",
-    phone_number: "",
-    email: "",
-    password: "",
-    role: "employee",
-    status: "Active",
-    supplier_email: "",
-  });
+  const [loadingEmployee, setLoadingEmployee] = useState(Boolean(editMode && id));
 
   useEffect(() => {
-    if (editMode && id) {
-      fetchEmployee();
-    }
-  }, [editMode, id]);
+    if (!editMode || !id) return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const response = await getEmployee(id);
+        if (cancelled) return;
+        const employee = response.data;
+        setFormData({
+          full_name: employee.full_name || '',
+          phone_number: employee.phone_number || '',
+          email: employee.email || '',
+          password: '',
+          role: employee.role === 'manager' ? 'manager' : 'employee',
+          status: String(employee.status || 'active').toLowerCase() === 'active' ? 'active' : 'inactive',
+        });
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'تعذر تحميل بيانات الموظف');
+        navigate('/supplier/employees');
+      } finally {
+        if (!cancelled) setLoadingEmployee(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [editMode, id, navigate]);
 
-  const fetchEmployee = async () => {
-    try {
-      const res = await getEmployee(id);
-      const emp = res.data;
-
-      setFormData({
-        full_name: emp.full_name || "",
-        phone_number: emp.phone_number || "",
-        email: emp.email || "",
-        password: "",
-        role: emp.role || "staff",
-        status: emp.status || "Active",
-
-        // إذا كان الـ API يرجع البريد
-        supplier_email: emp.supplier_email || "",
-      });
-    } catch (error) {
-      console.log(error);
-      alert("فشل جلب بيانات الموظف");
-    }
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-
+  const onSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
-
     try {
       if (editMode) {
-        await createEmployee(formData);
-        alert("تم إنشاء الموظف بنجاح");
+        await updateEmployee(id, {
+          full_name: formData.full_name,
+          phone_number: formData.phone_number,
+          role: formData.role,
+          status: formData.status,
+        });
+        toast.success('تم تحديث بيانات الموظف بنجاح');
       } else {
-        await updateEmployee(id, formData);
-        alert("تم تحديث الموظف بنجاح");
-
+        await createEmployee(formData);
+        toast.success('تم إنشاء الموظف بنجاح');
       }
-      navigate("./employees");
-    }
-     catch (err) {
-      alert(err?.response?.data?.message || "حدث خطأ أثناء الحفظ");
-      } finally {
+      navigate('/supplier/employees');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'حدث خطأ أثناء حفظ بيانات الموظف');
+    } finally {
       setLoading(false);
     }
   };
 
-  return (<div
-    className="dashboard"
-    style={{
-      minHeight: "100vh",
-      background: "#f8f9fa",
-      padding: "30px 24px",
-    }}
-  >
-    <h1
-      style={{
-        fontSize: "1.8rem",
-        marginBottom: "24px",
-        fontWeight: "bold",
-      }}
-    >
-      {editMode ? "تعديل الموظف" : "إضافة موظف جديد"}
-    </h1>
-  
-    <div
-      className="card"
-      style={{
-        background: "white",
-        borderRadius: "12px",
-        padding: "10%",
-        maxWidth: "900px",
-        margin: "0 auto",
-        boxShadow: "0 1px 3px rgba(0,0,0,.1)",
-      }}
-    >
-      <form
-        onSubmit={onSubmit}
-        style={{
-          display:"flex",
-          flexDirection: "column",
-          gap: "24px",
-        }}
-      >
-        {/* mm */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "20px",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
-              الاسم الكامل
-            </label>
-  
-            <input
-              type="text"
-              name="full_name"
-              required
-              value={formData.full_name}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #ced4da",
-                borderRadius: "6px",
-              }}
-            />
+  if (loadingEmployee) {
+    return <div dir="rtl" style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>جارٍ تحميل بيانات الموظف...</div>;
+  }
+
+  return (
+    <main dir="rtl" style={{ minHeight: '100vh', background: '#f5f7fb', padding: '35px 20px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <button type="button" onClick={() => navigate('/supplier/employees')} style={styles.back}>
+          <ArrowLeft size={17} /> العودة إلى فريق العمل
+        </button>
+
+        <section style={styles.card}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={styles.title}>{editMode ? 'تعديل الموظف' : 'إضافة موظف جديد'}</h1>
+            <p style={styles.subtitle}>
+              {editMode ? 'تحديث بيانات الموظف ودوره الوظيفي.' : 'إنشاء حساب موظف مرتبط بالمورد الحالي.'}
+            </p>
           </div>
-  
-          <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.85rem' }}>رقم الهاتف</label>
-              <div style={{ position: 'relative' }}>
-                <Phone size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6c757d' }} />
-                <input 
-                  type="tel" 
-                  name="phone" 
-                  placeholder="05xxxxxxxx" 
-                  value={formData.phone} 
-                  onChange={handleChange} 
-                  dir="ltr" 
-                  required 
-                  style={{
-                    width: '100%',
-                    padding: '10px 40px 10px 12px',
-                    border: '1px solid #ced4da',
-                    borderRadius: '8px',
-                    fontSize: '0.9rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-          </div>
-        </div>
-  
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
-              البريد الإلكتروني
-            </label>
-  
-            <input
-                type="email" 
-                name="email" 
-                placeholder="example@mail.com" 
-                value={formData.email} 
-                onChange={handleChange} 
-                dir="ltr" 
-                required 
-                style={{
-                  width: '100%',
-                  padding: '10px 40px 10px 12px',
-                  border: '1px solid #ced4da',
-                  borderRadius: '8px',
-                  fontSize: '0.9rem',
-                  outline: 'none'
-              }}
-            />
-          </div>
-  
-          {!editMode && (
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "6px",
-                  fontWeight: "600",
-                }}
-              >
-                كلمة المرور
-              </label>
-  
-              <input
-                   type="password" 
-                   name="password" 
-                   placeholder="••••••••" 
-                   value={formData.password} 
-                   onChange={handleChange} 
-                   dir="ltr" 
-                   required 
-                   style={{
-                     width: '100%',
-                     padding: '10px 40px 10px 12px',
-                     border: '1px solid #ced4da',
-                     borderRadius: '8px',
-                     fontSize: '0.9rem',
-                     outline: 'none'
-                }}
-              />
+
+          <form onSubmit={onSubmit} style={{ display: 'grid', gap: 18 }}>
+            <div style={styles.grid}>
+              <Field label="الاسم الكامل" name="full_name" value={formData.full_name} onChange={handleChange} required />
+              <Field label="رقم الهاتف" name="phone_number" value={formData.phone_number} onChange={handleChange} dir="ltr" />
             </div>
-           
-          )}
-        </div>
-  
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
-              الصلاحية
-            </label>
-  
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #ced4da",
-                borderRadius: "6px",
-              }}
-            >
-              <option value="staff">موظف</option>
-              <option value="manager">مدير</option>
-              <option value="admin">مشرف</option>
-            </select>
-          </div>
-  
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "6px",
-                fontWeight: "600",
-              }}
-            >
-              الحالة
-            </label>
-  
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "8px 12px",
-                border: "1px solid #ced4da",
-                borderRadius: "6px",
-              }}
-            >
-              <option value="Active">نشط</option>
-              <option value="Inactive">غير نشط</option>
-            </select>
-          </div>
-        </div>
-  
-        <div>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "6px",
-              fontWeight: "600",
-            }}
-          >
-            البريد الإلكتروني للمورد
-          </label>
-  
-          <input
-            type="email"
-            name="supplier_email"
-            value={formData.supplier_email}
-            onChange={handleChange}
-            placeholder="supplier@email.com"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #ced4da",
-              borderRadius: "6px",
-            }}
-          />
-        </div>
-        <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: "12px",
-          marginTop: "10px",
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          style={{
-            background: "#6c757d",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
-          <ArrowLeft size={18} />
-          رجوع
-        </button>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            background: "#0a58ca",
-            color: "white",
-            border: "none",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontWeight: "bold",
-          }}
-        >
-          <Save size={18} />
-          {loading
-            ? "جاري الحفظ..."
-            : editMode
-            ? "حفظ التعديلات"
-            : "إضافة الموظف"}
-        </button>
+            <div style={styles.grid}>
+              <Field label="البريد الإلكتروني" name="email" type="email" value={formData.email} onChange={handleChange} dir="ltr" required disabled={editMode} />
+              {!editMode && <Field label="كلمة المرور" name="password" type="password" value={formData.password} onChange={handleChange} dir="ltr" required minLength={8} />}
+            </div>
+
+            <div style={styles.grid}>
+              <label style={styles.label}>
+                الدور الوظيفي
+                <select name="role" value={formData.role} onChange={handleChange} style={styles.input}>
+                  <option value="employee">موظف</option>
+                  <option value="manager">مدير فريق</option>
+                </select>
+              </label>
+
+              <label style={styles.label}>
+                حالة الحساب
+                <select name="status" value={formData.status} onChange={handleChange} style={styles.input}>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+              </label>
+            </div>
+
+            <div style={styles.note}>
+              الصلاحيات التفصيلية لا تُحدد من الدور فقط؛ بعد إنشاء الموظف يمكن للمورد فتح ملفه وتحديد الصلاحيات المطلوبة من صفحة الصلاحيات.
+            </div>
+
+            <div style={styles.actions}>
+              <button type="button" onClick={() => navigate('/supplier/employees')} style={styles.cancel}>إلغاء</button>
+              <button type="submit" disabled={loading} style={styles.save}>
+                <Save size={17} /> {loading ? 'جارٍ الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة الموظف'}
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
-    </form>
-  </div>
-
-  <style>{`
-        @media (max-width: 768px) {
-          .dashboard {
-            flex-direction: column;
-          }
-          .sidebar {
-            width: 100% !important;
-            height: auto !important;
-            position: relative !important;
-            border-left: none !important;
-            border-bottom: 1px solid #e9ecef;
-            padding: 12px 0 !important;
-          }
-          .sidebar > div {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-          }
-          .sidebar-item {
-            flex: 1 0 auto;
-            justify-content: center;
-          }
-          .dashboard-content {
-            padding: 20px 16px !important;
-          }
-          .card {
-            padding: 20px !important;
-          }
-          [style*="grid-template-columns"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        .form-input:focus {
-          outline: none;
-          border-color: #86b7fe;
-          box-shadow: 0 0 0 2px rgba(13,110,253,0.25);
-        }
-      `}</style>
-</div>
-);
+    </main>
+  );
 }
+
+function Field({ label, name, type = 'text', value, onChange, required, disabled, dir, minLength }) {
+  return (
+    <label style={styles.label}>
+      {label}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        disabled={disabled}
+        minLength={minLength}
+        dir={dir}
+        style={{ ...styles.input, opacity: disabled ? 0.65 : 1 }}
+      />
+    </label>
+  );
+}
+
+const styles = {
+  back: { display: 'inline-flex', alignItems: 'center', gap: 7, border: 0, background: 'transparent', color: '#456270', cursor: 'pointer', fontWeight: 800, marginBottom: 18 },
+  card: { background: '#fff', border: '1px solid #e5edf1', borderRadius: 22, padding: 30, boxShadow: '0 12px 35px rgba(23,58,82,.07)' },
+  title: { margin: 0, color: '#173a52', fontSize: 28 },
+  subtitle: { margin: '8px 0 0', color: '#788993' },
+  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+  label: { display: 'grid', gap: 7, color: '#526873', fontWeight: 800, fontSize: 13 },
+  input: { width: '100%', boxSizing: 'border-box', padding: '12px 13px', border: '1px solid #d9e4e8', borderRadius: 11, background: '#fff', color: '#173a52', font: 'inherit', outline: 'none' },
+  note: { padding: 14, borderRadius: 12, background: '#f3f8fa', color: '#637984', lineHeight: 1.7, fontSize: 13 },
+  actions: { display: 'flex', justifyContent: 'flex-start', gap: 10, marginTop: 8 },
+  cancel: { border: '1px solid #d8e2e6', background: '#fff', color: '#526873', padding: '11px 18px', borderRadius: 11, cursor: 'pointer', fontWeight: 800 },
+  save: { display: 'inline-flex', alignItems: 'center', gap: 7, border: 0, background: '#173a52', color: '#fff', padding: '11px 20px', borderRadius: 11, cursor: 'pointer', fontWeight: 900 },
+};
