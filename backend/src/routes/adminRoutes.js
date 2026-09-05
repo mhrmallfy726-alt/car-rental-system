@@ -8,6 +8,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
+const { registerViolation } = require('../services/violationService');
 
 // All admin routes require admin role
 router.use(protect, authorize('admin'));
@@ -36,8 +37,50 @@ router.get('/stats', asyncHandler(async (req, res) => {
 
 // Get all users
 router.get('/users', asyncHandler(async (req, res) => {
-  const result = await query('SELECT id, name, email, role, phone, is_verified, is_active, created_at FROM users ORDER BY created_at DESC');
+  const result = await query(`
+    SELECT u.id, u.name, u.email, u.role, u.phone, u.is_verified, u.is_active, u.created_at,
+           COUNT(uv.id)::int AS violation_count
+    FROM users u
+    LEFT JOIN user_violations uv ON uv.user_id = u.id
+    GROUP BY u.id
+    ORDER BY u.created_at DESC
+  `);
   res.json({ success: true, data: result.rows });
+}));
+
+// Get a user's violation history
+router.get('/users/:id/violations', asyncHandler(async (req, res, next) => {
+  const user = await query('SELECT id, name, email, role, is_active FROM users WHERE id = $1', [req.params.id]);
+  if (!user.rows.length) return next(new AppError('المستخدم غير موجود', 404));
+  const violations = await query(`
+    SELECT v.*, reporter.name AS reported_by_name
+    FROM user_violations v
+    LEFT JOIN users reporter ON reporter.id = v.reported_by
+    WHERE v.user_id = $1
+    ORDER BY v.created_at DESC
+  `, [req.params.id]);
+  res.json({ success: true, user: user.rows[0], data: violations.rows });
+}));
+
+// The first violation warns; the second and later violations disable the account.
+router.post('/users/:id/violations', asyncHandler(async (req, res, next) => {
+  const { reason, description, severity } = req.body;
+  if (!reason?.trim()) return next(new AppError('سبب المخالفة مطلوب', 400));
+  const result = await registerViolation({
+    userId: req.params.id,
+    reportedBy: req.user.id,
+    reason,
+    description,
+    severity,
+    io: req.app.get('io'),
+  });
+  res.status(201).json({
+    success: true,
+    message: result.banned
+      ? 'تم تسجيل المخالفة وحظر الحساب لتكرار المخالفات'
+      : 'تم تسجيل المخالفة وإرسال تحذير للمستخدم',
+    data: result,
+  });
 }));
 
 // Verify user
