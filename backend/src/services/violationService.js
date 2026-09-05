@@ -22,6 +22,11 @@ async function registerViolation({ userId, reportedBy = null, reason, descriptio
     error.statusCode = 400;
     throw error;
   }
+  if (!user.is_active) {
+    const error = new Error('لا يمكن تسجيل مخالفة جديدة لحساب محظور أو معطل');
+    error.statusCode = 400;
+    throw error;
+  }
 
   const countResult = await query(
     'SELECT COUNT(*)::int AS count FROM user_violations WHERE user_id = $1',

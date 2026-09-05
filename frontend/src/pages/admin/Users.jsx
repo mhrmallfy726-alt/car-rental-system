@@ -65,7 +65,7 @@ export default function AdminUsers() {
             <td style={{ padding: '12px 16px', color: u.violation_count > 0 ? '#dc3545' : '#6c757d', fontWeight: 'bold' }}>{u.violation_count || 0}</td>
             <td style={{ padding: '12px 16px' }}>{format(new Date(u.created_at), 'yyyy-MM-dd')}</td><td style={{ padding: '12px 16px' }}>{getStatusBadge(u.is_active)}</td>
             <td style={{ padding: '12px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>{u.role !== 'admin' && <>
-              <button onClick={() => setSelectedUser(u)} style={{ background: '#ffc107', color: '#212529', border: 0, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', gap: 5, alignItems: 'center', fontWeight: 'bold' }}><ShieldAlert size={14} /> تسجيل مخالفة</button>
+              {u.is_active && <button onClick={() => setSelectedUser(u)} style={{ background: '#ffc107', color: '#212529', border: 0, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', gap: 5, alignItems: 'center', fontWeight: 'bold' }}><ShieldAlert size={14} /> تسجيل مخالفة</button>}
               <button onClick={() => handleToggleActive(u.id, u.is_active, u.name)} disabled={togglingId === u.id} style={{ background: u.is_active ? '#dc3545' : '#28a745', color: 'white', border: 0, padding: '6px 10px', borderRadius: 6, cursor: 'pointer', display: 'inline-flex', gap: 5, alignItems: 'center' }}>{u.is_active ? <><UserX size={14} /> تعطيل</> : <><UserCheck size={14} /> تفعيل</>}</button>
             </>}</td>
           </tr>)}</tbody>
