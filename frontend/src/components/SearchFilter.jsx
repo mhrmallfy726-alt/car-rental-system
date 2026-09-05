@@ -61,14 +61,18 @@ radius: 10,
 
   <div className="input-wrapper">
     <label>خدمة السائق</label>
-    <select
-      className="custom-input"
-      value={searchParams.withDriver || 'false'}
-      onChange={(e) => setSearchParams({ ...searchParams, withDriver: e.target.value })}
-    >
-      <option value="false">بدون سائق</option>
-      <option value="true">مع سائق</option>
-    </select>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', minHeight: '50px', cursor: 'pointer', fontWeight: 800, color: '#173a52' }}>
+      <input
+        type="checkbox"
+        checked={(searchParams.withDriver || 'false') === 'false'}
+        onChange={(e) => setSearchParams({ ...searchParams, withDriver: e.target.checked ? 'false' : 'true' })}
+        style={{ width: '20px', height: '20px', accentColor: '#178263', cursor: 'pointer' }}
+      />
+      بدون سائق
+    </label>
+    <small style={{ color: '#74858d', fontSize: '12px' }}>
+      {(searchParams.withDriver || 'false') === 'false' ? 'سيارة بدون سائق' : 'سيارة مع سائق'}
+    </small>
   </div>
 
   <div className="input-wrapper">
