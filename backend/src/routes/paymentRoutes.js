@@ -7,6 +7,20 @@ const financeService = require('../services/financeService');
 const { listCurrencies, assertCurrency, convertFromYER } = require('../services/currencyService');
 const { sendTextMessage } = require('../services/whatsappService');
 
+const isValidCardNumber = (value) => {
+  const digits = String(value || '');
+  if (!/^\d{13,19}$/.test(digits)) return false;
+  let sum = 0;
+  let doubleDigit = false;
+  for (let index = digits.length - 1; index >= 0; index -= 1) {
+    let digit = Number(digits[index]);
+    if (doubleDigit) { digit *= 2; if (digit > 9) digit -= 9; }
+    sum += digit;
+    doubleDigit = !doubleDigit;
+  }
+  return sum % 10 === 0;
+};
+
 // GET /api/payments/currencies
 router.get('/currencies', protect, asyncHandler(async (req, res) => {
   res.json({ success: true, data: listCurrencies(), default_currency: 'YER' });
@@ -14,14 +28,20 @@ router.get('/currencies', protect, asyncHandler(async (req, res) => {
 
 // GET /api/payments/cards
 router.get('/cards', protect, asyncHandler(async (req, res) => {
-  const result = await query('SELECT id, card_holder_name, card_number_masked, expiry_month, expiry_year, brand, is_default FROM saved_cards WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
+  const result = await query('SELECT id, card_holder_name, card_number_masked, expiry_month, expiry_year, brand, is_default, simulated_balance_yer, gateway_status FROM saved_cards WHERE user_id = $1 ORDER BY created_at DESC', [req.user.id]);
   res.json({ success: true, data: result.rows });
 }));
 
 // POST /api/payments/cards
 router.post('/cards', protect, asyncHandler(async (req, res, next) => {
   const { card_holder_name, card_number, expiry_month, expiry_year, cvv } = req.body;
-  if (!card_number || card_number.length < 16) return next(new AppError('بيانات البطاقة غير صالحة', 400));
+  const simulatedBalance = Number(req.body.simulated_balance_yer ?? 1000000);
+  if (!isValidCardNumber(card_number) || !/^\d{3,4}$/.test(String(cvv || ''))) return next(new AppError('رقم البطاقة أو رمز الأمان غير صالح', 400));
+  const expiryMonth = Number(expiry_month);
+  const expiryYear = Number(expiry_year < 100 ? `20${String(expiry_year).padStart(2, '0')}` : expiry_year);
+  const now = new Date();
+  if (!Number.isInteger(expiryMonth) || expiryMonth < 1 || expiryMonth > 12 || !Number.isInteger(expiryYear) || expiryYear < now.getFullYear() || (expiryYear === now.getFullYear() && expiryMonth < now.getMonth() + 1)) return next(new AppError('البطاقة منتهية أو تاريخها غير صالح', 400));
+  if (!Number.isFinite(simulatedBalance) || simulatedBalance < 0 || simulatedBalance > 100000000) return next(new AppError('الرصيد التجريبي غير صالح', 400));
   
   const masked = '**** **** **** ' + card_number.slice(-4);
   const brand = card_number.startsWith('4') ? 'Visa' : 'Mastercard';
@@ -32,9 +52,9 @@ router.post('/cards', protect, asyncHandler(async (req, res, next) => {
   const isDefault = existing.rows.length === 0;
 
   const result = await query(
-    `INSERT INTO saved_cards (user_id, card_holder_name, card_number_masked, card_token, expiry_month, expiry_year, brand, is_default)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, card_holder_name, card_number_masked, expiry_month, expiry_year, brand, is_default`,
-    [req.user.id, card_holder_name, masked, token, expiry_monyth, expiry_year, brand, isDefault]
+    `INSERT INTO saved_cards (user_id, card_holder_name, card_number_masked, card_token, expiry_month, expiry_year, brand, is_default, simulated_balance_yer)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, card_holder_name, card_number_masked, expiry_month, expiry_year, brand, is_default, simulated_balance_yer`,
+    [req.user.id, card_holder_name, masked, token, expiry_month, expiry_year, brand, isDefault, simulatedBalance]
   );
   res.status(201).json({ success: true, data: result.rows[0] });
 }));
@@ -102,6 +122,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const charge = await financeService.createReservationCharge({
     reservationId: reservation_id,
     customerId: req.user.id,
+    savedCardId: saved_card_id,
     paymentMethod: payment_method || 'simulation',
     currency,
     withDriver: req.body.with_driver,
@@ -158,7 +179,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   res.status(201).json({
     success: true,
     data: { ...payment.rows[0], commission: charge.commission, supplier_payable: charge.supplierPayable, simulated: true },
-    verification: { gateway: 'sandbox', verified: true, reconciliation_status: 'matched' },
+    verification: { gateway: 'local_database', verified: true, reconciliation_status: 'matched', balance_after_yer: charge.gateway.balanceAfter },
     settlement_warning: settlementWarning,
     reservation_status: latestReservation.rows[0]?.status || r.status,
     handover_state: latestReservation.rows[0]?.handover_state || r.handover_state,

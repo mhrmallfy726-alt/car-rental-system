@@ -1,5 +1,6 @@
 const { query, getClient } = require('../config/database');
 const { assertCurrency, convertFromYER } = require('./currencyService');
+const { captureReservationPayment } = require('./localPaymentGateway');
 
 const DEFAULT_CURRENCY = 'YER';
 
@@ -39,7 +40,7 @@ const updateSettings = async (adminId, data = {}) => {
   return (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_price_home_per_day=$5,advertisement_price_cars_per_day=$6,advertisement_price_car_detail_per_day=$7,advertisement_price_all_public_per_day=$8,advertisement_start_time=$9,advertisement_end_time=$10,updated_by=$11,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, homePrice, carsPrice, carDetailPrice, allPublicPrice, adStartTime, adEndTime, adminId])).rows[0];
 };
 
-const createReservationCharge = async ({ reservationId, customerId, paymentMethod = 'simulation', currency = DEFAULT_CURRENCY, withDriver }) => {
+const createReservationCharge = async ({ reservationId, customerId, savedCardId, paymentMethod = 'simulation', currency = DEFAULT_CURRENCY, withDriver }) => {
   const paymentCurrency = assertCurrency(currency);
   const client = await getClient();
   try {
@@ -60,13 +61,20 @@ const createReservationCharge = async ({ reservationId, customerId, paymentMetho
     const settings = await getSettings();
     const commission = totalAmount * Number(settings.commission_rate || 0) / 100;
     const supplierPayable = Math.max(0, totalAmount - commission);
-    const providerReference = `SIM-RES-${reservationId}-${Date.now()}`;
+    const gateway = await captureReservationPayment(client, {
+      savedCardId,
+      userId: customerId,
+      reservationId,
+      paymentId: null,
+      amountYER: baseAmountYER,
+    });
     const payment = await client.query(
       `INSERT INTO payments (reservation_id, customer_id, payer_id, supplier_id, amount, currency, payment_method, status, provider_reference, metadata, paid_at)
        VALUES ($1,$2,$2,$3,$4,$5,$6,'paid',$7,$8::jsonb,NOW()) RETURNING *`,
-      [reservationId, customerId, reservation.supplier_id, totalAmount, paymentCurrency, paymentMethod, providerReference,
-        JSON.stringify({ simulated: true, gateway: 'sandbox', event: 'reservation_checkout', base_amount: baseAmountYER, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver) })]
+      [reservationId, customerId, reservation.supplier_id, totalAmount, paymentCurrency, paymentMethod, gateway.reference,
+        JSON.stringify({ simulated: true, gateway: 'local_database', event: 'reservation_checkout', base_amount: baseAmountYER, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver), balance_before_yer: gateway.balanceBefore, balance_after_yer: gateway.balanceAfter })]
     );
+    await client.query('UPDATE payment_gateway_transactions SET payment_id = $1 WHERE id = $2', [payment.rows[0].id, gateway.transaction.id]);
     const metadata = JSON.stringify({ simulated: true, commission_rate: Number(settings.commission_rate || 0), base_amount: baseAmountYER });
     await client.query(
       `INSERT INTO ledger_entries (payment_id,reservation_id,supplier_id,entry_type,direction,amount,currency,description,metadata)
@@ -76,7 +84,7 @@ const createReservationCharge = async ({ reservationId, customerId, paymentMetho
       [payment.rows[0].id, reservationId, reservation.supplier_id, totalAmount, paymentCurrency, metadata, commission, supplierPayable]
     );
     await client.query('COMMIT');
-    return { payment: payment.rows[0], reservation, commission, supplierPayable, totalAmount, currency: paymentCurrency };
+    return { payment: payment.rows[0], reservation, commission, supplierPayable, totalAmount, currency: paymentCurrency, gateway };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

@@ -54,7 +54,8 @@ export default function Checkout() {
     card_number: '',
     expiry_month: '',
     expiry_year: '',
-    cvv: ''
+    cvv: '',
+    simulated_balance_yer: '1000000'
   });
   const [cardErrors, setCardErrors] = useState({});
 
@@ -151,7 +152,8 @@ export default function Checkout() {
       card_number: '',
       expiry_month: '',
       expiry_year: '',
-      cvv: ''
+      cvv: '',
+      simulated_balance_yer: '1000000'
     });
     setCardErrors({});
   };
@@ -219,7 +221,7 @@ export default function Checkout() {
                       <input type="radio" name="saved_card" checked={selectedCardId === card.id} onChange={() => setSelectedCardId(card.id)} />
                       <div>
                         <p style={{ fontWeight: 'bold' }}>{card.brand} - {card.card_number_masked}</p>
-                        <p style={{ fontSize: '0.75rem', color: '#6c757d' }}>ينتهي في {card.expiry_month}/{card.expiry_year}</p>
+                        <p style={{ fontSize: '0.75rem', color: '#6c757d' }}>ينتهي في {card.expiry_month}/{card.expiry_year} · الرصيد: {Number(card.simulated_balance_yer || 0).toLocaleString()} ر.ي.</p>
                       </div>
                     </label>
                   ))}
@@ -270,6 +272,12 @@ export default function Checkout() {
                       value={cardData.cvv} onChange={e => handleCardInputChange('cvv', e.target.value)} />
                     {cardErrors.cvv && <p style={{ color: '#dc3545', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.cvv}</p>}
                   </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الرصيد التجريبي للبطاقة (ر.ي.)</label>
+                  <input type="number" min="0" step="0.01" required dir="ltr" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={cardData.simulated_balance_yer} onChange={e => handleCardInputChange('simulated_balance_yer', e.target.value)} />
+                  <small style={{ color: '#806a28' }}>هذا الرصيد محلي للمحاكاة فقط، وينقص عند كل عملية دفع.</small>
                 </div>
 
                 {savedCards.length > 0 && (
