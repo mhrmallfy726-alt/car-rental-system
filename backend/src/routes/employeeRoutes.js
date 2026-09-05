@@ -36,6 +36,19 @@ const defaultPermissionNamesByJobRole = {
   fleet: ['view_cars', 'manage_cars', 'view_fleet_performance'],
 };
 
+const resetPermissionsForJobRole = async (employeeId, jobRole) => {
+  const names = defaultPermissionNamesByJobRole[jobRole] || [];
+  const permissions = await query('SELECT id FROM permissions WHERE name = ANY($1::text[])', [names]);
+  await query('DELETE FROM employees_permissions WHERE employee_id = $1', [employeeId]);
+  for (const permission of permissions.rows) {
+    await query(
+      'INSERT INTO employees_permissions (employee_id, permission_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [employeeId, permission.id]
+    );
+  }
+  return permissions.rows.map((permission) => permission.id);
+};
+
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -159,7 +172,12 @@ router.get('/', async (req, res) => {
 
 router.get('/permissions/list', async (req, res) => {
   try {
-    const result = await query('SELECT id, name, description FROM permissions ORDER BY id');
+    const result = await query(`
+      SELECT id, name, description,
+             CASE WHEN name LIKE 'manage_%' THEN 'manage' ELSE 'view' END AS access_level,
+             CASE WHEN name LIKE 'manage_%' THEN 'إدارة وتنفيذ' ELSE 'عرض واطلاع' END AS access_label
+      FROM permissions ORDER BY id
+    `);
     res.json({ success: true, data: result.rows });
   } catch (err) {
     console.error(err);
@@ -242,7 +260,7 @@ router.put('/:id', async (req, res) => {
     const normalizedStatus = status === undefined ? undefined : String(status).trim().toLowerCase();
     if (normalizedStatus !== undefined && !['active', 'inactive'].includes(normalizedStatus)) return res.status(400).json({ success: false, message: 'حالة الموظف غير صالحة' });
 
-    const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
+    const found = await query('SELECT supplier_id, job_role FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
@@ -260,7 +278,11 @@ router.put('/:id', async (req, res) => {
     vals.push(id);
     const sql = `UPDATE employees SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${idx} RETURNING id, full_name, email, role, job_role, status, supplier_id, created_at`;
     const updated = await query(sql, vals);
-    res.json({ success: true, data: updated.rows[0] });
+    let permissionIds;
+    if (job_role !== undefined && job_role !== found.rows[0].job_role) {
+      permissionIds = await resetPermissionsForJobRole(id, job_role);
+    }
+    res.json({ success: true, data: updated.rows[0], permission_ids: permissionIds });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'خطأ في الخادم' });
