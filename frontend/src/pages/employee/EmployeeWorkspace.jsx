@@ -83,7 +83,15 @@ export default function EmployeeWorkspace() {
     try {
       if (section === 'reservations') {
         const status = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'completed';
-        await api.put(`/employee-self/me/reservations/${row.id}`, { status });
+        if (action === 'edit') {
+          await api.put(`/employee-self/me/reservations/${row.id}`, {
+            pickup_location: window.prompt('موقع التسليم', row.pickup_location || '') || row.pickup_location || null,
+            dropoff_location: window.prompt('موقع الإرجاع', row.dropoff_location || '') || row.dropoff_location || null,
+            supplier_notes: window.prompt('ملاحظات المورد', row.supplier_notes || '') || row.supplier_notes || null,
+          });
+        } else {
+          await api.put(`/employee-self/me/reservations/${row.id}`, { status });
+        }
       } else if (section === 'fleet' && action === 'delete') {
         await api.delete(`/employee-self/me/cars/${row.id}`);
       } else if (section === 'fleet' && action === 'create') {
@@ -171,6 +179,7 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
   const actionsFor = (row) => {
     if (!canManage) return null;
     if (section === 'reservations') return <div style={styles.rowActions}>
+      <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button>
       {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> قبول</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
       {row.status === 'active' && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'complete')}><Check size={14} /> إكمال</button>}
     </div>;
