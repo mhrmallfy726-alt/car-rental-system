@@ -44,7 +44,10 @@ export default function EmployeeDashboard() {
   const permissionNames = useMemo(() => new Set(permissions.map((permission) => permission.name)), [permissions]);
   const canViewCars = permissionNames.has('view_cars') || permissionNames.has('manage_cars');
   const canViewReservations = permissionNames.has('view_reservations') || permissionNames.has('manage_reservations');
+  const canManageCars = permissionNames.has('manage_cars');
 
+  const canManageReservations =
+    permissionNames.has('manage_reservations');
   const loadDashboard = useCallback(async (showRefresh = false) => {
     try {
       if (showRefresh) setRefreshing(true); else setLoading(true);

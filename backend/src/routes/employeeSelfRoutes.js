@@ -4,7 +4,6 @@ const { protect } = require('../middleware/auth');
 const { query } = require('../config/database');
 
 router.use(protect);
-
 const requireEmployee = (req, res, next) => {
   if (req.user?.account_type !== 'employee' || !req.employeeId || !req.user.supplier_id) {
     return res.status(403).json({ success: false, message: 'هذا المسار مخصص للموظفين فقط' });
@@ -188,7 +187,218 @@ router.get('/me/cars', requirePermission('view_cars', 'manage_cars'), async (req
     next(error);
   }
 });
+// =====================================================
+// CREATE CAR - إضافة سيارة
+// يحتاج صلاحية manage_cars
+// =====================================================
+router.post('/me/cars', requirePermission('manage_cars'), async (req, res, next) => {
+  try {
+    const {
+      make,
+      model,
+      year,
+      color,
+      license_plate,
+      seats,
+      doors,
+      transmission,
+      fuel_type,
+      price_per_day,
+      description,
+      mileage,
+      status,
+      category_id,
+      location_id
+    } = req.body;
 
+    if (!make || !model || !year || price_per_day === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'الماركة والموديل والسنة والسعر اليومي مطلوبة'
+      });
+    }
+
+    const result = await query(
+      `INSERT INTO cars (
+        supplier_id,
+        category_id,
+        location_id,
+        make,
+        model,
+        year,
+        color,
+        license_plate,
+        seats,
+        doors,
+        transmission,
+        fuel_type,
+        price_per_day,
+        description,
+        mileage,
+        status
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+        $11, $12, $13, $14, $15, $16
+      )
+      RETURNING *`,
+      [
+        req.user.supplier_id,
+        category_id || null,
+        location_id || null,
+        make,
+        model,
+        Number(year),
+        color || null,
+        license_plate || null,
+        seats ? Number(seats) : 5,
+        doors ? Number(doors) : 4,
+        transmission || 'automatic',
+        fuel_type || 'petrol',
+        Number(price_per_day),
+        description || null,
+        mileage ? Number(mileage) : 0,
+        status || 'available'
+      ]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'تمت إضافة السيارة بنجاح',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+// =====================================================
+// UPDATE CAR - تعديل سيارة
+// يحتاج صلاحية manage_cars
+// =====================================================
+router.put('/me/cars/:id', requirePermission('manage_cars'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const {
+      make,
+      model,
+      year,
+      color,
+      license_plate,
+      seats,
+      doors,
+      transmission,
+      fuel_type,
+      price_per_day,
+      description,
+      mileage,
+      status,
+      category_id,
+      location_id
+    } = req.body;
+
+    const result = await query(
+      `UPDATE cars
+       SET
+         make = COALESCE($1, make),
+         model = COALESCE($2, model),
+         year = COALESCE($3, year),
+         color = COALESCE($4, color),
+         license_plate = COALESCE($5, license_plate),
+         seats = COALESCE($6, seats),
+         doors = COALESCE($7, doors),
+         transmission = COALESCE($8, transmission),
+         fuel_type = COALESCE($9, fuel_type),
+         price_per_day = COALESCE($10, price_per_day),
+         description = COALESCE($11, description),
+         mileage = COALESCE($12, mileage),
+         status = COALESCE($13, status),
+         category_id = COALESCE($14, category_id),
+         location_id = COALESCE($15, location_id),
+         updated_at = NOW()
+       WHERE id = $16
+         AND supplier_id = $17
+       RETURNING *`,
+      [
+        make ?? null,
+        model ?? null,
+        year !== undefined ? Number(year) : null,
+        color ?? null,
+        license_plate ?? null,
+        seats !== undefined ? Number(seats) : null,
+        doors !== undefined ? Number(doors) : null,
+        transmission ?? null,
+        fuel_type ?? null,
+        price_per_day !== undefined ? Number(price_per_day) : null,
+        description ?? null,
+        mileage !== undefined ? Number(mileage) : null,
+        status ?? null,
+        category_id ?? null,
+        location_id ?? null,
+        id,
+        req.user.supplier_id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'السيارة غير موجودة أو لا تتبع لمؤسستك'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'تم تعديل السيارة بنجاح',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+// =====================================================
+// DELETE CAR - حذف سيارة
+// يحتاج صلاحية manage_cars
+// =====================================================
+router.delete('/me/cars/:id', requirePermission('manage_cars'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const result = await query(
+      `DELETE FROM cars
+       WHERE id = $1
+         AND supplier_id = $2
+       RETURNING id`,
+      [id, req.user.supplier_id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'السيارة غير موجودة أو لا تتبع لمؤسستك'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'تم حذف السيارة بنجاح'
+    });
+  } catch (error) {
+    // بسبب ارتباط السيارة بحجوزات
+    if (error.code === '23503') {
+      return res.status(409).json({
+        success: false,
+        message: 'لا يمكن حذف هذه السيارة لأنها مرتبطة بحجوزات سابقة'
+      });
+    }
+
+    next(error);
+  }
+});
 router.get('/me/reservations', requirePermission('view_reservations', 'manage_reservations'), async (req, res, next) => {
   try {
     const result = await query(
@@ -203,7 +413,82 @@ router.get('/me/reservations', requirePermission('view_reservations', 'manage_re
     next(error);
   }
 });
+// =====================================================
+// UPDATE RESERVATION - تعديل حالة الحجز
+// يحتاج صلاحية manage_reservations
+// =====================================================
+router.put(
+  '/me/reservations/:id',
+  requirePermission('manage_reservations'),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
 
+      const {
+        status,
+        pickup_location,
+        dropoff_location,
+        supplier_notes,
+        cancellation_reason
+      } = req.body;
+
+      const allowedStatuses = [
+        'pending',
+        'approved',
+        'rejected',
+        'cancelled',
+        'active',
+        'completed',
+        'disputed'
+      ];
+
+      if (status && !allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: 'حالة الحجز غير صحيحة'
+        });
+      }
+
+      const result = await query(
+        `UPDATE reservations
+         SET
+           status = COALESCE($1, status),
+           pickup_location = COALESCE($2, pickup_location),
+           dropoff_location = COALESCE($3, dropoff_location),
+           supplier_notes = COALESCE($4, supplier_notes),
+           cancellation_reason = COALESCE($5, cancellation_reason),
+           updated_at = NOW()
+         WHERE id = $6
+           AND supplier_id = $7
+         RETURNING *`,
+        [
+          status ?? null,
+          pickup_location ?? null,
+          dropoff_location ?? null,
+          supplier_notes ?? null,
+          cancellation_reason ?? null,
+          id,
+          req.user.supplier_id
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'الحجز غير موجود أو لا يتبع لمؤسستك'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'تم تعديل الحجز بنجاح',
+        data: result.rows[0]
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 router.get('/me/customers', requirePermission('view_customers'), async (req, res, next) => {
   try {
     const result = await query(

@@ -8,10 +8,12 @@ ALTER TABLE employees
 UPDATE employees
 SET job_role = CASE
   WHEN role = 'manager' THEN 'team_manager'
-  WHEN job_role IS NULL OR job_role = '' THEN 'fleet_employee'
+  WHEN job_role IS NULL OR job_role = '' THEN 'fleet'
   ELSE job_role
 END;
-
+UPDATE employees
+SET job_role = 'fleet'
+WHERE job_role = 'fleet_employee';
 INSERT INTO permissions (name, description) VALUES
   ('view_advertisements', 'عرض الإعلانات وطلبات الإعلانات'),
   ('manage_advertisements', 'إدارة طلبات وحملات الإعلانات'),
