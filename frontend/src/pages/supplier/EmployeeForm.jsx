@@ -10,6 +10,7 @@ const JOB_ROLES = [
   { value: 'reservations', label: 'موظف إدارة الحجوزات', description: 'الحجوزات والعملاء ومتابعة دورة الحجز' },
   { value: 'finance', label: 'موظف الإدارة المالية', description: 'التقارير والعمليات المالية المسموح بها' },
   { value: 'fleet', label: 'موظف إدارة أسطول السيارات', description: 'السيارات وحالة الأسطول ومتابعة أدائه' },
+  { value: 'delivery', label: 'موظف توصيل واستلام السيارات', description: 'رفع تقارير حالة السيارة قبل التسليم وبعد الاسترجاع والتواصل مع العميل' },
 ];
 
 const EMPTY_FORM = {

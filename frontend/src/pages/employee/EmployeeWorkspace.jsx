@@ -10,6 +10,7 @@ const ROLE_META = {
   reservations: { label: 'موظف إدارة الحجوزات', icon: CalendarDays },
   finance: { label: 'موظف الإدارة المالية', icon: WalletCards },
   fleet: { label: 'موظف إدارة أسطول السيارات', icon: Car },
+  delivery: { label: 'موظف توصيل واستلام السيارات', icon: Car },
 };
 
 const SECTIONS = {
@@ -19,6 +20,7 @@ const SECTIONS = {
   advertisements: { label: 'الإعلانات والأداء', icon: Megaphone, endpoint: '/employee-self/me/advertisements', manage: 'manage_advertisements' },
   finance: { label: 'الإدارة المالية', icon: WalletCards, endpoint: '/employee-self/me/finance', manage: 'manage_finance' },
   team: { label: 'إدارة الفريق والأداء', icon: Users, endpoint: '/employee-self/me/team', manage: 'manage_team' },
+  delivery: { label: 'توصيل واستلام السيارات', icon: Car, endpoint: '/employee-self/me/delivery', manage: 'manage_handover' },
 };
 
 const PERMISSION_SECTION = {
@@ -26,6 +28,7 @@ const PERMISSION_SECTION = {
   view_reservations: 'reservations', manage_reservations: 'reservations', view_customers: 'customers',
   view_advertisements: 'advertisements', manage_advertisements: 'advertisements', view_ad_performance: 'advertisements',
   view_finance: 'finance', manage_finance: 'finance', manage_team: 'team', view_team_performance: 'team',
+  view_handover: 'delivery', manage_handover: 'delivery',
 };
 
 const roleLabel = (role) => ROLE_META[role]?.label || 'تخصص غير محدد';
@@ -75,7 +78,7 @@ export default function EmployeeWorkspace() {
       .finally(() => setSectionLoading(false));
   }, [active]);
 
-  const runManagementAction = async (section, row, action) => {
+  const runManagementAction = async (section, row, action, files = []) => {
     setActionLoading(`${section}-${row.id}-${action}`);
     try {
       if (section === 'reservations') {
@@ -83,6 +86,26 @@ export default function EmployeeWorkspace() {
         await api.put(`/employee-self/me/reservations/${row.id}`, { status });
       } else if (section === 'fleet' && action === 'delete') {
         await api.delete(`/employee-self/me/cars/${row.id}`);
+      } else if (section === 'fleet' && action === 'create') {
+        const make = window.prompt('ماركة السيارة');
+        const model = window.prompt('موديل السيارة');
+        const year = window.prompt('سنة الصنع');
+        const price_per_day = window.prompt('السعر اليومي');
+        if (!make || !model || !year || !price_per_day) throw new Error('يجب إدخال بيانات السيارة كاملة');
+        await api.post('/employee-self/me/cars', { make, model, year, price_per_day, status: 'available' });
+      } else if (section === 'fleet' && action === 'edit') {
+        const price_per_day = window.prompt('السعر اليومي الجديد', row.price_per_day || '');
+        const status = window.prompt('الحالة: available أو maintenance', row.status || 'available');
+        await api.put(`/employee-self/me/cars/${row.id}`, { price_per_day, status });
+      } else if (section === 'delivery') {
+        const formData = new FormData();
+        formData.append('fuel_level', window.prompt('نسبة الوقود من 0 إلى 100', '100') || '0');
+        formData.append('mileage', window.prompt('قراءة العداد', '0') || '0');
+        formData.append('condition_notes', window.prompt('ملاحظات حالة السيارة', '') || '');
+        formData.append('exterior_condition', 'good');
+        formData.append('interior_condition', 'good');
+        Array.from(files).forEach((file) => formData.append('images', file));
+        await api.post(`/handover/${row.id}/${action}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       }
       toast.success('تم تنفيذ العملية بنجاح');
       const sectionConfig = SECTIONS[section];
@@ -151,16 +174,20 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
       {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> قبول</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
       {row.status === 'active' && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'complete')}><Check size={14} /> إكمال</button>}
     </div>;
-    if (section === 'fleet') return <button style={styles.rejectButton} disabled={actionLoading} onClick={() => window.confirm('هل تريد حذف هذه السيارة؟') && onAction(section, row, 'delete')}><Trash2 size={14} /> حذف</button>;
+    if (section === 'fleet') return <div style={styles.rowActions}><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => window.confirm('هل تريد حذف هذه السيارة؟') && onAction(section, row, 'delete')}><Trash2 size={14} /> حذف</button></div>;
+    if (section === 'delivery') return <div style={styles.rowActions}>
+      {!row.before_report_id && ['approved', 'awaiting_pickup'].includes(row.status) && <label style={styles.approveButton}><Check size={14} /> تقرير قبل<input type="file" multiple accept="image/*" hidden onChange={(event) => onAction(section, row, 'before', event.target.files)} /></label>}
+      {!row.after_report_id && row.status === 'active' && <label style={styles.approveButton}><Check size={14} /> تقرير بعد<input type="file" multiple accept="image/*" hidden onChange={(event) => onAction(section, row, 'after', event.target.files)} /></label>}
+    </div>;
     return null;
   };
-  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p></section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{row.status || row.email || row.customer_name || row.placement || ''}</small></div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
+  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canManage && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{row.status || row.email || row.customer_name || row.placement || ''}{row.with_driver ? ' · مع سائق' : ''}</small></div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
 }
 
 function Nav({ active, value, label, icon: Icon, onClick }) { return <button type="button" onClick={() => onClick(value)} style={{ ...styles.nav, ...(active === value ? styles.navActive : {}) }}><Icon size={18} />{label}</button>; }
 
 const styles = {
   page: { minHeight: '100vh', background: '#f4f7f9', padding: '28px 20px 60px', color: '#173a52' }, wrap: { maxWidth: 1450, margin: '0 auto' },
-  header: { background: '#fff', border: '1px solid #e5edf1', borderRadius: 22, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 15, flexWrap: 'wrap' }, identity: { display: 'flex', alignItems: 'center', gap: 13 }, avatar: { width: 58, height: 58, borderRadius: 17, display: 'grid', placeItems: 'center', background: '#e6f7f3', color: '#087f68' }, kicker: { color: '#0b8a73', fontSize: 10, fontWeight: 900 }, title: { margin: '4px 0', fontSize: 26 }, muted: { margin: 0, color: '#748692' }, actions: { display: 'flex', gap: 8 }, secondary: { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 13px', border: '1px solid #dce6ea', background: '#fff', borderRadius: 11, cursor: 'pointer', fontWeight: 800, color: '#173a52' }, danger: { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 13px', border: '1px solid #f0dada', background: '#fff7f7', borderRadius: 11, cursor: 'pointer', fontWeight: 800, color: '#b64040' },
+  header: { background: '#fff', border: '1px solid #e5edf1', borderRadius: 22, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 15, flexWrap: 'wrap' }, identity: { display: 'flex', alignItems: 'center', gap: 13 }, avatar: { width: 58, height: 58, borderRadius: 17, display: 'grid', placeItems: 'center', background: '#e6f7f3', color: '#087f68' }, kicker: { color: '#0b8a73', fontSize: 10, fontWeight: 900 }, title: { margin: '4px 0', fontSize: 26 }, muted: { margin: 0, color: '#748692' }, actions: { display: 'flex', gap: 8 }, secondary: { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 13px', border: '1px solid #dce6ea', background: '#fff', borderRadius: 11, cursor: 'pointer', fontWeight: 800, color: '#173a52' }, danger: { display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 13px', border: '1px solid #f0dada', background: '#fff7f7', borderRadius: 11, cursor: 'pointer', fontWeight: 800, color: '#b64040' }, primaryButton: { display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 12, border: 0, borderRadius: 9, padding: '9px 13px', color: '#fff', background: '#087f68', cursor: 'pointer', fontWeight: 900 },
   layout: { display: 'grid', gridTemplateColumns: '250px minmax(0,1fr)', gap: 18, marginTop: 18 }, sidebar: { background: '#fff', border: '1px solid #e5edf1', borderRadius: 20, padding: 14, height: 'max-content', position: 'sticky', top: 20 }, nav: { width: '100%', display: 'flex', alignItems: 'center', gap: 9, border: 0, background: 'transparent', color: '#566b77', padding: '12px 13px', borderRadius: 11, cursor: 'pointer', font: 'inherit', fontWeight: 800, textAlign: 'right', marginBottom: 5 }, navActive: { background: '#eaf7f4', color: '#087f68' }, permissionBox: { marginTop: 15, padding: 13, borderRadius: 12, background: '#f5f8fa', display: 'grid', gap: 5, color: '#627783', fontSize: 12 }, content: { minWidth: 0 }, hero: { background: 'linear-gradient(135deg,#173a52,#24647d)', color: '#fff', borderRadius: 22, padding: 26, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20 }, heroTag: { color: '#7ef5d3', fontSize: 10, fontWeight: 900 }, heroTitle: { margin: '8px 0', fontSize: 26 }, heroText: { margin: 0, color: '#d7e9ef' }, cards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 13, marginTop: 16 }, card: { border: '1px solid #e5edf1', background: '#fff', borderRadius: 18, padding: 18, textAlign: 'right', display: 'grid', gap: 8, color: '#173a52', cursor: 'pointer' }, panel: { marginTop: 16, background: '#fff', border: '1px solid #e5edf1', borderRadius: 18, padding: 20 }, panelTitle: { margin: '0 0 15px' }, metrics: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }, metric: { padding: 14, borderRadius: 12, background: '#f6f9fa', display: 'grid', gap: 5 }, sectionHead: { background: '#fff', border: '1px solid #e5edf1', borderRadius: 18, padding: 20 }, sectionTitle: { display: 'flex', alignItems: 'center', gap: 8, margin: '6px 0' }, rows: { display: 'grid', gap: 8 }, row: { border: '1px solid #edf1f3', borderRadius: 12, padding: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }, rowActions: { display: 'flex', gap: 6, flexWrap: 'wrap' }, approveButton: { display: 'inline-flex', alignItems: 'center', gap: 4, border: 0, borderRadius: 8, padding: '7px 9px', color: '#fff', background: '#198754', cursor: 'pointer', fontWeight: 800, fontSize: 11 }, rejectButton: { display: 'inline-flex', alignItems: 'center', gap: 4, border: 0, borderRadius: 8, padding: '7px 9px', color: '#fff', background: '#dc3545', cursor: 'pointer', fontWeight: 800, fontSize: 11 }, empty: { textAlign: 'center', padding: 35, color: '#7d8d95' }, manageHint: { marginTop: 14, padding: 12, borderRadius: 11, background: '#fff8e8', color: '#806a28', fontSize: 12 }, loading: { minHeight: '70vh', display: 'grid', placeItems: 'center', color: '#667984' },
 };

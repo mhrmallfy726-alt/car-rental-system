@@ -19,6 +19,17 @@ function isReportWindowOpen(reservation, type) {
   return Date.now() >= scheduledAt.getTime() - REPORT_WINDOW_MS;
 }
 
+async function canEmployeeManageHandover(user, reservation) {
+  if (user?.account_type !== 'employee' || String(user.supplier_id) !== String(reservation.supplier_id)) return false;
+  const result = await query(
+    `SELECT 1 FROM employees_permissions ep
+      JOIN permissions p ON p.id = ep.permission_id
+     WHERE ep.employee_id = $1 AND p.name = 'manage_handover' LIMIT 1`,
+    [user.id]
+  );
+  return result.rows.length > 0;
+}
+
 // Record before-delivery or after-return inspection and advance the reservation lifecycle.
 router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler(async (req, res, next) => {
   const { reservationId, type } = req.params;
@@ -39,7 +50,7 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   if (reservationResult.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
 
   const reservation = reservationResult.rows[0];
-  const isOwner = reservation.supplier_id === req.user.id || req.user.role === 'admin';
+  const isOwner = reservation.supplier_id === req.user.id || req.user.role === 'admin' || await canEmployeeManageHandover(req.user, reservation);
   if (!isOwner) return next(new AppError('غير مصرح لك بتوثيق هذا الحجز', 403));
 
   const expectedStatus = type === 'before' ? ['approved', 'awaiting_pickup'] : ['active'];
@@ -56,9 +67,9 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   if (duplicate.rows.length) return next(new AppError('تم توثيق هذه المرحلة مسبقاً', 409));
 
   const log = await query(
-    `INSERT INTO handover_logs (reservation_id, type, recorded_by, fuel_level, mileage, condition_notes, exterior_condition, interior_condition, gps_lat, gps_lng)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-    [reservationId, type, req.user.id, fuel, mil, condition_notes || '', exterior_condition, interior_condition, gps_lat || null, gps_lng || null]
+    `INSERT INTO handover_logs (reservation_id, type, recorded_by, recorded_by_employee_id, fuel_level, mileage, condition_notes, exterior_condition, interior_condition, gps_lat, gps_lng)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+    [reservationId, type, reservation.supplier_id, req.user.account_type === 'employee' ? req.user.id : null, fuel, mil, condition_notes || '', exterior_condition, interior_condition, gps_lat || null, gps_lng || null]
   );
 
   if (req.files?.length) {
@@ -85,6 +96,18 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
     );
     await query('UPDATE cars SET mileage = GREATEST(mileage, $1) WHERE id = $2', [mil, reservation.car_id]);
   }
+
+  await query(
+    `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+     VALUES ($1, $2, $3, 'reservation', $4, 'reservation', $5)`,
+    [
+      reservation.customer_id,
+      type === 'before' ? 'تم رفع تقرير تسليم السيارة' : 'تم رفع تقرير استرجاع السيارة',
+      type === 'before' ? 'تم توثيق حالة السيارة قبل التسليم ويمكنك مراجعة التقرير.' : 'تم توثيق حالة السيارة بعد الاسترجاع.',
+      reservationId,
+      '/my-reservations',
+    ]
+  );
 
   const io = req.app.get('io');
   if (io) {
@@ -266,7 +289,8 @@ router.get('/:reservationId', protect, asyncHandler(async (req, res, next) => {
   const reservation = await query('SELECT customer_id, supplier_id FROM reservations WHERE id = $1', [req.params.reservationId]);
   if (!reservation.rows.length) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
-  if (![r.customer_id, r.supplier_id].includes(req.user.id) && req.user.role !== 'admin') return next(new AppError('غير مصرح لك', 403));
+  const employeeCanView = await canEmployeeManageHandover(req.user, r);
+  if (![r.customer_id, r.supplier_id].includes(req.user.id) && req.user.role !== 'admin' && !employeeCanView) return next(new AppError('غير مصرح لك', 403));
 
   const logs = await query('SELECT * FROM handover_logs WHERE reservation_id = $1 ORDER BY created_at', [req.params.reservationId]);
   for (const log of logs.rows) {

@@ -47,6 +47,7 @@ export default function Checkout() {
   const [processing, setProcessing] = useState(false);
   const [showNewCard, setShowNewCard] = useState(false);
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const [withDriver, setWithDriver] = useState(false);
 
   const [cardData, setCardData] = useState({
     card_holder_name: '',
@@ -75,6 +76,7 @@ export default function Checkout() {
       }
 
       setReservation(resRes.data.data);
+      setWithDriver(Boolean(resRes.data.data.with_driver));
       setSavedCards(cardsRes.data.data);
 
       if (cardsRes.data.data.length > 0) {
@@ -130,6 +132,7 @@ export default function Checkout() {
         payment_method: 'card',
         saved_card_id: finalCardId,
         currency,
+        with_driver: withDriver,
       });
 
       toast.success('تم الدفع بنجاح! أُرسل طلبك للمورد للمراجعة.');
@@ -187,6 +190,19 @@ export default function Checkout() {
                   {SUPPORTED_CURRENCIES.map((item) => <option key={item.code} value={item.code}>{item.name} ({item.code} — {item.symbol})</option>)}
                 </select>
                 <small style={{ display: 'block', marginTop: '8px', color: '#70828d' }}>الأسعار الأساسية بالريال اليمني. سعر التحويل المحاكى: 1 {getCurrency(currency).code} = {getCurrency(currency).rateToYER.toLocaleString()} ر.ي.</small>
+              </div>
+
+              <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '12px', background: '#fffaf0', border: '1px solid #f1d28a' }}>
+                <strong style={{ display: 'block', marginBottom: '10px', color: '#173a52' }}>طريقة استلام السيارة</strong>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '9px', cursor: 'pointer' }}>
+                  <input type="radio" name="driver-option" checked={withDriver} onChange={() => setWithDriver(true)} />
+                  أريد السيارة مع سائق
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '9px', cursor: 'pointer' }}>
+                  <input type="radio" name="driver-option" checked={!withDriver} onChange={() => setWithDriver(false)} />
+                  أريد السيارة بدون سائق
+                </label>
+                <small style={{ display: 'block', marginTop: '9px', color: '#806a28' }}>سيتم إرسال اختيارك للمورد وموظف التوصيل ضمن تفاصيل الحجز.</small>
               </div>
 
               {/* البطاقات المحفوظة */}

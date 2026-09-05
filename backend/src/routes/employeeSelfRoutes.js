@@ -413,6 +413,26 @@ router.get('/me/reservations', requirePermission('view_reservations', 'manage_re
     next(error);
   }
 });
+router.get('/me/delivery', requirePermission('view_handover', 'manage_handover'), async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT r.*, c.make, c.model, u.name AS customer_name, u.phone AS customer_phone,
+              h_before.id AS before_report_id, h_after.id AS after_report_id
+         FROM reservations r
+         JOIN cars c ON c.id = r.car_id
+         LEFT JOIN users u ON u.id = r.customer_id
+         LEFT JOIN handover_logs h_before ON h_before.reservation_id = r.id AND h_before.type = 'before'
+         LEFT JOIN handover_logs h_after ON h_after.reservation_id = r.id AND h_after.type = 'after'
+        WHERE r.supplier_id = $1 AND r.with_driver = TRUE
+          AND r.status IN ('approved','awaiting_pickup','active','returned','disputed')
+        ORDER BY r.pickup_at ASC NULLS LAST, r.created_at DESC LIMIT 100`,
+      [req.user.supplier_id]
+    );
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    next(error);
+  }
+});
 // =====================================================
 // UPDATE RESERVATION - تعديل حالة الحجز
 // يحتاج صلاحية manage_reservations

@@ -21,6 +21,7 @@ const JOB_ROLES = {
   reservations: 'موظف إدارة الحجوزات',
   finance: 'موظف الإدارة المالية',
   fleet: 'موظف إدارة أسطول السيارات',
+  delivery: 'موظف توصيل واستلام السيارات',
 };
 
 const defaultPermissionNamesByJobRole = {
@@ -28,12 +29,14 @@ const defaultPermissionNamesByJobRole = {
     'view_cars', 'manage_cars', 'view_fleet_performance',
     'view_reservations', 'manage_reservations', 'view_customers',
     'view_advertisements', 'manage_advertisements', 'view_ad_performance',
-    'view_finance', 'manage_finance', 'manage_team', 'view_team_performance'
+    'view_finance', 'manage_finance', 'manage_team', 'view_team_performance',
+    'view_handover', 'manage_handover'
   ],
   advertisements: ['view_advertisements', 'manage_advertisements', 'view_ad_performance'],
   reservations: ['view_reservations', 'manage_reservations', 'view_customers'],
   finance: ['view_finance', 'manage_finance'],
   fleet: ['view_cars', 'manage_cars', 'view_fleet_performance'],
+  delivery: ['view_reservations', 'view_customers', 'view_handover', 'manage_handover'],
 };
 
 const resetPermissionsForJobRole = async (employeeId, jobRole) => {

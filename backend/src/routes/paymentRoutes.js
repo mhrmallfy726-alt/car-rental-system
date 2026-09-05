@@ -72,7 +72,7 @@ router.post('/advertisement-checkout', protect, asyncHandler(async (req, res, ne
 }));
 
 router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
-  const { reservation_id, payment_method, saved_card_id } = req.body;
+  const { reservation_id, payment_method, saved_card_id, with_driver } = req.body;
   let currency;
   try {
     currency = assertCurrency(req.body.currency || 'YER');
@@ -83,11 +83,16 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
   if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن الدفع لهذا الحجز في حالته الحالية', 400));
+  if (with_driver !== undefined && typeof with_driver !== 'boolean') return next(new AppError('اختيار السائق غير صالح', 400));
   const existingPaid = await query(
     `SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`,
     [reservation_id]
   );
   if (existingPaid.rows.length > 0) return next(new AppError('تم دفع هذا الحجز مسبقاً', 409));
+
+  if (with_driver !== undefined) {
+    await query('UPDATE reservations SET with_driver = $1 WHERE id = $2', [with_driver, reservation_id]);
+  }
 
   if (saved_card_id) {
     const card = await query('SELECT id FROM saved_cards WHERE id = $1 AND user_id = $2', [saved_card_id, req.user.id]);

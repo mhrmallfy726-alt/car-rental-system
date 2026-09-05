@@ -53,7 +53,7 @@ async function notifyReservationWhatsApp(reservationId, status, reason = null) {
 // @access  Customer
 // ========================
 router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, next) => {
-  const { car_id, start_date, end_date, pickup_time = '09:00', return_time = '18:00', pickup_location, dropoff_location, customer_notes } = req.body;
+  const { car_id, start_date, end_date, pickup_time = '09:00', return_time = '18:00', pickup_location, dropoff_location, customer_notes, with_driver = false } = req.body;
 
   if (!car_id || !start_date || !end_date || !pickup_time || !return_time) {
     return next(new AppError('الرجاء تحديد السيارة وتواريخ وأوقات الحجز', 400));
@@ -89,9 +89,9 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   const total_price = total_days * car.price_per_day;
 
   const result = await query(`
-    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, handover_state, status)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17) RETURNING *
-  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, 'not_started', 'pending']);
+    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, with_driver, handover_state, status)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *
+  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, Boolean(with_driver), 'not_started', 'pending']);
 
   // The supplier is notified after successful payment in paymentRoutes.js.
   res.status(201).json({ success: true, data: result.rows[0] });
