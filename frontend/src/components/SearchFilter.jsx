@@ -64,14 +64,14 @@ radius: 10,
     <label style={{ display: 'flex', alignItems: 'center', gap: '10px', minHeight: '50px', cursor: 'pointer', fontWeight: 800, color: '#173a52' }}>
       <input
         type="checkbox"
-        checked={(searchParams.withDriver || 'false') === 'false'}
-        onChange={(e) => setSearchParams({ ...searchParams, withDriver: e.target.checked ? 'false' : 'true' })}
+        checked={(searchParams.withDriver || 'false') === 'true'}
+        onChange={(e) => setSearchParams({ ...searchParams, withDriver: e.target.checked ? 'true' : 'false' })}
         style={{ width: '20px', height: '20px', accentColor: '#178263', cursor: 'pointer' }}
       />
-      بدون سائق
+      مع سائق
     </label>
     <small style={{ color: '#74858d', fontSize: '12px' }}>
-      {(searchParams.withDriver || 'false') === 'false' ? 'سيارة بدون سائق' : 'سيارة مع سائق'}
+      {(searchParams.withDriver || 'false') === 'true' ? 'سيارة مع سائق' : 'سيارة بدون سائق'}
     </small>
   </div>
 
