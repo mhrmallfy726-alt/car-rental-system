@@ -512,12 +512,28 @@ router.put(
 router.get('/me/customers', requirePermission('view_customers'), async (req, res, next) => {
   try {
     const result = await query(
-      `SELECT DISTINCT u.id, u.name, u.email, u.phone,
+      `SELECT u.id, u.name, u.phone, u.avatar, u.created_at AS customer_since,
               COUNT(r.id)::int AS reservations_count,
-              MAX(r.created_at) AS last_reservation_at
-         FROM reservations r JOIN users u ON u.id = r.customer_id
-        WHERE r.supplier_id = $1
-        GROUP BY u.id, u.name, u.email, u.phone
+              MAX(r.created_at) AS last_reservation_at,
+              COALESCE(SUM(r.total_price) FILTER (WHERE r.status IN ('paid','active','completed')), 0)::numeric AS total_booking_value,
+              COALESCE(json_agg(json_build_object(
+                'id', r.id, 'status', r.status, 'start_date', r.start_date, 'end_date', r.end_date,
+                'total_days', r.total_days, 'total_price', r.total_price, 'with_driver', r.with_driver,
+                'pickup_location', r.pickup_location, 'dropoff_location', r.dropoff_location,
+                'customer_notes', r.customer_notes, 'created_at', r.created_at,
+                'car', json_build_object('make', c.make, 'model', c.model, 'year', c.year)
+              ) ORDER BY r.created_at DESC) FILTER (WHERE r.id IS NOT NULL), '[]'::json) AS reservations,
+              json_build_object(
+                'preferred_service', CASE WHEN COUNT(r.id) FILTER (WHERE r.with_driver = TRUE) > COUNT(r.id) FILTER (WHERE r.with_driver = FALSE) THEN 'مع سائق' ELSE 'بدون سائق' END,
+                'favorite_cars', COALESCE((SELECT json_agg(json_build_object('make', fc_car.make, 'model', fc_car.model, 'year', fc_car.year) ORDER BY fc.created_at DESC) FROM favorite_cars fc JOIN cars fc_car ON fc_car.id = fc.car_id WHERE fc.user_id = u.id AND fc_car.supplier_id = $1), '[]'::json),
+                'last_pickup_location', (SELECT rr.pickup_location FROM reservations rr WHERE rr.customer_id = u.id AND rr.supplier_id = $1 AND rr.pickup_location IS NOT NULL ORDER BY rr.created_at DESC LIMIT 1),
+                'last_dropoff_location', (SELECT rr.dropoff_location FROM reservations rr WHERE rr.customer_id = u.id AND rr.supplier_id = $1 AND rr.dropoff_location IS NOT NULL ORDER BY rr.created_at DESC LIMIT 1)
+              ) AS preferences
+         FROM users u
+         LEFT JOIN reservations r ON r.customer_id = u.id AND r.supplier_id = $1
+         LEFT JOIN cars c ON c.id = r.car_id
+        WHERE u.role = 'customer' AND EXISTS (SELECT 1 FROM reservations er WHERE er.customer_id = u.id AND er.supplier_id = $1)
+        GROUP BY u.id, u.name, u.phone, u.avatar, u.created_at
         ORDER BY last_reservation_at DESC`,
       [req.user.supplier_id]
     );
