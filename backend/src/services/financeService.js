@@ -1,5 +1,5 @@
 const { query, getClient } = require('../config/database');
-const { assertCurrency } = require('./currencyService');
+const { assertCurrency, convertFromYER } = require('./currencyService');
 
 const DEFAULT_CURRENCY = 'YER';
 
@@ -39,11 +39,57 @@ const updateSettings = async (adminId, data = {}) => {
   return (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_price_home_per_day=$5,advertisement_price_cars_per_day=$6,advertisement_price_car_detail_per_day=$7,advertisement_price_all_public_per_day=$8,advertisement_start_time=$9,advertisement_end_time=$10,updated_by=$11,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, homePrice, carsPrice, carDetailPrice, allPublicPrice, adStartTime, adEndTime, adminId])).rows[0];
 };
 
+const createReservationCharge = async ({ reservationId, customerId, paymentMethod = 'simulation', currency = DEFAULT_CURRENCY, withDriver }) => {
+  const paymentCurrency = assertCurrency(currency);
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const reservationResult = await client.query('SELECT * FROM reservations WHERE id = $1 AND customer_id = $2 FOR UPDATE', [reservationId, customerId]);
+    if (!reservationResult.rows.length) throw new Error('الحجز غير موجود');
+    const reservation = reservationResult.rows[0];
+    if (!['pending', 'approved'].includes(reservation.status)) throw new Error('لا يمكن الدفع لهذا الحجز في حالته الحالية');
+    const existing = await client.query("SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1", [reservationId]);
+    if (existing.rows.length) throw new Error('تم دفع هذا الحجز مسبقاً');
+    if (withDriver !== undefined) {
+      if (typeof withDriver !== 'boolean') throw new Error('اختيار السائق غير صالح');
+      await client.query('UPDATE reservations SET with_driver = $1 WHERE id = $2', [withDriver, reservationId]);
+    }
+    const baseAmountYER = Number(reservation.total_price || 0);
+    if (!Number.isFinite(baseAmountYER) || baseAmountYER <= 0) throw new Error('قيمة الحجز غير صالحة');
+    const totalAmount = convertFromYER(baseAmountYER, paymentCurrency);
+    const settings = await getSettings();
+    const commission = totalAmount * Number(settings.commission_rate || 0) / 100;
+    const supplierPayable = Math.max(0, totalAmount - commission);
+    const providerReference = `SIM-RES-${reservationId}-${Date.now()}`;
+    const payment = await client.query(
+      `INSERT INTO payments (reservation_id, customer_id, payer_id, supplier_id, amount, currency, payment_method, status, provider_reference, metadata, paid_at)
+       VALUES ($1,$2,$2,$3,$4,$5,$6,'paid',$7,$8::jsonb,NOW()) RETURNING *`,
+      [reservationId, customerId, reservation.supplier_id, totalAmount, paymentCurrency, paymentMethod, providerReference,
+        JSON.stringify({ simulated: true, gateway: 'sandbox', event: 'reservation_checkout', base_amount: baseAmountYER, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver) })]
+    );
+    const metadata = JSON.stringify({ simulated: true, commission_rate: Number(settings.commission_rate || 0), base_amount: baseAmountYER });
+    await client.query(
+      `INSERT INTO ledger_entries (payment_id,reservation_id,supplier_id,entry_type,direction,amount,currency,description,metadata)
+       VALUES ($1,$2,$3,'charge','credit',$4,$5,'تحصيل حجز محاكى',$6::jsonb),
+              ($1,$2,$3,'platform_fee','credit',$7,$5,'عمولة المنصة من الحجز',$6::jsonb),
+              ($1,$2,$3,'supplier_payable','credit',$8,$5,'إيراد المورد من الحجز',$6::jsonb)`,
+      [payment.rows[0].id, reservationId, reservation.supplier_id, totalAmount, paymentCurrency, metadata, commission, supplierPayable]
+    );
+    await client.query('COMMIT');
+    return { payment: payment.rows[0], reservation, commission, supplierPayable, totalAmount, currency: paymentCurrency };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const getDashboard = async () => {
   const [summary, adPayments, reservationPayments, pendingPayouts] = await Promise.all([
-    query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS gross_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND advertisement_id IS NOT NULL),0)::numeric AS advertisement_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND reservation_id IS NOT NULL),0)::numeric AS reservation_revenue,COALESCE(SUM(amount) FILTER (WHERE status='refunded'),0)::numeric AS refunded_amount,COUNT(*) FILTER (WHERE status='paid')::int AS paid_transactions,COUNT(*) FILTER (WHERE status='pending')::int AS pending_transactions FROM payments`),
+    query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS gross_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND advertisement_id IS NOT NULL),0)::numeric AS advertisement_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND reservation_id IS NOT NULL),0)::numeric AS reservation_revenue,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='platform_fee' AND direction='credit'),0)::numeric AS platform_commission,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='supplier_payable' AND direction='credit'),0)::numeric AS supplier_payable,COALESCE(SUM(amount) FILTER (WHERE status='refunded'),0)::numeric AS refunded_amount,COUNT(*) FILTER (WHERE status='paid')::int AS paid_transactions,COUNT(*) FILTER (WHERE status='pending')::int AS pending_transactions FROM payments`),
     query(`SELECT p.id,p.amount,p.currency,p.status,p.paid_at,p.provider_reference,a.title,u.name AS supplier_name FROM payments p LEFT JOIN advertisements a ON a.id=p.advertisement_id LEFT JOIN users u ON u.id=p.supplier_id WHERE p.advertisement_id IS NOT NULL ORDER BY p.created_at DESC LIMIT 100`),
-    query(`SELECT p.id,p.amount,p.currency,p.status,p.paid_at,p.provider_reference,c.make,c.model FROM payments p LEFT JOIN reservations r ON r.id=p.reservation_id LEFT JOIN cars c ON c.id=r.car_id WHERE p.reservation_id IS NOT NULL ORDER BY p.created_at DESC LIMIT 100`),
+    query(`SELECT p.id,p.reservation_id,p.amount,p.currency,p.status,p.paid_at,p.provider_reference,r.start_date,r.end_date,r.with_driver,c.make,c.model,su.name AS supplier_name,cu.name AS customer_name,COALESCE(fee.amount,0)::numeric AS commission,CASE WHEN p.amount > 0 THEN ROUND((COALESCE(fee.amount,0)/p.amount*100)::numeric,2) ELSE 0 END AS commission_rate,COALESCE(payable.amount,0)::numeric AS supplier_amount,CASE WHEN p.status='paid' AND COALESCE(fee.amount,0)+COALESCE(payable.amount,0)=p.amount THEN 'matched' ELSE 'check' END AS reconciliation_status FROM payments p LEFT JOIN reservations r ON r.id=p.reservation_id LEFT JOIN cars c ON c.id=r.car_id LEFT JOIN users su ON su.id=r.supplier_id LEFT JOIN users cu ON cu.id=r.customer_id LEFT JOIN LATERAL (SELECT amount FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee' AND direction='credit' LIMIT 1) fee ON TRUE LEFT JOIN LATERAL (SELECT amount FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable' AND direction='credit' LIMIT 1) payable ON TRUE WHERE p.reservation_id IS NOT NULL ORDER BY p.created_at DESC LIMIT 100`),
     query(`SELECT sp.*,u.name AS supplier_name FROM supplier_payouts sp JOIN users u ON u.id=sp.supplier_id WHERE sp.status IN ('pending','processing') ORDER BY sp.created_at ASC LIMIT 100`),
   ]);
   return { summary: summary.rows[0], advertisementPayments: adPayments.rows, reservationPayments: reservationPayments.rows, pendingPayouts: pendingPayouts.rows };
@@ -105,4 +151,4 @@ const completePayout = async (adminId, payoutId, notes = '') => {
   finally { client.release(); }
 };
 
-module.exports = { createAdvertisementCharge, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };
+module.exports = { createAdvertisementCharge, createReservationCharge, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };

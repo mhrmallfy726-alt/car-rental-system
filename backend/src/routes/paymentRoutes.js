@@ -99,60 +99,23 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     if (card.rows.length === 0) return next(new AppError('البطاقة غير صالحة', 400));
   }
 
-  const baseAmountYER = Number(r.total_price || 0);
-  const totalAmount = convertFromYER(baseAmountYER, currency);
-  const payment = await query(
-    `INSERT INTO payments
-      (reservation_id, customer_id, payer_id, supplier_id, amount,
-       currency, payment_method, status, provider_reference, metadata, paid_at)
-     VALUES ($1, $2, $2, $3, $4, $5, $6, 'paid', $7, $8::jsonb, NOW())
-     RETURNING *`,
-    [
-      reservation_id,
-      req.user.id,
-      r.supplier_id,
-      totalAmount,
-      currency,
-      payment_method || 'card',
-      `SIM-RES-${reservation_id}-${Date.now()}`,
-      JSON.stringify({ simulated: true, event: 'reservation_checkout', base_amount: baseAmountYER, base_currency: 'YER', exchange_rate_to_YER: totalAmount ? Number((baseAmountYER / totalAmount).toFixed(6)) : 0 }),
-    ]
-  );
-
+  const charge = await financeService.createReservationCharge({
+    reservationId: reservation_id,
+    customerId: req.user.id,
+    paymentMethod: payment_method || 'simulation',
+    currency,
+    withDriver: req.body.with_driver,
+  });
+  const payment = { rows: [charge.payment] };
   const financeSettings = await financeService.getSettings();
-  const commission = totalAmount * Number(financeSettings.commission_rate || 0) / 100;
-  const supplierPayable = Math.max(0, totalAmount - commission);
-
-  await query(
-    `INSERT INTO ledger_entries
-      (payment_id, reservation_id, supplier_id, entry_type, direction,
-       amount, currency, description, metadata)
-     VALUES ($1, $2, $3, 'charge', 'credit', $4, $5, $6, $7::jsonb),
-            ($1, $2, $3, 'platform_fee', 'credit', $8, $5, $9, $7::jsonb),
-            ($1, $2, $3, 'supplier_payable', 'credit', $10, $5, $11, $7::jsonb)`,
-    [
-      payment.rows[0].id,
-      reservation_id,
-      r.supplier_id,
-      totalAmount,
-      currency,
-      'تحصيل حجز محاكى',
-      JSON.stringify({ simulated: true, commission_rate: financeSettings.commission_rate }),
-      commission,
-      'عمولة المنصة',
-      supplierPayable,
-      'مستحق المورد قبل التسوية',
-    ]
-  );
-
-  if (financeSettings.settlement_mode === 'automatic' && supplierPayable > 0) {
-    await financeService.createPayout(
-      req.user.id,
-      r.supplier_id,
-      supplierPayable,
-      `تسوية تلقائية محاكاة للحجز ${reservation_id}`,
-      currency,
-    );
+  let settlementWarning = null;
+  if (financeSettings.settlement_mode === 'automatic' && charge.supplierPayable > 0) {
+    try {
+      await financeService.createPayout(req.user.id, r.supplier_id, charge.supplierPayable, `تسوية تلقائية محاكاة للحجز ${reservation_id}`, currency);
+    } catch (error) {
+      settlementWarning = 'تم تأكيد الدفع، لكن التسوية التلقائية تحتاج مراجعة الإدارة المالية';
+      console.error('Automatic simulated payout failed:', error.message);
+    }
   }
 
   // Payment-first flow: payment never marks a reservation active.
@@ -194,10 +157,34 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const latestReservation = await query('SELECT status, handover_state FROM reservations WHERE id = $1', [reservation_id]);
   res.status(201).json({
     success: true,
-    data: payment.rows[0],
+    data: { ...payment.rows[0], commission: charge.commission, supplier_payable: charge.supplierPayable, simulated: true },
+    verification: { gateway: 'sandbox', verified: true, reconciliation_status: 'matched' },
+    settlement_warning: settlementWarning,
     reservation_status: latestReservation.rows[0]?.status || r.status,
     handover_state: latestReservation.rows[0]?.handover_state || r.handover_state,
   });
+}));
+
+router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
+  const result = await query(
+    `SELECT p.*, r.customer_id, r.supplier_id,
+            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee' AND direction='credit'),0) AS commission,
+            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable' AND direction='credit'),0) AS supplier_payable,
+            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND direction='credit'),0) AS ledger_total
+       FROM payments p JOIN reservations r ON r.id=p.reservation_id
+      WHERE p.id=$1`,
+    [req.params.id]
+  );
+  if (!result.rows.length) return next(new AppError('عملية الدفع غير موجودة', 404));
+  const payment = result.rows[0];
+  const allowed = req.user.role === 'admin' || req.user.id === payment.customer_id || req.user.id === payment.supplier_id;
+  if (!allowed) return next(new AppError('غير مصرح لك بالتحقق من عملية الدفع', 403));
+  const verified = payment.status === 'paid'
+    && payment.provider_reference?.startsWith('SIM-')
+    && payment.metadata?.simulated === true
+    && Math.abs(Number(payment.commission) + Number(payment.supplier_payable) - Number(payment.amount)) < 0.01
+    && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + Number(payment.supplier_payable))) < 0.01;
+  res.json({ success: true, data: { payment_id: payment.id, gateway: 'sandbox', verified, reconciliation_status: verified ? 'matched' : 'check', amount: payment.amount, currency: payment.currency, commission: payment.commission, supplier_payable: payment.supplier_payable } });
 }));
 
 router.get('/history', protect, asyncHandler(async (req, res) => {

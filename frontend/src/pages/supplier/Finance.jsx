@@ -50,7 +50,7 @@ export default function SupplierFinance() {
           ))}
           <div style={{background:'#fff',borderRadius:12,padding:22,marginBottom:24}}>
             <h3>تفاصيل عمليات الحجوزات</h3>
-            <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th>الحجز</th><th>السيارة</th><th>الإجمالي</th><th>العمولة</th><th>مستحق المورد</th><th>الحالة</th></tr></thead><tbody>{(data?.transactions||[]).map(x=><tr key={x.id}>{[x.reservation_id?.slice(0,8)||'-',`${x.make||''} ${x.model||''}`,money(x.gross_amount,x.currency),money(x.commission,x.currency),money(x.supplier_amount,x.currency),statusLabel(x.status)].map((v,i)=><td key={i} style={{padding:10,borderTop:'1px solid #eee'}}>{v}</td>)}</tr>)}</tbody></table></div>
+            <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse'}}><thead><tr><th>الحجز</th><th>العميل</th><th>السيارة</th><th>الخدمة</th><th>الإجمالي</th><th>العمولة</th><th>مستحق المورد</th><th>المطابقة</th></tr></thead><tbody>{(data?.transactions||[]).map(x=><tr key={x.id}>{[x.reservation_id?.slice(0,8)||'-',x.customer_name || '-',`${x.make||''} ${x.model||''}`,x.with_driver ? 'مع سائق' : 'بدون سائق',money(x.gross_amount,x.currency),`${money(x.commission,x.currency)} (${x.commission_rate || 0}%)`,money(x.supplier_amount,x.currency),x.reconciliation_status === 'matched' ? 'مطابق' : 'يحتاج مراجعة'].map((v,i)=><td key={i} style={{padding:10,borderTop:'1px solid #eee',color:i === 7 && x.reconciliation_status !== 'matched' ? '#b42318' : 'inherit',fontWeight:i === 7 ? 700 : 400}}>{v}</td>)}</tr>)}</tbody></table></div>
           </div>
           <div style={{background:'#fff',borderRadius:12,padding:22}}>
             <h3>سجل التسويات</h3>

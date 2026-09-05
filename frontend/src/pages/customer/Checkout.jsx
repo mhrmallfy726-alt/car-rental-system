@@ -129,7 +129,7 @@ export default function Checkout() {
 
       await paymentsAPI.checkout({
         reservation_id: reservationId,
-        payment_method: 'card',
+        payment_method: 'simulation',
         saved_card_id: finalCardId,
         currency,
         with_driver: withDriver,

@@ -60,12 +60,16 @@ router.get('/summary', asyncHandler(async (req, res) => {
 
   const transactionsResult = await query(`
     SELECT p.id,p.reservation_id,p.amount AS gross_amount,p.currency,p.status,p.paid_at,p.created_at,
+           r.start_date,r.end_date,r.with_driver,u.name AS customer_name,
            c.make,c.model,
            COALESCE(fee.amount,0) AS commission,
-           COALESCE(payable.amount,0) AS supplier_amount
+           CASE WHEN p.amount > 0 THEN ROUND((COALESCE(fee.amount,0)/p.amount*100)::numeric,2) ELSE 0 END AS commission_rate,
+           COALESCE(payable.amount,0) AS supplier_amount,
+           CASE WHEN p.status='paid' AND COALESCE(fee.amount,0)+COALESCE(payable.amount,0)=p.amount THEN 'matched' ELSE 'check' END AS reconciliation_status
     FROM payments p
     JOIN reservations r ON r.id=p.reservation_id
     JOIN cars c ON c.id=r.car_id
+    LEFT JOIN users u ON u.id=r.customer_id
     LEFT JOIN LATERAL (
       SELECT amount FROM ledger_entries
       WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='platform_fee' AND direction='credit'

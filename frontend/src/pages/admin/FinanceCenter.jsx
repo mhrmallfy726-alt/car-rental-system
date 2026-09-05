@@ -71,6 +71,8 @@ export default function FinanceCenter() {
     ['إجمالي الإيرادات', money(summary.gross_revenue)],
     ['إيرادات الإعلانات', money(summary.advertisement_revenue)],
     ['إيرادات الحجوزات', money(summary.reservation_revenue)],
+    ['عمولة المنصة', money(summary.platform_commission)],
+    ['مستحقات الموردين', money(summary.supplier_payable)],
     ['المبالغ المستردة', money(summary.refunded_amount)],
   ];
 
@@ -192,6 +194,19 @@ export default function FinanceCenter() {
             {!dashboard?.pendingPayouts?.length && <p className="finance-empty">لا توجد تسويات معلقة.</p>}
           </div>
         </article>
+      </section>
+
+      <section className="finance-table-card" style={{ marginTop: 18 }}>
+        <div className="finance-table-head"><h2>مطابقة مالية لكل حجز</h2><span>{dashboard?.reservationPayments?.length || 0} حجز</span></div>
+        <div className="finance-table-list">
+          {(dashboard?.reservationPayments || []).map((payment) => (
+            <div className="finance-row" key={payment.id}>
+              <div><strong>{payment.make || 'سيارة'} {payment.model || ''}</strong><small>{payment.customer_name || 'عميل'} · {payment.supplier_name || 'مورد'} · {payment.with_driver ? 'مع سائق' : 'بدون سائق'}</small></div>
+              <div className="finance-row-amount"><b>{money(payment.amount, payment.currency)}</b><small>عمولة: {money(payment.commission, payment.currency)} ({payment.commission_rate || 0}%) · المورد: {money(payment.supplier_amount, payment.currency)}</small><span className={`finance-status finance-status-${payment.reconciliation_status}`}>{payment.reconciliation_status === 'matched' ? 'مطابق' : 'يحتاج مراجعة'}</span></div>
+            </div>
+          ))}
+          {!dashboard?.reservationPayments?.length && <p className="finance-empty">لا توجد مدفوعات حجوزات حتى الآن.</p>}
+        </div>
       </section>
     </main>
   );
