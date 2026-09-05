@@ -31,6 +31,7 @@ export default function Cars() {
     endDate: initialParams.get('endDate') || '',
     pickup_time: initialParams.get('pickupTime') || initialParams.get('pickup_time') || '09:00',
     return_time: initialParams.get('returnTime') || initialParams.get('return_time') || '18:00',
+    withDriver: initialParams.get('withDriver') || initialParams.get('with_driver') || 'false',
     latitude: initialParams.get('latitude') || '',
     longitude: initialParams.get('longitude') || '',
     radius: Number(initialParams.get('radius')) || 10
@@ -121,7 +122,8 @@ export default function Cars() {
       startDate: '',
       endDate: '',
       pickup_time: '09:00',
-      return_time: '18:00'
+      return_time: '18:00',
+      withDriver: 'false'
     });
     setDateError('');
   };
@@ -337,7 +339,7 @@ export default function Cars() {
                       key={car.id}
                       to={{
                         pathname: `/cars/${car.id}`,
-                        search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || 10), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),
+                        search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', withDriver: filters.withDriver || 'false', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || 10), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),
                         state: { search: filters },
                       }}
                       className="car-card-3d"

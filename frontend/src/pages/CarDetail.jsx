@@ -46,6 +46,7 @@ export default function CarDetail() {
     pickup_time: '09:00',
     return_time: '18:00',
     pickup_location: '',
+    with_driver: false,
   });
   const [searchParams, setSearchParams] = useState(() => ({
     location:
@@ -71,6 +72,12 @@ export default function CarDetail() {
       carriedSearch.returnTime ||
       searchQuery.get('returnTime') ||
       '18:00',
+    withDriver:
+      carriedSearch.withDriver ||
+      carriedSearch.with_driver ||
+      searchQuery.get('withDriver') ||
+      searchQuery.get('with_driver') ||
+      'false',
     minPrice:
       carriedSearch.min_price ||
       carriedSearch.minPrice ||
@@ -105,6 +112,10 @@ export default function CarDetail() {
       })
       .finally(() => setLoading(false));
   }, [id, navigate]);
+
+  useEffect(() => {
+    setBooking((current) => ({ ...current, with_driver: searchParams.withDriver === 'true' }));
+  }, [searchParams.withDriver]);
 
   const images = car?.images?.length
     ? car.images.map((img) => getImageUrl(img.image_url))
@@ -342,6 +353,12 @@ radius: 10,
                 </strong>
               </div>
             )}
+
+            <div className="car-search-summary-item">
+              <Car size={18} />
+              <span>خدمة السائق</span>
+              <strong>{searchParams.withDriver === 'true' ? 'مع سائق' : 'بدون سائق'}</strong>
+            </div>
 
             {(searchParams.latitude && searchParams.longitude) && (
               <div className="car-search-summary-item">

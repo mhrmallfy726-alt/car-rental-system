@@ -60,6 +60,18 @@ radius: 10,
   </div>
 
   <div className="input-wrapper">
+    <label>خدمة السائق</label>
+    <select
+      className="custom-input"
+      value={searchParams.withDriver || 'false'}
+      onChange={(e) => setSearchParams({ ...searchParams, withDriver: e.target.value })}
+    >
+      <option value="false">بدون سائق</option>
+      <option value="true">مع سائق</option>
+    </select>
+  </div>
+
+  <div className="input-wrapper">
     <label>وقت الاستلام</label>
     <input
       type="time"

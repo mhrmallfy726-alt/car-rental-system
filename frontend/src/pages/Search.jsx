@@ -10,6 +10,7 @@ const defaultSearch = {
   endDate: '',
   pickupTime: '09:00',
   returnTime: '18:00',
+  withDriver: 'false',
   minPrice: '',
   maxPrice: '',
   latitude: '',
@@ -26,6 +27,7 @@ function readSearchParams(search) {
     endDate: params.get('endDate') || '',
     pickupTime: params.get('pickupTime') || params.get('pickup_time') || '09:00',
     returnTime: params.get('returnTime') || params.get('return_time') || '18:00',
+    withDriver: params.get('withDriver') || params.get('with_driver') || 'false',
     minPrice: params.get('minPrice') || params.get('min_price') || '',
     maxPrice: params.get('maxPrice') || params.get('max_price') || '',
     latitude: params.get('latitude') || '',
@@ -85,6 +87,7 @@ export default function SearchPage() {
     query.set('endDate', searchParams.endDate);
     query.set('pickupTime', searchParams.pickupTime);
     query.set('returnTime', searchParams.returnTime);
+    query.set('withDriver', searchParams.withDriver || 'false');
     query.set('radius', String(searchParams.radius || 10));
 
     if (searchParams.latitude) query.set('latitude', String(searchParams.latitude));
