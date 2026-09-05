@@ -59,6 +59,12 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
     return next(new AppError('الرجاء تحديد السيارة وتواريخ وأوقات الحجز', 400));
   }
 
+  const today = new Date();
+  const todayValue = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  if (start_date < todayValue || end_date < todayValue) {
+    return next(new AppError('لا يمكن إنشاء حجز بتاريخ قبل اليوم', 400));
+  }
+
   const pickupAt = new Date(`${start_date}T${pickup_time}:00`);
   const returnAt = new Date(`${end_date}T${return_time}:00`);
   if (Number.isNaN(pickupAt.getTime()) || Number.isNaN(returnAt.getTime()) || returnAt <= pickupAt) {

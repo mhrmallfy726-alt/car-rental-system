@@ -56,6 +56,12 @@ export default function SearchPage() {
       toast.error('يرجى إدخال تاريخ الاستلام وتاريخ الإرجاع');
       return;
     }
+    const now = new Date();
+    const todayValue = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (searchParams.startDate < todayValue || searchParams.endDate < todayValue) {
+      toast.error('لا يمكن البحث بتاريخ قبل اليوم');
+      return;
+    }
     if (!searchParams.pickupTime || !searchParams.returnTime) {
       toast.error('يرجى إدخال وقت الاستلام ووقت الإرجاع');
       return;

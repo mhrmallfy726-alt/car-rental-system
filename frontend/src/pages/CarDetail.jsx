@@ -22,6 +22,7 @@ import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
 import LocationPicker from '../components/LocationPicker';
+import UnifiedDatePicker, { parseDateValue } from '../components/UnifiedDatePicker';
 
 export default function CarDetail() {
   const { id } = useParams();
@@ -556,21 +557,7 @@ radius: 10,
                   تاريخ الاستلام
                 </span>
 
-                <input
-                  required
-                  type="date"
-                  min={new Date()
-                    .toISOString()
-                    .split('T')[0]}
-                  value={booking.start_date}
-                  onChange={(e) =>
-                    setBooking({
-                      ...booking,
-                      start_date: e.target.value,
-                    })
-                  }
-                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#c65345]/10"
-                />
+                <UnifiedDatePicker value={booking.start_date} onChange={(value) => setBooking({ ...booking, start_date: value, ...(booking.end_date && parseDateValue(booking.end_date) < parseDateValue(value) ? { end_date: '' } : {}) })} placeholder="اختر تاريخ الاستلام" />
               </label>
 
               <label className="flex flex-col gap-2 text-xs font-bold text-stone-700">
@@ -583,24 +570,7 @@ radius: 10,
                   تاريخ الإرجاع
                 </span>
 
-                <input
-                  required
-                  type="date"
-                  min={
-                    booking.start_date ||
-                    new Date()
-                      .toISOString()
-                      .split('T')[0]
-                  }
-                  value={booking.end_date}
-                  onChange={(e) =>
-                    setBooking({
-                      ...booking,
-                      end_date: e.target.value,
-                    })
-                  }
-                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#c65345]/10"
-                />
+                <UnifiedDatePicker value={booking.end_date} minDate={parseDateValue(booking.start_date)} onChange={(value) => setBooking({ ...booking, end_date: value })} placeholder="اختر تاريخ الإرجاع" />
               </label>
             </div>
 

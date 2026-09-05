@@ -10,6 +10,7 @@ import {
   Eye, Edit, Trash2, Star, Pin, ChevronDown, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
+import UnifiedDatePicker, { parseDateValue } from '../../components/UnifiedDatePicker';
 
 const STATUS_MAP = {
   pending: { label: 'قيد المراجعة', icon: Clock, color: '#ffc107' },
@@ -956,36 +957,12 @@ export default function Admins() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>تاريخ البداية</label>
-                    <input
-                      type="date"
-                      name="start_date"
-                      value={formData.start_date}
-                      onChange={handleFormChange}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #e9ecef',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem',
-                      }}
-                    />
+                    <UnifiedDatePicker value={formData.start_date} onChange={(value) => handleFormChange({ target: { name: 'start_date', value } })} placeholder="اختر تاريخ البداية" isClearable={false} />
                   </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>تاريخ النهاية</label>
-                    <input
-                      type="date"
-                      name="end_date"
-                      value={formData.end_date}
-                      onChange={handleFormChange}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '1px solid #e9ecef',
-                        borderRadius: '6px',
-                        fontSize: '0.85rem',
-                      }}
-                    />
+                    <UnifiedDatePicker value={formData.end_date} minDate={parseDateValue(formData.start_date)} onChange={(value) => handleFormChange({ target: { name: 'end_date', value } })} placeholder="اختر تاريخ النهاية" isClearable={false} />
                   </div>
                 </div>
 

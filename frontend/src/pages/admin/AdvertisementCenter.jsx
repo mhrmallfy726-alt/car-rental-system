@@ -3,6 +3,7 @@ import { BarChart3, CheckCircle2, Clock3, Eye, FilePlus2, LayoutDashboard, Megap
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../services/api';
+import UnifiedDatePicker from '../../components/UnifiedDatePicker';
 
 const navy = '#173a52';
 const gold = '#d4af37';
@@ -294,7 +295,7 @@ export default function AdvertisementCenter() {
 
 function StatusBadge({ status }) { const meta = statuses[status] || statuses.draft; return <span style={{ padding: '5px 8px', borderRadius: 999, color: meta[1], background: meta[2], fontSize: 11, fontWeight: 900 }}>{meta[0]}</span>; }
 function EmptyState({ text }) { return <div style={{ padding: '50px 16px', color: muted, textAlign: 'center', border: '1px dashed #dfe5e9', borderRadius: 14 }}>{text}</div>; }
-function Field({ label, name, type = 'text', value, onChange, options, placeholder, required, wide }) { return <label style={{ gridColumn: wide ? '1 / -1' : undefined, color: navy, fontSize: 13, fontWeight: 800 }}>{label}{type === 'select' ? <select name={name} value={value} onChange={onChange} style={inputStyle} required={required}>{options.map(([key, optionLabel]) => <option value={key} key={key}>{optionLabel}</option>)}</select> : type === 'textarea' ? <textarea name={name} value={value} onChange={onChange} style={{ ...inputStyle, minHeight: 95, resize: 'vertical' }} required={required} placeholder={placeholder} /> : <input name={name} value={value} onChange={onChange} type={type} style={inputStyle} required={required} placeholder={placeholder} />}</label>; }
+function Field({ label, name, type = 'text', value, onChange, options, placeholder, required, wide }) { return <label style={{ gridColumn: wide ? '1 / -1' : undefined, color: navy, fontSize: 13, fontWeight: 800 }}>{label}{type === 'select' ? <select name={name} value={value} onChange={onChange} style={inputStyle} required={required}>{options.map(([key, optionLabel]) => <option value={key} key={key}>{optionLabel}</option>)}</select> : type === 'date' ? <UnifiedDatePicker value={value} onChange={(nextValue) => onChange({ target: { name, value: nextValue } })} placeholder={`اختر ${label}`} isClearable={false} /> : type === 'textarea' ? <textarea name={name} value={value} onChange={onChange} style={{ ...inputStyle, minHeight: 95, resize: 'vertical' }} required={required} placeholder={placeholder} /> : <input name={name} value={value} onChange={onChange} type={type} style={inputStyle} required={required} placeholder={placeholder} />}</label>; }
 
 const inputStyle = { display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 8, padding: '11px 12px', border: '1px solid #dfe5e9', borderRadius: 10, background: '#fff', color: navy, font: 'inherit', outline: 'none' };
 const panelStyle = { padding: 24, borderRadius: 19, background: '#fff', border: '1px solid #e8edf0', boxShadow: '0 12px 30px rgba(23,58,82,0.05)' };
@@ -304,4 +305,3 @@ const subStyle = { margin: '6px 0 0', color: muted, fontSize: 13, lineHeight: 1.
 const linkButton = { border: 0, padding: 0, background: 'transparent', color: navy, fontWeight: 900, cursor: 'pointer' };
 const actionButton = { display: 'inline-flex', alignItems: 'center', gap: 6, border: 0, borderRadius: 10, padding: '9px 12px', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer' };
 const iconButton = { display: 'grid', placeItems: 'center', width: 34, height: 34, border: '1px solid #dfe5e9', borderRadius: 9, color: navy, background: '#fff', cursor: 'pointer' };
-

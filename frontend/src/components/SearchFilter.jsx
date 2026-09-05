@@ -1,5 +1,6 @@
 import LocationPicker from './LocationPicker';
 import LocationSearch from './LocationSearch';
+import UnifiedDatePicker, { parseDateValue } from './UnifiedDatePicker';
 import { MapPin, Search } from "lucide-react";
 
 
@@ -50,24 +51,12 @@ radius: 10,
 
   <div className="input-wrapper">
     <label>تاريخ الاستلام</label>
-    <input
-      type="date"
-      className="custom-input"
-      required
-      value={searchParams.startDate}
-      onChange={e => setSearchParams({ ...searchParams, startDate: e.target.value })}
-    />
+    <UnifiedDatePicker value={searchParams.startDate} onChange={(value) => setSearchParams({ ...searchParams, startDate: value, ...(searchParams.endDate && parseDateValue(searchParams.endDate) < parseDateValue(value) ? { endDate: '' } : {}) })} placeholder="اختر تاريخ الاستلام" />
   </div>
 
   <div className="input-wrapper">
     <label>تاريخ التسليم</label>
-    <input
-      type="date"
-      className="custom-input"
-      required
-      value={searchParams.endDate}
-      onChange={e => setSearchParams({ ...searchParams, endDate: e.target.value })}
-    />
+    <UnifiedDatePicker value={searchParams.endDate} minDate={parseDateValue(searchParams.startDate)} onChange={(value) => setSearchParams({ ...searchParams, endDate: value })} placeholder="اختر تاريخ التسليم" />
   </div>
 
   <div className="input-wrapper">
