@@ -13,7 +13,7 @@ ALTER TABLE locations
 UPDATE locations l
 SET supplier_id = x.supplier_id
 FROM (
-  SELECT location_id, MIN(supplier_id) AS supplier_id
+SELECT location_id, MIN(supplier_id::text)::uuid AS supplier_id
   FROM cars
   WHERE location_id IS NOT NULL
   GROUP BY location_id
