@@ -51,8 +51,21 @@ const sendOTP = async (req, res) => {
 };
 const resendOTP = async (req,res)=>{
     try {
-   
-    const {email}=req.body;
+    const { email, newEmail } = req.body;
+    const targetEmail = String(newEmail || email || '').trim().toLowerCase();
+    const sourceEmail = String(email || '').trim().toLowerCase();
+    if (!sourceEmail || !targetEmail) {
+      return res.status(400).json({ success: false, message: "البريد الإلكتروني مطلوب" });
+    }
+    if (newEmail && sourceEmail !== targetEmail) {
+      const duplicate = await query(
+        'SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+        [targetEmail]
+      );
+      if (duplicate.rows.length > 0) {
+        return res.status(409).json({ success: false, message: "البريد الإلكتروني مستخدم مسبقاً" });
+      }
+    }
    
     const newOTP = generateOTP();
    
@@ -60,17 +73,21 @@ const resendOTP = async (req,res)=>{
     `UPDATE email_verifications 
     SET otp=$1,
     attempts=0,
-    last_sent_at=NOW()
-    WHERE email=$2`,
+    last_sent_at=NOW(),
+    email=$2,
+    user_data = CASE WHEN $3 <> email THEN jsonb_set(user_data::jsonb, '{email}', to_jsonb($2::text), true) ELSE user_data::jsonb END
+    WHERE email=$4`,
     [
      newOTP,
-     email
+     targetEmail,
+     targetEmail,
+     sourceEmail
     ]
     );
    
    
     await sendEmail(
-    email,
+    targetEmail,
     "رمز التحقق الجديد",
     `<h2>${newOTP}</h2>`
     );
@@ -78,7 +95,8 @@ const resendOTP = async (req,res)=>{
    
     res.json({
      success:true,
-     message:"تم إرسال رمز جديد"
+     message:"تم إرسال رمز جديد",
+     email: targetEmail
     });
    
    

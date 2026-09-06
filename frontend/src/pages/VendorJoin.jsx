@@ -65,6 +65,9 @@ export default function Join() {
   const [verificationStep, setVerificationStep] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [emailDraft, setEmailDraft] = useState('');
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   // Progress calculation
   const progressPercentage = Math.round((currentStep / 3) * 100);
@@ -396,6 +399,52 @@ export default function Join() {
     }
   };
 
+  const handleResendOTP = async () => {
+    setResendLoading(true);
+    try {
+      const response = await api.post('/auth/resend-otp', { email: verificationEmail });
+      if (response.data.success) {
+        setOtp('');
+        toast.success('تم إرسال رمز تحقق جديد');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر إعادة إرسال الرمز');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleChangeVerificationEmail = async () => {
+    const nextEmail = emailDraft.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+      toast.error('يرجى إدخال بريد إلكتروني صحيح');
+      return;
+    }
+    if (nextEmail === verificationEmail.toLowerCase()) {
+      setIsChangingEmail(false);
+      return;
+    }
+    setResendLoading(true);
+    try {
+      const response = await api.post('/auth/resend-otp', {
+        email: verificationEmail,
+        newEmail: nextEmail
+      });
+      if (response.data.success) {
+        setVerificationEmail(nextEmail);
+        setFormData((prev) => ({ ...prev, ownerEmail: nextEmail }));
+        setEmailDraft('');
+        setOtp('');
+        setIsChangingEmail(false);
+        toast.success('تم تغيير البريد وإرسال رمز جديد');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تغيير البريد الإلكتروني');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -484,6 +533,32 @@ textTransform: "uppercase",
                 placeholder="000000" dir="ltr"
                 style={{ width: '100%', maxWidth: '260px', padding: '14px', textAlign: 'center', letterSpacing: '8px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '1.2rem' }}
               />
+              {isChangingEmail ? (
+                <div style={{ margin: '18px auto 0', maxWidth: '360px' }}>
+                  <input
+                    type="email" value={emailDraft} onChange={(e) => setEmailDraft(e.target.value)}
+                    placeholder="البريد الإلكتروني الجديد" dir="ltr"
+                    style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px' }}
+                  />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <button type="button" onClick={handleChangeVerificationEmail} disabled={resendLoading} style={{ flex: 1, padding: '10px', background: '#0F766E', color: 'white', border: 'none', borderRadius: '8px', cursor: resendLoading ? 'not-allowed' : 'pointer' }}>
+                      {resendLoading ? 'جاري الإرسال...' : 'حفظ وإرسال الرمز'}
+                    </button>
+                    <button type="button" onClick={() => setIsChangingEmail(false)} style={{ padding: '10px 14px', background: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                      إلغاء
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '14px', fontSize: '0.85rem' }}>
+                  <button type="button" onClick={handleResendOTP} disabled={resendLoading} style={{ background: 'none', border: 'none', color: '#0F766E', cursor: resendLoading ? 'not-allowed' : 'pointer' }}>
+                    {resendLoading ? 'جاري الإرسال...' : 'إعادة إرسال الرمز'}
+                  </button>
+                  <button type="button" onClick={() => { setEmailDraft(verificationEmail); setIsChangingEmail(true); }} style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}>
+                    تغيير البريد
+                  </button>
+                </div>
+              )}
               <button type="submit" disabled={loading} style={{ display: 'block', width: '100%', maxWidth: '260px', margin: '24px auto 0', padding: '12px 24px', background: '#0F766E', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
                 {loading ? 'جاري التحقق...' : 'تأكيد الرمز'}
               </button>
