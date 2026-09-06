@@ -415,6 +415,7 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { sendOTP } = require("./verificationController");
 const crypto = require('crypto');
 const { sendEmail, generateOTP } = require('../services/emailService');
+const { normalizePhoneNumber } = require('../utils/phone');
 //ايميل
 // ========================
 // @desc    Register a new user
@@ -430,15 +431,37 @@ const register = asyncHandler(async (req, res, next) => {
   if (!name || !email || !password) {
     return next(new AppError('الرجاء إدخال الاسم، البريد الإلكتروني، وكلمة المرور', 400));
   }
+<<<<<<< ours
+=======
+
+  const normalizedPhone = normalizePhoneNumber(phone);
+  if (!normalizedPhone) {
+    return next(new AppError('الرجاء إدخال رقم هاتف صحيح', 400));
+  }
+>>>>>>> theirs
 
   const existingUser = await query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
   if (existingUser.rows.length > 0) {
     return next(new AppError('البريد الإلكتروني مسجل مسبقاً', 400));
   }
+<<<<<<< ours
 
   const userData = {
     name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
     phone, company_name, city, address, latitude, longitude,
+=======
+  const existingPhone = await query(
+    'SELECT id FROM users WHERE phone_normalized = $1 LIMIT 1',
+    [normalizedPhone]
+  );
+  if (existingPhone.rows.length > 0) {
+    return next(new AppError('رقم الهاتف مستخدم مسبقاً', 409));
+  }
+
+  const userData = {
+    name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
+    phone: normalizedPhone, company_name, city, address, latitude, longitude,
+>>>>>>> theirs
     late_fee_price_per_hour, grace_period_hours,
     avatar: req.files?.avatar?.[0]?.filename || null,
     commercial_register: req.files?.commercial_register?.[0]?.filename || null,
@@ -625,11 +648,24 @@ const uploadDocs = asyncHandler(async (req, res, next) => {
 const updateProfile = asyncHandler(async (req, res, next) => {
    const { name, phone, address, brand_description, iban, bank_name, auto_accept_bookings } = req.body;
   const userId = req.user.id;
-
+  const normalizedPhone = phone === undefined ? null : normalizePhoneNumber(phone);
+  if (phone !== undefined && !normalizedPhone) {
+    return next(new AppError('الرجاء إدخال رقم هاتف صحيح', 400));
+  }
+  if (normalizedPhone) {
+    const duplicatePhone = await query(
+      'SELECT id FROM users WHERE phone_normalized = $1 AND id <> $2 LIMIT 1',
+      [normalizedPhone, userId]
+    );
+    if (duplicatePhone.rows.length > 0) {
+      return next(new AppError('رقم الهاتف مستخدم مسبقاً', 409));
+    }
+  }
   const result = await query(
     `UPDATE users SET 
       name = COALESCE(NULLIF($1,''), name), 
       phone = COALESCE(NULLIF($2,''), phone),
+      phone_normalized = COALESCE(NULLIF($9,''), phone_normalized),
       address = COALESCE(NULLIF($3,''), address),
       brand_description = COALESCE(NULLIF($4,''), brand_description),
       iban = COALESCE(NULLIF($5,''), iban),
@@ -637,7 +673,7 @@ const updateProfile = asyncHandler(async (req, res, next) => {
       auto_accept_bookings = COALESCE($7, auto_accept_bookings)
      WHERE id = $8 
      RETURNING id, name, email, role, phone, avatar, brand_logo, brand_description, address, iban, bank_name, auto_accept_bookings, is_verified`,
-    [name, phone, address, brand_description, iban, bank_name, auto_accept_bookings, userId]
+    [name, phone, address, brand_description, iban, bank_name, auto_accept_bookings, userId, normalizedPhone]
   );
 
   if (result.rows.length === 0) return next(new AppError('المستخدم غير موجود', 404));
