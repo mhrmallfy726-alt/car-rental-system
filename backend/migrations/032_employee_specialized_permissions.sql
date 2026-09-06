@@ -1,29 +1,28 @@
 BEGIN;
 
--- Business job roles: technical role stays employee for all staff accounts.
+-- Keep the technical account role stable for every employee.
 UPDATE employees
 SET role = 'employee'
 WHERE role IS DISTINCT FROM 'employee';
 
--- Remove the previous role constraint before temporarily using specialized values.
+-- Remove any previous version of the job-role constraint before normalization.
 ALTER TABLE employees DROP CONSTRAINT IF EXISTS employees_job_role_check;
 
--- Normalize known legacy values.
+-- Normalize all legacy and specialized values to the application's final values.
 UPDATE employees
 SET job_role = CASE
-  WHEN job_role = 'team_manager' THEN 'team_manager'
-  WHEN job_role = 'advertising_employee' THEN 'advertising_employee'
-  WHEN job_role = 'reservations_employee' THEN 'reservations_employee'
-  WHEN job_role = 'finance_employee' THEN 'finance_employee'
-  WHEN job_role = 'fleet_employee' THEN 'fleet_employee'
-  ELSE 'fleet_employee'
+  WHEN job_role IN ('team_manager', 'manager') THEN 'team_manager'
+  WHEN job_role IN ('advertisements', 'advertising_employee') THEN 'advertisements'
+  WHEN job_role IN ('reservations', 'reservations_employee') THEN 'reservations'
+  WHEN job_role IN ('finance', 'finance_employee') THEN 'finance'
+  WHEN job_role IN ('fleet', 'fleet_employee') THEN 'fleet'
+  ELSE 'fleet'
 END;
 
--- Make the specialization explicit and safe.
 ALTER TABLE employees ADD CONSTRAINT employees_job_role_check
-  CHECK (job_role IN ('team_manager','advertising_employee','reservations_employee','finance_employee','fleet_employee'));
+  CHECK (job_role IN ('team_manager','advertisements','reservations','finance','fleet'));
 
--- Reset default access for specialized staff according to their business role.
+-- Reset permissions according to each employee's final business role.
 DELETE FROM employees_permissions ep
 USING employees e
 WHERE e.id = ep.employee_id;
@@ -39,13 +38,13 @@ JOIN permissions p ON p.name = ANY(
       'view_advertisements','manage_advertisements','view_ad_performance',
       'view_finance','manage_finance','manage_team','view_team_performance'
     ]
-    WHEN 'advertising_employee' THEN ARRAY[
+    WHEN 'advertisements' THEN ARRAY[
       'view_advertisements','manage_advertisements','view_ad_performance'
     ]
-    WHEN 'reservations_employee' THEN ARRAY[
+    WHEN 'reservations' THEN ARRAY[
       'view_reservations','manage_reservations','view_customers'
     ]
-    WHEN 'finance_employee' THEN ARRAY[
+    WHEN 'finance' THEN ARRAY[
       'view_finance','manage_finance'
     ]
     ELSE ARRAY[
