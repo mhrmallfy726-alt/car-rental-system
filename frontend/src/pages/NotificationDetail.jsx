@@ -16,6 +16,15 @@ const formatDate = (value) => {
 };
 
 const getReferencePath = (notification, user) => {
+  const actionUrl = typeof notification?.action_url === 'string'
+    ? notification.action_url.trim()
+    : '';
+
+  // لا نسمح إلا بروابط داخلية، ونمنع فتح مسارات الإدارة لغير المدير.
+  if (actionUrl.startsWith('/') && (!actionUrl.startsWith('/admin/') || user?.role === 'admin')) {
+    return actionUrl;
+  }
+
   if (!notification?.reference_id) return null;
 
   switch (notification.reference_type || notification.type) {
@@ -32,7 +41,7 @@ const getReferencePath = (notification, user) => {
     case 'complaint':
       return `/complaints/${notification.reference_id}`;
     case 'user':
-      return `/profile`;
+      return user?.role === 'admin' ? '/admin/supplier-requests' : '/profile';
     default:
       return null;
   }

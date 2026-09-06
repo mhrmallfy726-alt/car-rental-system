@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-import { LogOut, User, Menu, Car, X, LayoutDashboard, Search, Heart, Settings, Bell, CheckCircle } from 'lucide-react';
+import { LogOut, Menu, X, LayoutDashboard, Settings, Bell, CheckCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { notificationsAPI } from '../services/api';
 import SOCKET_URL from '../utils/socket';
@@ -39,6 +39,7 @@ const roleNavItems = {
     { to: '/admin/dashboard', label: 'لوحة الإدارة' },
     { to: '/admin/users', label: 'المستخدمون' },
     { to: '/admin/cars', label: 'السيارات' },
+    { to: '/admin/supplier-requests', label: 'اعتماد الموردين' },
     { to: '/admin/advertisement-center', label: 'الإعلانات' },
     { to: '/admin/finance', label: 'المالية' },
     { to: '/admin/complaints', label: 'الشكاوى' },

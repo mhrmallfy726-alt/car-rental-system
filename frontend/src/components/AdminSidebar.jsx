@@ -5,7 +5,7 @@ const adminLinks = [
   { to: '/admin/dashboard', label: 'لوحة الإحصائيات', icon: BarChart3 },
   { to: '/admin/users', label: 'المستخدمون', icon: Users },
   { to: '/admin/cars', label: 'السيارات', icon: Car },
-  { to: '/admin/supplier-requests', label: 'طلبات الموردين', icon: FileText },
+  { to: '/admin/supplier-requests', label: 'اعتماد الموردين', icon: FileText },
   { to: '/admin/advertisement-center', label: 'الإعلانات', icon: Megaphone },
   { to: '/admin/finance', label: 'الإدارة المالية', icon: WalletCards },
   { to: '/admin/complaints', label: 'الشكاوى', icon: MessageSquare },
