@@ -423,139 +423,37 @@ const { sendEmail, generateOTP } = require('../services/emailService');
 // ========================
 const register = asyncHandler(async (req, res, next) => {
   const {
-    name,
-    email,
-    password,
-    role,
-    phone,
-    company_name,
-    city,
-    address,
-    late_fee_price_per_hour,
-    grace_period_hours
+    name, email, password, role, phone, company_name, city, address,
+    late_fee_price_per_hour, grace_period_hours, latitude, longitude
   } = req.body;
-  
-  // Basic Validation
+
   if (!name || !email || !password) {
     return next(new AppError('الرجاء إدخال الاسم، البريد الإلكتروني، وكلمة المرور', 400));
   }
-  const avatar =
-  req.files?.avatar?.[0]?.filename || null;
 
-const commercialRegister =
-  req.files?.commercial_register?.[0]?.filename || null;
-
-const ownerId =
-  req.files?.owner_id?.[0]?.filename || null;
-  await sendOTP(
-    {
-      body: {
-        email,
-        userData: {
-          name,
-          email,
-          password,
-          role,
-          phone,
-          company_name,
-          city,
-          address,
-          late_fee_price_per_hour,
-          grace_period_hours,
-          avatar,
-         commercialRegister,
-         ownerId
-        }
-      }
-    },
-    {
-      status: () => ({ json: () => {} }),
-      json: () => {}
-    }
-  );
-  
-  return res.status(200).json({
-    success: true,
-    message: "تم إرسال رمز التحقق إلى البريد الإلكتروني"
-  });
-  // Check if user exists
-  const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
+  const existingUser = await query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
   if (existingUser.rows.length > 0) {
     return next(new AppError('البريد الإلكتروني مسجل مسبقاً', 400));
   }
 
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+  const userData = {
+    name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
+    phone, company_name, city, address, latitude, longitude,
+    late_fee_price_per_hour, grace_period_hours,
+    avatar: req.files?.avatar?.[0]?.filename || null,
+    commercial_register: req.files?.commercial_register?.[0]?.filename || null,
+    owner_id: req.files?.owner_id?.[0]?.filename || null
+  };
 
-  // Default role is customer unless specified
-  const userRole = role === 'supplier' ? 'supplier' : 'customer';
-  
+  await sendOTP(
+    { body: { email: userData.email, userData } },
+    { status: () => ({ json: () => {} }), json: () => {} }
+  );
 
-  // Insert user
-  const result = await query(
-    `
-    INSERT INTO users (
-        name,
-        email,
-        password,
-        role,
-        phone,
-        company_name,
-        city,
-        address,
-        avatar,
-        commercial_register,
-        owner_id,
-        late_fee_price_per_hour,
-        grace_period_hours
-    )
-    VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
-    )
-    RETURNING *
-    `,
-    [
-        name,
-        email,
-        hashedPassword,
-        userRole,
-        phone,
-        company_name,
-        city,
-        address,
-        avatar,
-        commercialRegister,
-        ownerId,
-        late_fee_price_per_hour,
-        grace_period_hours
-    ]
-    );
-  const user = result.rows[0];
-  if (req.files) {
-    console.log(req.files);
-  }
-
-  // إشعار للإدارة عند تسجيل مورد جديد
-  if (userRole === 'supplier') {
-    try {
-      const admins = await query("SELECT id FROM users WHERE role = 'admin'");
-      const io = req.app.get('io');
-      
-      for (const admin of admins.rows) {
-        const notif = await query(
-          `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
-           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-          [admin.id, 'مورد جديد', `سجل المورد ${name} للتو في النظام. يرجى مراجعة حسابه وتوثيقه.`, 'system', user.id, 'user', '/admin/supplier-requests']
-        );
-        if (io) io.to(`user_${admin.id}`).emit('new_notification', notif.rows[0]);
-      }
-    } catch (err) {
-      console.error('Error sending admin notification:', err);
-    }
-  }
-
-  sendTokenResponse(user, 201, res);
+  return res.status(200).json({
+    success: true,
+    message: 'تم إرسال رمز التحقق إلى البريد الإلكتروني'
+  });
 });
 
 // ========================

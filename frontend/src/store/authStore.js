@@ -81,10 +81,14 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         try {
           const res = await authAPI.register(data);
-          const { token, user } = res.data;
-          localStorage.setItem('token', token);
-          set({ user, token, isLoading: false });
-          return { success: true, user };
+          const { token, user, message } = res.data;
+          if (token && user) {
+            localStorage.setItem('token', token);
+            set({ user, token, isLoading: false });
+          } else {
+            set({ isLoading: false });
+          }
+          return { success: true, user, message };
         } catch (err) {
           const msg = err.response?.data?.message || 'فشل إنشاء الحساب';
           set({ error: msg, isLoading: false });

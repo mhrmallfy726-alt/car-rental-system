@@ -95,31 +95,22 @@ const resendOTP = async (req,res)=>{
    };
 const verifyOTP = async (req, res) => {
     const { email, otp } = req.body;
-    const verification = await query(
-        "SELECT * FROM email_verifications WHERE email=$1",
-        [email]
-      );
-      
-      if (verification.rows.length === 0) {
-        return res.status(400).json({
-          success:false,
-          message:"لا يوجد طلب تحقق"
-        });
-      }
-      
-      if (verification.rows[0].attempts >= 3) {
-        return res.status(400).json({
-          success:false,
-          message:"تم تجاوز عدد المحاولات، أعد إرسال رمز جديد"
-        });
-      }
-      await query(
-        "UPDATE email_verifications SET attempts = attempts + 1 WHERE email=$1",
-        [email]
-      );
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "البريد ورمز التحقق مطلوبان" });
+    }
     try {
-      const { email, otp } = req.body;
-  
+      const pendingVerification = await query(
+        "SELECT attempts FROM email_verifications WHERE email=$1 ORDER BY created_at DESC LIMIT 1",
+        [email]
+      );
+      if (pendingVerification.rows.length === 0) {
+        return res.status(400).json({ success: false, message: "لا يوجد طلب تحقق" });
+      }
+      if (pendingVerification.rows[0].attempts >= 3) {
+        return res.status(400).json({ success: false, message: "تم تجاوز عدد المحاولات، أعد إرسال رمز جديد" });
+      }
+      await query("UPDATE email_verifications SET attempts = attempts + 1 WHERE email=$1", [email]);
+
       const result = await pool.query(
         `
         SELECT * FROM email_verifications
@@ -139,7 +130,9 @@ const verifyOTP = async (req, res) => {
       }
   
       const verification = result.rows[0];
-      const userData = verification.user_data;
+      const userData = typeof verification.user_data === 'string'
+        ? JSON.parse(verification.user_data)
+        : verification.user_data;
       if (new Date() > new Date(verification.expires_at)) {
         return res.status(400).json({
           success: false,

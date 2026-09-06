@@ -62,6 +62,9 @@ export default function Join() {
     ownerId: 0
   });
   const [currentStep, setCurrentStep] = useState(1); // 1: Basic, 2: Rental Settings, 3: Documents
+  const [verificationStep, setVerificationStep] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [otp, setOtp] = useState('');
 
   // Progress calculation
   const progressPercentage = Math.round((currentStep / 3) * 100);
@@ -346,28 +349,48 @@ export default function Join() {
       // Add rental settings
       formDataToSend.append('late_fee_price_per_hour', formData.lateFeePricePerHour);
       formDataToSend.append('grace_period_hours', formData.gracePeriodHours);
+      formDataToSend.append('latitude', formData.latitude || '');
+      formDataToSend.append('longitude', formData.longitude || '');
       
       // Add files
       if (files.logo) formDataToSend.append('avatar', files.logo);
       if (files.commercial) formDataToSend.append('commercial_register', files.commercial);
       if (files.ownerId) formDataToSend.append('owner_id', files.ownerId);
 
-      // TODO: Replace with actual API call
-      // const response = await authAPI.registerVendor(formDataToSend);
-      
-      // For now, simulate API call
-      const response = await api.post('/auth/register', formDataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      
-      toast.success("تم إنشاء حساب المورد بنجاح");
-      
-      navigate("/supplier/dashboard");
+      const response = await api.post('/auth/register', formDataToSend);
+
+      if (response.data.success) {
+        setVerificationEmail(formData.ownerEmail);
+        setVerificationStep(true);
+        toast.success('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || 'حدث خطأ أثناء تقديم الطلب');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    if (!otp.trim()) {
+      toast.error('أدخل رمز التحقق');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await api.post('/auth/verify-otp', {
+        email: verificationEmail,
+        otp: otp.trim()
+      });
+      if (response.data.success) {
+        toast.success('تم إرسال طلبك إلى الإدارة للمراجعة');
+        setVerificationStep(false);
+        setCurrentStep(1);
+        navigate('/supplier/login', { state: { message: 'تم إرسال طلبك للمراجعة. يمكنك تسجيل الدخول بعد اعتماد الإدارة.' } });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'رمز التحقق غير صحيح');
     } finally {
       setLoading(false);
     }
@@ -449,8 +472,24 @@ textTransform: "uppercase",
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
+        <form onSubmit={verificationStep ? handleVerifyOTP : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {verificationStep ? (
+            <div style={{ textAlign: 'center', padding: '32px 12px' }}>
+              <Mail size={48} style={{ color: '#0F766E', marginBottom: '16px' }} />
+              <h2 style={{ color: '#1a1a1a', marginBottom: '10px' }}>تحقق من بريدك الإلكتروني</h2>
+              <p style={{ color: '#6c757d', marginBottom: '24px' }}>أدخل الرمز المرسل إلى {verificationEmail}</p>
+              <input
+                type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000" dir="ltr"
+                style={{ width: '100%', maxWidth: '260px', padding: '14px', textAlign: 'center', letterSpacing: '8px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '1.2rem' }}
+              />
+              <button type="submit" disabled={loading} style={{ display: 'block', width: '100%', maxWidth: '260px', margin: '24px auto 0', padding: '12px 24px', background: '#0F766E', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>
+                {loading ? 'جاري التحقق...' : 'تأكيد الرمز'}
+              </button>
+            </div>
+          ) : (
+            <>
           {/* STEP 1: Basic Information */}
           {currentStep === 1 && (
             <div style={{ animation: 'slideIn 0.3s ease-out' }}>
@@ -470,7 +509,7 @@ textTransform: "uppercase",
                     <input
                       type="text"
                       name="ownerName"
-                      placeholder="أحمد محمد"
+                      placeholder="أسم المالك"
                       value={formData.ownerName}
                       onChange={handleChange}
                       style={{
@@ -1286,6 +1325,8 @@ textTransform: "uppercase",
               </button>
             )}
           </div>
+            </>
+          )}
         </form>
       </div>
 

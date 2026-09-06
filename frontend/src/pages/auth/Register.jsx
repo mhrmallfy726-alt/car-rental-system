@@ -332,10 +332,10 @@ export default function Register() {
       const data = response.data;
   
       if (data.success) {
-        toast.success("تم إنشاء الحساب بنجاح ✅");
+        toast.success(data.message || "تم التحقق من البريد الإلكتروني ✅");
   
         if (data.user?.role === "supplier") {
-          navigate("/supplier/dashboard");
+          navigate("/supplier/login", { state: { message: "تم إرسال طلبك للمراجعة. يمكنك تسجيل الدخول بعد اعتماد الإدارة." } });
         } else {
           navigate("/");
         }

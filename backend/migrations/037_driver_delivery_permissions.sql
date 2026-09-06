@@ -25,3 +25,11 @@ WHERE e.job_role = 'team_manager'
 ON CONFLICT (employee_id, permission_id) DO NOTHING;
 
 COMMIT;
+
+ALTER TABLE reservations
+ADD COLUMN IF NOT EXISTS with_driver BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE reservations
+ADD COLUMN IF NOT EXISTS driver_employee_id UUID
+REFERENCES employees(id)
+ON DELETE SET NULL;
