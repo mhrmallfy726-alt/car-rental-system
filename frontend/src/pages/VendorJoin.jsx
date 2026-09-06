@@ -46,8 +46,10 @@ export default function Join() {
     logoPreview: null,
     commercial: null,
     commercialName: '',
+    commercialPreview: null,
     ownerId: null,
-    ownerIdName: ''
+    ownerIdName: '',
+    ownerIdPreview: null
   });
 
   // UI State
@@ -88,7 +90,9 @@ export default function Join() {
     if (!file) return;
 
     // Validation
-    if (!file.type.startsWith('image/')) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension);
+    if (!isImage) {
       toast.error('يرجى اختيار صورة فقط');
       return;
     }
@@ -120,6 +124,7 @@ export default function Join() {
       }));
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // Handle commercial register upload
@@ -128,7 +133,9 @@ export default function Join() {
     if (!file) return;
 
     // Validation
-    if (file.type !== 'application/pdf' && !file.type.startsWith('image/')) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension);
+    if (file.type !== 'application/pdf' && !isImage && extension !== 'pdf') {
       toast.error('يرجى اختيار ملف PDF أو صورة');
       return;
     }
@@ -150,11 +157,19 @@ export default function Join() {
       });
     }, 200);
 
-    setFiles(prev => ({
-      ...prev,
-      commercial: file,
-      commercialName: file.name
-    }));
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (event) => setFiles(prev => ({
+        ...prev,
+        commercial: file,
+        commercialName: file.name,
+        commercialPreview: event.target.result
+      }));
+      reader.readAsDataURL(file);
+    } else {
+      setFiles(prev => ({ ...prev, commercial: file, commercialName: file.name, commercialPreview: null }));
+    }
+    e.target.value = '';
   };
 
   // Handle owner ID upload
@@ -163,7 +178,9 @@ export default function Join() {
     if (!file) return;
 
     // Validation
-    if (!file.type.startsWith('image/')) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension);
+    if (!isImage) {
       toast.error('يرجى اختيار صورة فقط');
       return;
     }
@@ -185,11 +202,15 @@ export default function Join() {
       });
     }, 200);
 
-    setFiles(prev => ({
+    const reader = new FileReader();
+    reader.onload = (event) => setFiles(prev => ({
       ...prev,
       ownerId: file,
-      ownerIdName: file.name
+      ownerIdName: file.name,
+      ownerIdPreview: event.target.result
     }));
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   // Handle drag and drop
@@ -983,7 +1004,7 @@ textTransform: "uppercase",
                 <input
                   ref={logoInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif,.jfif"
                   onChange={handleLogoChange}
                   style={{ display: 'none' }}
                 />
@@ -1021,7 +1042,9 @@ textTransform: "uppercase",
                 >
                   {files.commercial ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <FileCheck size={32} style={{ color: '#10B981' }} />
+                      {files.commercialPreview ? (
+                        <img src={files.commercialPreview} alt="معاينة السجل التجاري" style={{ maxWidth: '180px', maxHeight: '90px', objectFit: 'contain', borderRadius: '8px' }} />
+                      ) : <FileCheck size={32} style={{ color: '#10B981' }} />}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
                         <CheckCircle size={18} />
                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع الملف</span>
@@ -1042,7 +1065,7 @@ textTransform: "uppercase",
                         اسحب الملف أو اضغط للاختيار
                       </p>
                       <p style={{ fontSize: '0.75rem', color: '#6c757d', margin: 0 }}>
-                        PDF فقط - حتى 5MB
+                        PDF أو JPG أو PNG - حتى 5MB
                       </p>
                     </div>
                   )}
@@ -1050,7 +1073,7 @@ textTransform: "uppercase",
                 <input
                   ref={commercialInputRef}
                   type="file"
-                  accept=".pdf,image/*"
+                  accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif,.jfif"
                   onChange={handleCommercialChange}
                   style={{ display: 'none' }}
                 />
@@ -1088,7 +1111,9 @@ textTransform: "uppercase",
                 >
                   {files.ownerId ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <FileCheck size={32} style={{ color: '#10B981' }} />
+                      {files.ownerIdPreview ? (
+                        <img src={files.ownerIdPreview} alt="معاينة هوية المالك" style={{ maxWidth: '180px', maxHeight: '100px', objectFit: 'contain', borderRadius: '8px' }} />
+                      ) : <FileCheck size={32} style={{ color: '#10B981' }} />}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
                         <CheckCircle size={18} />
                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع الصورة</span>
@@ -1117,7 +1142,7 @@ textTransform: "uppercase",
                 <input
                   ref={idInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif,.jfif"
                   onChange={handleIdChange}
                   style={{ display: 'none' }}
                 />

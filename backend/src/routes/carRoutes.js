@@ -14,8 +14,25 @@ router.get('/', asyncHandler(async (req, res) => {
   const {
     category, location, min_price, max_price,
     transmission, fuel_type, seats, status,
-    search, sort_by, page = 1, limit = 12
+    search, sort_by, page = 1, limit = 12,
+    startDate, endDate, start_date, end_date,
+    pickup_time, return_time, pickupTime, returnTime
   } = req.query;
+
+  const requestedStart = startDate || start_date;
+  const requestedEnd = endDate || end_date;
+  const requestedPickupTime = pickup_time || pickupTime || '00:00';
+  const requestedReturnTime = return_time || returnTime || '23:59';
+  if ((requestedStart && !requestedEnd) || (!requestedStart && requestedEnd)) {
+    return res.status(400).json({ success: false, message: 'يجب إدخال تاريخ الاستلام والإرجاع معًا' });
+  }
+  if (requestedStart && requestedEnd) {
+    const pickupAt = new Date(`${requestedStart}T${requestedPickupTime}:00`);
+    const returnAt = new Date(`${requestedEnd}T${requestedReturnTime}:00`);
+    if (Number.isNaN(pickupAt.getTime()) || Number.isNaN(returnAt.getTime()) || returnAt <= pickupAt) {
+      return res.status(400).json({ success: false, message: 'تاريخ ووقت الإرجاع يجب أن يكونا بعد الاستلام' });
+    }
+  }
 
   let sql = `
     SELECT c.*, 
@@ -33,13 +50,30 @@ router.get('/', asyncHandler(async (req, res) => {
   let paramIndex = 1;
 
   if (category) { sql += ` AND c.category_id = $${paramIndex++}`; params.push(category); }
-  if (location) { sql += ` AND c.location_id = $${paramIndex++}`; params.push(location); }
+  if (location) {
+    sql += ` AND (c.location_id::text = $${paramIndex} OR loc.city ILIKE $${paramIndex} OR COALESCE(loc.address, '') ILIKE $${paramIndex})`;
+    params.push(location.trim().startsWith('%') ? location.trim() : `%${location.trim()}%`);
+    paramIndex++;
+  }
   if (min_price) { sql += ` AND c.price_per_day >= $${paramIndex++}`; params.push(min_price); }
   if (max_price) { sql += ` AND c.price_per_day <= $${paramIndex++}`; params.push(max_price); }
   if (transmission) { sql += ` AND c.transmission = $${paramIndex++}`; params.push(transmission); }
   if (fuel_type) { sql += ` AND c.fuel_type = $${paramIndex++}`; params.push(fuel_type); }
   if (seats) { sql += ` AND c.seats >= $${paramIndex++}`; params.push(seats); }
   if (search) { sql += ` AND (c.make ILIKE $${paramIndex} OR c.model ILIKE $${paramIndex})`; params.push(`%${search}%`); paramIndex++; }
+
+  // لا تعرض السيارة إذا كان لها حجز مؤكد يتداخل مع الفترة المطلوبة.
+  if (requestedStart && requestedEnd) {
+    sql += ` AND NOT EXISTS (
+      SELECT 1 FROM reservations r
+      WHERE r.car_id = c.id
+        AND r.status IN ('pending','approved','awaiting_pickup','active','returned')
+        AND COALESCE(r.pickup_at, r.start_date::timestamp) < $${paramIndex}::timestamp
+        AND COALESCE(r.return_at, r.end_date::timestamp + interval '23 hours 59 minutes') > $${paramIndex + 1}::timestamp
+    )`;
+    params.push(`${requestedEnd}T${requestedReturnTime}:00`, `${requestedStart}T${requestedPickupTime}:00`);
+    paramIndex += 2;
+  }
 
   // Sorting
   const sortOptions = {
@@ -50,6 +84,9 @@ router.get('/', asyncHandler(async (req, res) => {
   };
   sql += ` ORDER BY ${sortOptions[sort_by] || 'c.created_at DESC'}`;
 
+  const countSql = sql;
+  const countParams = [...params];
+
   // Pagination
   const offset = (page - 1) * limit;
   sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
@@ -57,9 +94,8 @@ router.get('/', asyncHandler(async (req, res) => {
 
   const result = await query(sql, params);
 
-  // Count total
-  let countSql = `SELECT COUNT(*) FROM cars c WHERE c.is_approved = true AND c.status = 'available'`;
-  const countResult = await query(countSql);
+  // Count total باستخدام نفس فلاتر الموقع والسعر والتاريخ.
+  const countResult = await query(`SELECT COUNT(*) FROM (${countSql}) filtered_cars`, countParams);
   const total = parseInt(countResult.rows[0].count);
 
   res.json({

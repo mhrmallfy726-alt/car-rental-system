@@ -544,9 +544,9 @@ const ownerId =
       
       for (const admin of admins.rows) {
         const notif = await query(
-          `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type,verification_status,rejection_reason) 
-           VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-          [admin.id, 'مورد جديد', `سجل المورد ${name} للتو في النظام. يرجى مراجعة حسابه وتوثيقه.`, 'system', user.id, 'user']
+          `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+          [admin.id, 'مورد جديد', `سجل المورد ${name} للتو في النظام. يرجى مراجعة حسابه وتوثيقه.`, 'system', user.id, 'user', '/admin/supplier-requests']
         );
         if (io) io.to(`user_${admin.id}`).emit('new_notification', notif.rows[0]);
       }

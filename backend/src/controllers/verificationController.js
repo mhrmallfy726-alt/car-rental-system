@@ -170,10 +170,11 @@ INSERT INTO users (
  commercial_register,
  owner_id,
  late_fee_price_per_hour,
- grace_period_hours
+ grace_period_hours,
+ verification_status
 )
 VALUES (
- $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+ $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14
 )
 RETURNING *
 `,
@@ -187,12 +188,32 @@ RETURNING *
  userData.city,
  userData.address,
  userData.avatar,
- userData.commercial_register,
- userData.owner_id,
+ userData.commercial_register || userData.commercialRegister,
+ userData.owner_id || userData.ownerId,
  userData.late_fee_price_per_hour,
- userData.grace_period_hours
+ userData.grace_period_hours,
+ userRole === 'supplier' ? 'pending' : 'approved'
 ]
 );
+
+// لا يحصل المورد على صلاحية الدخول قبل مراجعة الأدمن، ويُنشأ طلب ظاهر في لوحة الإدارة.
+if (userRole === 'supplier') {
+  try {
+    const admins = await query("SELECT id FROM users WHERE role = 'admin' AND is_active = TRUE");
+    const io = req.app.get('io');
+    for (const admin of admins.rows) {
+      const notification = await query(
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+         VALUES ($1, $2, $3, 'system', $4, 'user', '/admin/supplier-requests')
+         RETURNING *`,
+        [admin.id, 'طلب تسجيل مورد جديد', `تم تسجيل المورد ${userData.name} ويحتاج إلى مراجعة واعتماد.`, newUser.rows[0].id]
+      );
+      if (io) io.to(`user_${admin.id}`).emit('new_notification', notification.rows[0]);
+    }
+  } catch (notificationError) {
+    console.error('Failed to notify admins about supplier request:', notificationError);
+  }
+}
 await query(
     "DELETE FROM email_verifications WHERE id = $1",
     [verification.id]

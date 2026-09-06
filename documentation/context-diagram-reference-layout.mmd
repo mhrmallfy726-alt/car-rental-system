@@ -1,0 +1,60 @@
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial", "fontSize": "20px", "primaryTextColor": "#111111", "lineColor": "#555555"}}}%%
+flowchart TB
+    ADMIN["ADMIN\nمدير النظام"]
+    PROVIDER["PROVIDER\nالمورد / مالك المعرض"]
+    SYSTEM(("CAR RENTAL SYSTEM\nنظام تأجير السيارات"))
+    RENTER["RENTER\nالعميل / المستأجر"]
+    PAYMENT["PAYMENT GATEWAY\nبوابة الدفع"]
+
+    %% تثبيت الترتيب العام حول النظام
+    ADMIN ~~~ SYSTEM
+    PROVIDER ~~~ SYSTEM
+    SYSTEM ~~~ RENTER
+    SYSTEM ~~~ PAYMENT
+
+    %% عمليات ADMIN - كل عملية في خط مستقل
+    ADMIN -->|"إدارة المستخدمين والموردين"| SYSTEM
+    ADMIN -->|"اعتماد الحسابات والسيارات"| SYSTEM
+    ADMIN -->|"إدارة الشكاوى والإعلانات"| SYSTEM
+    ADMIN -->|"إدارة الصلاحيات والعمليات المالية"| SYSTEM
+    SYSTEM -->|"بيانات المستخدمين والسيارات"| ADMIN
+    SYSTEM -->|"طلبات الاعتماد والمراجعة"| ADMIN
+    SYSTEM -->|"التقارير والإحصائيات"| ADMIN
+    SYSTEM -->|"التنبيهات وحالات النظام"| ADMIN
+
+    %% عمليات PROVIDER - كل عملية في خط مستقل
+    PROVIDER -->|"تسجيل وإدارة بيانات المورد"| SYSTEM
+    PROVIDER -->|"إضافة المعارض والمواقع"| SYSTEM
+    PROVIDER -->|"إضافة وتعديل السيارات والأسعار"| SYSTEM
+    PROVIDER -->|"إدارة الحجوزات والإعلانات"| SYSTEM
+    SYSTEM -->|"حالة اعتماد المورد والمعرض"| PROVIDER
+    SYSTEM -->|"طلبات الحجز وتحديثاتها"| PROVIDER
+    SYSTEM -->|"البيانات المالية والتقارير"| PROVIDER
+    SYSTEM -->|"الإشعارات وحالة الإعلانات"| PROVIDER
+
+    %% عمليات RENTER - كل عملية في خط مستقل
+    RENTER -->|"التسجيل وتسجيل الدخول"| SYSTEM
+    RENTER -->|"البحث عن السيارات وتحديد الموقع"| SYSTEM
+    RENTER -->|"إدخال بيانات الحجز والدفع"| SYSTEM
+    RENTER -->|"إرسال التقييمات والشكاوى"| SYSTEM
+    SYSTEM -->|"قائمة السيارات المتاحة وتفاصيلها"| RENTER
+    SYSTEM -->|"تأكيد الحجز والفاتورة"| RENTER
+    SYSTEM -->|"حالة الدفع والاستلام والتسليم"| RENTER
+    SYSTEM -->|"الإشعارات والردود على الشكاوى"| RENTER
+
+    %% عمليات PAYMENT GATEWAY - كل عملية في خط مستقل
+    SYSTEM -->|"إنشاء جلسة الدفع"| PAYMENT
+    SYSTEM -->|"إرسال مبلغ الحجز والاشتراك"| PAYMENT
+    SYSTEM -->|"إرسال طلبات الاسترداد"| PAYMENT
+    PAYMENT -->|"إرجاع نتيجة عملية الدفع"| SYSTEM
+    PAYMENT -->|"تأكيد التحصيل أو الفشل"| SYSTEM
+    PAYMENT -->|"إرسال إشعارات Webhook"| SYSTEM
+
+    classDef system fill:#F4CCCC,color:#111111,stroke:#B85450,stroke-width:3px;
+    classDef entity fill:#D9EAF7,color:#111111,stroke:#6C8EBF,stroke-width:2px;
+    classDef gateway fill:#D9EAD3,color:#111111,stroke:#6AA84F,stroke-width:2px;
+    class SYSTEM system;
+    class ADMIN,PROVIDER,RENTER entity;
+    class PAYMENT gateway;
+
+    linkStyle 0,1,2,3 stroke:transparent,fill:none;

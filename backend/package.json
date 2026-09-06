@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "seed": "node src/config/seed.js",
+    "prestart": "npm run migrate",
     "start": "node server.js",
+    "predev": "npm run migrate",
     "dev": "nodemon server.js",
     "migrate": "node src/config/migrate.js"
   },

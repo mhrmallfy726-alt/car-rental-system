@@ -20,8 +20,10 @@ const localStorage = multer.diskStorage({
 // File Filter
 // ========================
 const imageFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (allowedTypes.includes(file.mimetype)) {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/jfif'];
+  const extension = path.extname(file.originalname || '').toLowerCase();
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.jfif'];
+  if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
     cb(new Error('نوع الملف غير مدعوم. يُسمح فقط بـ JPG, PNG, WEBP'), false);
@@ -29,8 +31,10 @@ const imageFilter = (req, file, cb) => {
 };
 
 const documentFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-  if (allowedTypes.includes(file.mimetype)) {
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/jfif', 'application/pdf'];
+  const extension = path.extname(file.originalname || '').toLowerCase();
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.jfif', '.pdf'];
+  if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
     cb(new Error('يُسمح فقط بـ JPG, PNG, PDF للوثائق'), false);

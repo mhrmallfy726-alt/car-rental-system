@@ -5,6 +5,9 @@ UPDATE employees
 SET role = 'employee'
 WHERE role IS DISTINCT FROM 'employee';
 
+-- Remove the previous role constraint before temporarily using specialized values.
+ALTER TABLE employees DROP CONSTRAINT IF EXISTS employees_job_role_check;
+
 -- Normalize known legacy values.
 UPDATE employees
 SET job_role = CASE
@@ -17,7 +20,6 @@ SET job_role = CASE
 END;
 
 -- Make the specialization explicit and safe.
-ALTER TABLE employees DROP CONSTRAINT IF EXISTS employees_job_role_check;
 ALTER TABLE employees ADD CONSTRAINT employees_job_role_check
   CHECK (job_role IN ('team_manager','advertising_employee','reservations_employee','finance_employee','fleet_employee'));
 

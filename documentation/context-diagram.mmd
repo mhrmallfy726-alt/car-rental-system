@@ -1,0 +1,74 @@
+flowchart TB
+    %% =========================
+    %% نظام تأجير السيارات - مخطط السياق
+    %% =========================
+
+    SYSTEM["نظام تأجير السيارات\nCar Rental System"]
+
+    subgraph USERS["الجهات المستخدمة للنظام"]
+        direction LR
+        CUSTOMER["العميل\nCustomer"]
+        SUPPLIER["المورد / مالك المعرض\nSupplier"]
+        EMPLOYEE["موظف المعرض\nEmployee"]
+        ADMIN["مدير النظام\nAdministrator"]
+    end
+
+    subgraph SERVICES["الخدمات والأنظمة الخارجية"]
+        direction LR
+        STRIPE["بوابة الدفع\nStripe"]
+        WHATSAPP["WhatsApp Cloud API"]
+        EMAIL["خدمة البريد الإلكتروني\nSMTP / Nodemailer"]
+        CLOUDINARY["تخزين الصور والوثائق\nCloudinary"]
+    end
+
+    %% وضع النظام بين الجهات والخدمات
+    USERS --> SYSTEM
+    SYSTEM --> USERS
+    SYSTEM --> SERVICES
+    SERVICES --> SYSTEM
+
+    %% تدفقات العميل
+    CUSTOMER -->|"التسجيل وتسجيل الدخول\nالبحث واختيار السيارة\nبيانات الحجز والدفع\nالتقييمات والشكاوى"| SYSTEM
+    SYSTEM -->|"نتائج البحث والتفاصيل\nتأكيد الحجز والفاتورة\nحالة الدفع والإشعارات\nالرد على الشكاوى"| CUSTOMER
+
+    %% تدفقات المورد
+    SUPPLIER -->|"بيانات المورد والمعرض\nإضافة السيارات والأسعار\nالمواقع والإعلانات\nإدارة الحجوزات"| SYSTEM
+    SYSTEM -->|"طلبات الحجز وتحديثاتها\nبيانات الأداء والمالية\nحالة السيارات والإعلانات\nالتنبيهات والتقارير"| SUPPLIER
+
+    %% تدفقات الموظف
+    EMPLOYEE -->|"تسجيل الدخول والمهام\nتأكيد الاستلام والتسليم\nفحص السيارة ورفع الصور\nتحديث حالة الحجز"| SYSTEM
+    SYSTEM -->|"قائمة الحجوزات والمهام\nبيانات العميل والسيارة\nحالات الاستلام والتسليم\nإشعارات العمل"| EMPLOYEE
+
+    %% تدفقات المدير
+    ADMIN -->|"اعتماد المستخدمين والموردين\nإدارة السيارات والمعارض\nإدارة الشكاوى والإعلانات\nإدارة المالية والصلاحيات"| SYSTEM
+    SYSTEM -->|"لوحة المؤشرات والإحصائيات\nالتقارير المالية والتشغيلية\nالتنبيهات وحالات الطلبات\nسجل العمليات"| ADMIN
+
+    %% تكامل الدفع
+    SYSTEM -->|"إنشاء جلسة الدفع\nطلبات التحصيل والاسترداد"| STRIPE
+    STRIPE -->|"نتيجة الدفع\nتأكيد العملية وWebhooks"| SYSTEM
+
+    %% تكامل واتساب
+    SYSTEM -->|"رسائل تأكيد الحجز\nالتذكيرات والتنبيهات\nرموز التحقق OTP"| WHATSAPP
+    WHATSAPP -->|"حالة الإرسال\nالرسائل الواردة وWebhooks"| SYSTEM
+
+    %% تكامل البريد
+    SYSTEM -->|"رسائل التحقق والتنشيط\nإشعارات الحجز والدفع\nإعادة تعيين كلمة المرور"| EMAIL
+    EMAIL -->|"حالة التسليم أو الفشل"| SYSTEM
+
+    %% تكامل الملفات
+    SYSTEM -->|"صور السيارات والوثائق\nصور الاستلام والتسليم\nتحديث الملفات أو حذفها"| CLOUDINARY
+    CLOUDINARY -->|"روابط الملفات\nنتيجة الرفع والمعالجة"| SYSTEM
+
+    %% الأنماط
+    classDef system fill:#174A73,color:#FFFFFF,stroke:#0B2F4A,stroke-width:4px;
+    classDef user fill:#D9EAF7,color:#102A43,stroke:#4F81A8,stroke-width:2px;
+    classDef service fill:#FCE4D6,color:#7F2D12,stroke:#C55A11,stroke-width:2px;
+    classDef group fill:#F7F9FB,stroke:#AAB7C4,stroke-width:1.5px,color:#263238;
+
+    class SYSTEM system;
+    class CUSTOMER,SUPPLIER,EMPLOYEE,ADMIN user;
+    class STRIPE,WHATSAPP,EMAIL,CLOUDINARY service;
+    class USERS,SERVICES group;
+
+    linkStyle 0,1 stroke:#6C8EBF,stroke-width:0px;
+    linkStyle 2,3 stroke:#C55A11,stroke-width:0px;
