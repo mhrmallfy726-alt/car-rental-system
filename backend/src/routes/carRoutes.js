@@ -16,7 +16,8 @@ router.get('/', asyncHandler(async (req, res) => {
     transmission, fuel_type, seats, status,
     search, sort_by, page = 1, limit = 12,
     startDate, endDate, start_date, end_date,
-    pickup_time, return_time, pickupTime, returnTime
+    pickup_time, return_time, pickupTime, returnTime,
+    latitude, longitude, radius = 10
   } = req.query;
 
   const requestedStart = startDate || start_date;
@@ -50,7 +51,20 @@ router.get('/', asyncHandler(async (req, res) => {
   let paramIndex = 1;
 
   if (category) { sql += ` AND c.category_id = $${paramIndex++}`; params.push(category); }
-  if (location) {
+  const hasCoordinates = latitude !== undefined && latitude !== '' && longitude !== undefined && longitude !== ''
+    && Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
+  if (hasCoordinates) {
+    const radiusKm = Math.min(Math.max(Number(radius) || 10, 1), 100);
+    sql += ` AND loc.latitude IS NOT NULL
+      AND loc.longitude IS NOT NULL
+      AND 6371 * 2 * ASIN(SQRT(
+        POWER(SIN(RADIANS(loc.latitude::double precision - $${paramIndex}::double precision) / 2), 2) +
+        COS(RADIANS($${paramIndex}::double precision)) * COS(RADIANS(loc.latitude::double precision)) *
+        POWER(SIN(RADIANS(loc.longitude::double precision - $${paramIndex + 1}::double precision) / 2), 2)
+      )) <= $${paramIndex + 2}`;
+    params.push(Number(latitude), Number(longitude), radiusKm);
+    paramIndex += 3;
+  } else if (location) {
     sql += ` AND (c.location_id::text = $${paramIndex} OR loc.city ILIKE $${paramIndex} OR COALESCE(loc.address, '') ILIKE $${paramIndex})`;
     params.push(location.trim().startsWith('%') ? location.trim() : `%${location.trim()}%`);
     paramIndex++;
