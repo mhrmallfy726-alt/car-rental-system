@@ -678,6 +678,23 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   res.json({ success: true, user: result.rows[0] });
 });
 
+const changePassword = asyncHandler(async (req, res, next) => {
+  const { current_password, new_password, confirm_password } = req.body;
+  if (!current_password || !new_password || !confirm_password) {
+    return next(new AppError('يرجى إدخال كلمة المرور الحالية والجديدة وتأكيدها', 400));
+  }
+  if (new_password.length < 8) return next(new AppError('كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف', 400));
+  if (new_password !== confirm_password) return next(new AppError('كلمات المرور الجديدة غير متطابقة', 400));
+
+  const current = await query('SELECT password FROM users WHERE id = $1', [req.user.id]);
+  if (!current.rows.length || !(await bcrypt.compare(current_password, current.rows[0].password))) {
+    return next(new AppError('كلمة المرور الحالية غير صحيحة', 400));
+  }
+  const hashedPassword = await bcrypt.hash(new_password, 12);
+  await query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [hashedPassword, req.user.id]);
+  res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+});
+
 // ========================
 // @desc    Upload brand logo (for suppliers)
 // @route   POST /api/auth/upload-brand-logo
@@ -743,6 +760,7 @@ module.exports = {
   getMe,
   uploadDocs,
   updateProfile,
+  changePassword,
   uploadBrandLogo,
   requestPasswordReset,
   verifyPasswordReset,

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Settings, CreditCard, Building, ShieldCheck, Save, Upload, User, Check, X } from 'lucide-react';
+import { Settings, CreditCard, Building, ShieldCheck, Save, Upload, User } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { authAPI } from '../../services/api';
+import SupplierSidebar from '../../components/SupplierSidebar';
 
 import { getImageUrl } from '../../utils/imageUtils';
 export default function SupplierSettings() {
@@ -21,7 +22,6 @@ export default function SupplierSettings() {
     auto_accept_bookings: user?.auto_accept_bookings || false
   });
   const [loading, setLoading] = useState(false);
-  const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(
     user?.brand_logo ? (user.brand_logo.startsWith('http') ? user.brand_logo : getImageUrl(user.brand_logo)) : null
   );
@@ -40,7 +40,6 @@ export default function SupplierSettings() {
       toast.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
       return;
     }
-    setLogoFile(file);
     setLogoPreview(URL.createObjectURL(file));
     // رفع تلقائي بعد اختيار الصورة (تحسين UX)
     uploadLogo(file);
@@ -55,7 +54,6 @@ export default function SupplierSettings() {
       await authAPI.uploadBrandLogo(fd);
       toast.success('تم رفع الشعار بنجاح');
       if (fetchMe) await fetchMe();
-      setLogoFile(null);
     } catch (error) {
       toast.error('فشل رفع الشعار: ' + (error.response?.data?.message || error.message));
     } finally {
@@ -88,8 +86,9 @@ export default function SupplierSettings() {
   };
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', background: '#f8f9fa', minHeight: '100vh' }}>
+      <SupplierSidebar />
+      <div style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '24px' }}>
         {/* رأس الصفحة */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#0a58ca' }}>

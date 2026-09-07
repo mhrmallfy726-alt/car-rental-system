@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
@@ -16,11 +16,7 @@ export default function MyCars() {
   const [newDiscount, setNewDiscount] = useState(0);
   const [updatingDiscount, setUpdatingDiscount] = useState(false);
 
-  useEffect(() => {
-    fetchCars();
-  }, [showroom?.id]);
-
-  const fetchCars = async () => {
+  const fetchCars = useCallback(async () => {
     try {
       const res = await carsAPI.getMyCars(showroom?.id ? { location_id: showroom.id } : undefined);
       setCars(res.data.data);
@@ -29,7 +25,11 @@ export default function MyCars() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showroom?.id]);
+
+  useEffect(() => {
+    fetchCars();
+  }, [fetchCars]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('هل أنت متأكد من حذف هذه السيارة؟ لا يمكن التراجع.')) return;

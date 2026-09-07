@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { User, Bell, Lock, ShieldCheck, Save, CheckCircle } from 'lucide-react';
+import { User, Bell, Lock, ShieldCheck, Save } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { authAPI } from '../services/api';
 
@@ -56,7 +56,7 @@ export default function UserSettings() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await authAPI.updateProfile({
+      await authAPI.updateProfile({
         name: settings.name,
         phone: settings.phone,
         address: settings.address || '',
@@ -103,15 +103,24 @@ export default function UserSettings() {
 
   const handleSaveSecurity = async (e) => {
     e.preventDefault();
+    if (settings.new_password.length < 8) return toast.error('كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف');
     if (settings.new_password !== settings.confirm_password) {
       return toast.error('كلمات المرور الجديدة غير متطابقة');
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await authAPI.changePassword({
+        current_password: settings.current_password,
+        new_password: settings.new_password,
+        confirm_password: settings.confirm_password
+      });
       toast.success('تم تغيير كلمة المرور بنجاح');
-      setSettings({ ...settings, current_password: '', new_password: '', confirm_password: '' });
-    }, 1000);
+      setSettings(prev => ({ ...prev, current_password: '', new_password: '', confirm_password: '' }));
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تغيير كلمة المرور');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

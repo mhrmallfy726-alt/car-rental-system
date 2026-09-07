@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { reservationsAPI, handoverAPI, default as api } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
@@ -77,11 +77,7 @@ export default function SupplierReservations() {
     }
   };
 
-  useEffect(() => {
-    fetchReservations();
-  }, [showroom?.id]);
-
-  const fetchReservations = async () => {
+  const fetchReservations = useCallback(async () => {
     try {
       const res = await reservationsAPI.getMy(showroom?.id ? { location_id: showroom.id } : undefined);
       const rows = res.data.data || [];
@@ -101,7 +97,11 @@ export default function SupplierReservations() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showroom?.id]);
+
+  useEffect(() => {
+    fetchReservations();
+  }, [fetchReservations]);
 
   const openHandoverDispute = async (reservation) => {
     setLoadingDisputeDetails(true);
