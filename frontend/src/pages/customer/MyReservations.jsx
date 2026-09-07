@@ -34,7 +34,7 @@ export default function MyReservations() {
 
   const [showReview, setShowReview] = useState(false);
   const [selectedRes, setSelectedRes] = useState(null);
-  const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+  const [reviewData, setReviewData] = useState({ rating: 5, platformRating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const [showDispute, setShowDispute] = useState(false);
@@ -78,7 +78,7 @@ export default function MyReservations() {
 
   const openReviewModal = (res) => {
     setSelectedRes(res);
-    setReviewData({ rating: 5, comment: '' });
+    setReviewData({ rating: 5, platformRating: 5, comment: '' });
     setShowReview(true);
   };
 
@@ -94,6 +94,7 @@ export default function MyReservations() {
         car_id: selectedRes.car_id,
         reservation_id: selectedRes.id,
         rating: reviewData.rating,
+        platform_rating: reviewData.platformRating,
         comment: reviewData.comment
       });
       toast.success('شكراً لتقييمك!');
@@ -388,7 +389,7 @@ export default function MyReservations() {
             </p>
             <form onSubmit={submitReview} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ textAlign: 'center' }}>
-                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>التقييم (من 1 إلى 5)</label>
+                    <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>تقييم السيارة والمورد (من 1 إلى 5)</label>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', direction: 'rtl' }}>
                   {[5, 4, 3, 2, 1].map((star) => (
                     <button
@@ -398,6 +399,21 @@ export default function MyReservations() {
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
                     >
                       <Star size={32} fill={reviewData.rating >= star ? '#ffc107' : 'none'} color={reviewData.rating >= star ? '#ffc107' : '#ced4da'} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>تقييم المنصة (من 1 إلى 5)</label>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', direction: 'rtl' }}>
+                  {[5, 4, 3, 2, 1].map((star) => (
+                    <button
+                      key={`platform-${star}`}
+                      type="button"
+                      onClick={() => setReviewData({ ...reviewData, platformRating: star })}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
+                    >
+                      <Star size={32} fill={reviewData.platformRating >= star ? '#ffc107' : 'none'} color={reviewData.platformRating >= star ? '#ffc107' : '#ced4da'} />
                     </button>
                   ))}
                 </div>

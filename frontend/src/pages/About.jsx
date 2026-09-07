@@ -1,4 +1,6 @@
-import { ShieldCheck, Sparkles, Car, Headphones } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ShieldCheck, Sparkles, Car, Headphones, Star } from 'lucide-react';
+import { reviewsAPI } from '../services/api';
 
 const highlights = [
   {
@@ -19,6 +21,16 @@ const highlights = [
 ];
 
 export default function About() {
+  const [platformRating, setPlatformRating] = useState({ average_rating: 0, total_reviews: 0 });
+  const [platformReviews, setPlatformReviews] = useState([]);
+
+  useEffect(() => {
+    reviewsAPI.getPlatform().then(({ data }) => {
+      setPlatformRating(data.data?.summary || { average_rating: 0, total_reviews: 0 });
+      setPlatformReviews(data.data?.reviews || []);
+    }).catch(() => {});
+  }, []);
+
   return (
     <main className="about-page" dir="rtl">
       <section className="about-hero">
@@ -54,6 +66,27 @@ export default function About() {
               <p>{text}</p>
             </article>
           ))}
+        </div>
+      </section>
+      <section className="about-section" style={{ paddingTop: 0 }}>
+        <div className="about-section-heading">
+          <span className="about-kicker about-kicker-light">آراء العملاء</span>
+          <h2>كيف يقيّم العملاء المنصة؟</h2>
+          <p>تقييمات حقيقية بعد اكتمال الحجوزات، وتشمل السيارة والمورد والمنصة.</p>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 20, padding: 24, maxWidth: 850, margin: '0 auto', boxShadow: '0 12px 35px rgba(23,58,82,.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+            <Star size={28} fill="#f4b740" color="#f4b740" />
+            <strong style={{ fontSize: 28, color: '#173a52' }}>{Number(platformRating.average_rating || 0).toFixed(1)}</strong>
+            <span style={{ color: '#64748b' }}>من 5 — {platformRating.total_reviews || 0} تقييم</span>
+          </div>
+          {platformReviews.slice(0, 3).map((review) => (
+            <article key={review.id} style={{ borderTop: '1px solid #edf1f4', padding: '14px 0', color: '#53636e' }}>
+              <strong style={{ color: '#173a52' }}>{review.reviewer_name || 'عميل'}</strong> · {review.platform_rating}/5 نجوم
+              {review.platform_comment && <p style={{ margin: '6px 0 0', lineHeight: 1.7 }}>{review.platform_comment}</p>}
+            </article>
+          ))}
+          {!platformReviews.length && <p style={{ color: '#64748b', margin: 0 }}>ستظهر تقييمات المنصة هنا بعد اكتمال أول حجز.</p>}
         </div>
       </section>
     </main>
