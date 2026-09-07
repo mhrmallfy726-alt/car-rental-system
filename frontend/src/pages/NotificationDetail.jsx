@@ -42,6 +42,8 @@ const getReferencePath = (notification, user) => {
       return `/complaints/${notification.reference_id}`;
     case 'user':
       return user?.role === 'admin' ? '/admin/supplier-requests' : '/profile';
+    case 'showroom_subscription':
+      return user?.role === 'admin' ? '/admin/branch-requests' : '/supplier/showrooms';
     default:
       return null;
   }

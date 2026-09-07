@@ -163,12 +163,12 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
   const result = await query(`UPDATE reservations SET status = 'awaiting_pickup', handover_state = 'awaiting_pickup', approved_at = NOW() WHERE id = $1 RETURNING *`, [id]);
 
   // Notify customer
-  await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
-    VALUES ($1, 'تمت الموافقة على حجزك', 'تمت الموافقة على طلب حجزك المدفوع. يمكنك متابعة تفاصيل الاستلام.', 'reservation', $2, 'reservation')`,
+  const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تمت الموافقة على حجزك', 'تمت الموافقة على طلب حجزك المدفوع. يمكنك متابعة تفاصيل الاستلام.', 'reservation', $2, 'reservation') RETURNING *`,
     [reservation.rows[0].customer_id, id]);
 
   const io = req.app.get('io');
-  if (io) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', { type: 'reservation', message: 'تمت الموافقة على حجزك' });
+  if (io && notificationResult.rows[0]) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', notificationResult.rows[0]);
 
   void notifyReservationWhatsApp(id, 'awaiting_pickup');
 

@@ -160,13 +160,13 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   );
   const supplier = supplierInfo.rows[0];
   if (r.status === 'pending' && supplier) {
-    await query(
+    const notificationResult = await query(
       `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
-       VALUES ($1, $2, $3, 'reservation', $4, 'reservation')`,
+       VALUES ($1, $2, $3, 'reservation', $4, 'reservation') RETURNING *`,
       [supplier.supplier_id, 'طلب حجز مدفوع', `تم دفع حجز سيارة ${supplier.make} ${supplier.model}. يرجى مراجعته.`, reservation_id]
     );
     const io = req.app.get('io');
-    if (io) io.to(`user_${supplier.supplier_id}`).emit('new_notification', { type: 'reservation', message: 'لديك طلب حجز مدفوع جديد' });
+    if (io && notificationResult.rows[0]) io.to(`user_${supplier.supplier_id}`).emit('new_notification', notificationResult.rows[0]);
     if (supplier.supplier_phone) {
       void sendTextMessage({
         to: supplier.supplier_phone,
