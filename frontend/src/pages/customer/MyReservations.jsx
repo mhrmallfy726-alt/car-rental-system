@@ -199,7 +199,7 @@ export default function MyReservations() {
   const getStatusBadge = (status) => {
     const map = {
       pending: { label: 'جاهز لإتمام الحجز', bg: '#ffc107', color: '#212529' },
-      approved: { label: 'بانتظار مراجعة المورد', bg: '#17a2b8', color: 'white' },
+      approved: { label: 'تمت الموافقة — بانتظار الاستلام', bg: '#17a2b8', color: 'white' },
       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
       active: { label: 'نشط', bg: '#28a745', color: 'white' },

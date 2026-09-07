@@ -93,6 +93,32 @@ const createReservationCharge = async ({ reservationId, customerId, savedCardId,
   }
 };
 
+const refundReservationPayment = async (reservationId, reason = 'إلغاء أو رفض الحجز') => {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const paymentResult = await client.query(`SELECT * FROM payments WHERE reservation_id = $1 AND status = 'paid' ORDER BY paid_at DESC NULLS LAST LIMIT 1 FOR UPDATE`, [reservationId]);
+    if (!paymentResult.rows.length) { await client.query('COMMIT'); return null; }
+    const payment = paymentResult.rows[0];
+    const gatewayResult = await client.query(`SELECT * FROM payment_gateway_transactions WHERE payment_id = $1 AND status = 'captured' ORDER BY created_at DESC LIMIT 1 FOR UPDATE`, [payment.id]);
+    const gateway = gatewayResult.rows[0];
+    if (gateway) {
+      const balanceResult = await client.query('SELECT simulated_balance_yer FROM saved_cards WHERE id = $1 FOR UPDATE', [gateway.saved_card_id]);
+      if (balanceResult.rows.length) {
+        const before = Number(balanceResult.rows[0].simulated_balance_yer || 0);
+        const after = Number((before + Number(gateway.amount_yer)).toFixed(2));
+        await client.query('UPDATE saved_cards SET simulated_balance_yer = $1 WHERE id = $2', [after, gateway.saved_card_id]);
+        await client.query(`UPDATE payment_gateway_transactions SET status = 'refunded', balance_before_yer = $1, balance_after_yer = $2 WHERE id = $3`, [before, after, gateway.id]);
+      }
+    }
+    await client.query(`UPDATE payments SET status = 'refunded', refund_amount = amount, refund_reason = $1, refunded_at = NOW() WHERE id = $2`, [reason, payment.id]);
+    await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, 'refund', 'debit', $4, $5, $6, $7::jsonb)`, [payment.id, reservationId, payment.supplier_id, payment.amount, payment.currency, reason, JSON.stringify({ simulated: true, refund_of: payment.id })]);
+    await client.query('COMMIT');
+    return payment;
+  } catch (error) { await client.query('ROLLBACK'); throw error; }
+  finally { client.release(); }
+};
+
 const getDashboard = async () => {
   const [summary, adPayments, reservationPayments, pendingPayouts] = await Promise.all([
     query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS gross_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND advertisement_id IS NOT NULL),0)::numeric AS advertisement_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND reservation_id IS NOT NULL),0)::numeric AS reservation_revenue,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='platform_fee' AND direction='credit'),0)::numeric AS platform_commission,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='supplier_payable' AND direction='credit'),0)::numeric AS supplier_payable,COALESCE(SUM(amount) FILTER (WHERE status='refunded'),0)::numeric AS refunded_amount,COUNT(*) FILTER (WHERE status='paid')::int AS paid_transactions,COUNT(*) FILTER (WHERE status='pending')::int AS pending_transactions FROM payments`),
@@ -159,4 +185,4 @@ const completePayout = async (adminId, payoutId, notes = '') => {
   finally { client.release(); }
 };
 
-module.exports = { createAdvertisementCharge, createReservationCharge, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };
+module.exports = { createAdvertisementCharge, createReservationCharge, refundReservationPayment, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };

@@ -7,6 +7,7 @@ const {
   sendTextMessage,
   sendReservationStatusMessage,
 } = require('../services/whatsappService');
+const { refundReservationPayment } = require('../services/financeService');
 
 async function notifyReservationWhatsApp(reservationId, status, reason = null) {
   try {
@@ -187,15 +188,19 @@ router.put('/:id/reject', protect, authorize('supplier'), asyncHandler(async (re
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن رفض هذا الحجز', 400));
 
+  const refund = await refundReservationPayment(id, supplier_notes || 'تم رفض الحجز من قبل المورد');
   const result = await query(`UPDATE reservations SET status = 'rejected', supplier_notes = $1 WHERE id = $2 RETURNING *`, [supplier_notes, id]);
 
-  await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
-    VALUES ($1, 'تم رفض حجزك', $2, 'reservation', $3, 'reservation')`,
+  const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تم رفض حجزك', $2, 'reservation', $3, 'reservation') RETURNING *`,
     [reservation.rows[0].customer_id, supplier_notes || 'تم رفض طلب الحجز من قبل المورد', id]);
+
+  const io = req.app.get('io');
+  if (io && notificationResult.rows[0]) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', notificationResult.rows[0]);
 
   void notifyReservationWhatsApp(id, 'rejected', supplier_notes || null);
 
-  res.json({ success: true, data: result.rows[0] });
+  res.json({ success: true, data: result.rows[0], refund: refund ? { status: 'refunded', amount: refund.amount, currency: refund.currency } : { status: 'not_required' } });
 }));
 
 // ========================
@@ -214,12 +219,19 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
   if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
   if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز', 400));
 
+  const refund = await refundReservationPayment(id, cancellation_reason || 'تم إلغاء الحجز');
   const result = await query(`UPDATE reservations SET status = 'cancelled', cancellation_reason = $1, cancelled_by = $2, cancelled_at = NOW() WHERE id = $3 RETURNING *`,
     [cancellation_reason, req.user.id, id]);
+  const recipientId = r.customer_id === req.user.id ? r.supplier_id : r.customer_id;
+  const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تم إلغاء الحجز', $2, 'reservation', $3, 'reservation') RETURNING *`,
+    [recipientId, `تم إلغاء الحجز${cancellation_reason ? `: ${cancellation_reason}` : ''}${refund ? ' وتمت إعادة المبلغ للعميل.' : '.'}`, id]);
+  const io = req.app.get('io');
+  if (io && notificationResult.rows[0]) io.to(`user_${recipientId}`).emit('new_notification', notificationResult.rows[0]);
 
   void notifyReservationWhatsApp(id, 'cancelled', cancellation_reason || null);
 
-  res.json({ success: true, data: result.rows[0] });
+  res.json({ success: true, data: result.rows[0], refund: refund ? { status: 'refunded', amount: refund.amount, currency: refund.currency } : { status: 'not_required' } });
 }));
 
 // ========================
