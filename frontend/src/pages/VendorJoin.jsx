@@ -133,48 +133,34 @@ export default function Join() {
     e.target.value = '';
   };
 
-  // Handle commercial register upload
+  // Handle commercial register upload (PDF only)
   const handleCommercialChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validation
     const extension = file.name.split('.').pop()?.toLowerCase();
-    const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'jfif'].includes(extension);
-    if (file.type !== 'application/pdf' && !isImage && extension !== 'pdf') {
-      toast.error('يرجى اختيار ملف PDF أو صورة');
+    const isPdf = file.type === 'application/pdf' || extension === 'pdf';
+
+    if (!isPdf) {
+      toast.error('السجل التجاري يجب أن يكون ملف PDF فقط');
+      e.target.value = '';
       return;
     }
+
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('حجم الملف يجب أن لا يتجاوز 5 ميجابايت');
+      toast.error('حجم ملف السجل التجاري يجب ألا يتجاوز 5 ميجابايت');
+      e.target.value = '';
       return;
     }
 
-    // Simulate upload progress
-    setUploadProgress(prev => ({ ...prev, commercial: 0 }));
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        const newProgress = prev.commercial + Math.random() * 30;
-        if (newProgress >= 100) {
-          clearInterval(interval);
-          return { ...prev, commercial: 100 };
-        }
-        return { ...prev, commercial: newProgress };
-      });
-    }, 200);
+    setUploadProgress(prev => ({ ...prev, commercial: 100 }));
+    setFiles(prev => ({
+      ...prev,
+      commercial: file,
+      commercialName: file.name,
+      commercialPreview: null,
+    }));
 
-    if (isImage) {
-      const reader = new FileReader();
-      reader.onload = (event) => setFiles(prev => ({
-        ...prev,
-        commercial: file,
-        commercialName: file.name,
-        commercialPreview: event.target.result
-      }));
-      reader.readAsDataURL(file);
-    } else {
-      setFiles(prev => ({ ...prev, commercial: file, commercialName: file.name, commercialPreview: null }));
-    }
     e.target.value = '';
   };
 
@@ -1156,12 +1142,10 @@ textTransform: "uppercase",
                 >
                   {files.commercial ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      {files.commercialPreview ? (
-                        <img src={files.commercialPreview} alt="معاينة السجل التجاري" style={{ maxWidth: '180px', maxHeight: '90px', objectFit: 'contain', borderRadius: '8px' }} />
-                      ) : <FileCheck size={32} style={{ color: '#10B981' }} />}
+                      <FileCheck size={42} style={{ color: '#10B981' }} />
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
                         <CheckCircle size={18} />
-                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع الملف</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع ملف PDF</span>
                       </div>
                       <p style={{ fontSize: '0.75rem', color: '#6c757d', margin: '0 0 8px 0' }}>
                         {files.commercialName}
@@ -1179,7 +1163,7 @@ textTransform: "uppercase",
                         اسحب الملف أو اضغط للاختيار
                       </p>
                       <p style={{ fontSize: '0.75rem', color: '#6c757d', margin: 0 }}>
-                        PDF أو JPG أو PNG - حتى 5MB
+                        ملف PDF فقط - حتى 5MB
                       </p>
                     </div>
                   )}
@@ -1187,7 +1171,7 @@ textTransform: "uppercase",
                 <input
                   ref={commercialInputRef}
                   type="file"
-                  accept="application/pdf,.pdf,image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif,.jfif"
+                  accept="application/pdf,.pdf"
                   onChange={handleCommercialChange}
                   style={{ display: 'none' }}
                 />

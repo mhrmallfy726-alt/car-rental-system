@@ -439,7 +439,7 @@ export default function SupplierRequests() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          📄 عرض السجل التجاري
+          📄 فتح السجل التجاري PDF
         </a>
       ) : (
         <p style={{ color: "#777" }}>لم يتم رفع السجل التجاري.</p>

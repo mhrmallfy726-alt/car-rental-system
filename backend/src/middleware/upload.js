@@ -3,12 +3,15 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
+const uploadDir = path.join(__dirname, '../../uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
 // ========================
 // Local Storage (Fallback)
 // ========================
 const localStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -31,14 +34,43 @@ const imageFilter = (req, file, cb) => {
 };
 
 const documentFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/jfif', 'application/pdf'];
   const extension = path.extname(file.originalname || '').toLowerCase();
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.jfif', '.pdf'];
-  if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(extension)) {
-    cb(null, true);
-  } else {
-    cb(new Error('يُسمح فقط بـ JPG, PNG, PDF للوثائق'), false);
+
+  // السجل التجاري يجب أن يكون PDF فقط
+  if (file.fieldname === 'commercial_register') {
+    const isPdf = file.mimetype === 'application/pdf' || extension === '.pdf';
+
+    if (!isPdf) {
+      return cb(new Error('السجل التجاري يجب أن يكون ملف PDF فقط'), false);
+    }
+
+    return cb(null, true);
   }
+
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/jfif',
+    'application/pdf',
+  ];
+  const allowedExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.gif',
+    '.jfif',
+    '.pdf',
+  ];
+
+  if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(extension)) {
+    return cb(null, true);
+  }
+
+  return cb(new Error('يُسمح فقط بـ JPG, PNG, PDF للوثائق'), false);
 };
 
 // ========================
