@@ -27,7 +27,7 @@ export default function Join() {
     ownerPassword: '',
     ownerPasswordConfirm: '',
     
-    // معلومات المعرض
+    // معلومات الفرع
     showroomName: '',
     city: '',
     address: '',
@@ -260,7 +260,7 @@ export default function Join() {
       return false;
     }
     if (!formData.showroomName.trim()) {
-      toast.error('يرجى إدخال اسم المعرض');
+      toast.error('يرجى إدخال اسم الفرع');
       return false;
     }
     if (!formData.city.trim()) {
@@ -288,7 +288,7 @@ export default function Join() {
 
   const validateStep3 = () => {
     if (!files.logo) {
-      toast.error('يرجى رفع شعار المعرض');
+      toast.error('يرجى رفع شعار الفرع');
       return false;
     }
     if (!files.commercial) {
@@ -492,7 +492,7 @@ textTransform: "uppercase",
             🚗 انضم كمورد سيارات
           </h1>
           <p style={{ color: '#6c757d', fontSize: '0.95rem' }}>
-            أكمل بيانات معرضك للانضمام إلى منصتنا
+            أكمل بيانات فرعك للانضمام إلى منصتنا
           </p>
         </div>
 
@@ -769,10 +769,10 @@ textTransform: "uppercase",
     style={{ color: '#0F766E' }}
   />
 
-  معلومات المعرض
+  معلومات الفرع
 </h2>
 
-{/* اسم المعرض */}
+{/* اسم الفرع */}
 <div style={{ marginBottom: '16px' }}>
   <label
     style={{
@@ -783,7 +783,7 @@ textTransform: "uppercase",
       color: '#1a1a1a',
     }}
   >
-    اسم المعرض *
+    اسم الفرع *
   </label>
 
   <div style={{ position: 'relative' }}>
@@ -801,7 +801,7 @@ textTransform: "uppercase",
     <input
       type="text"
       name="showroomName"
-      placeholder="معرض أحمد للسيارات"
+      placeholder="فرع أحمد للسيارات"
       value={formData.showroomName}
       onChange={handleChange}
       style={{
@@ -823,7 +823,7 @@ textTransform: "uppercase",
   </div>
 </div>
 
-{/* موقع المعرض */}
+{/* موقع الفرع */}
 <div style={{ marginBottom: '16px' }}>
   <label
     style={{
@@ -834,7 +834,7 @@ textTransform: "uppercase",
       color: '#1a1a1a',
     }}
   >
-    موقع المعرض *
+    موقع الفرع *
   </label>
 
   <LocationPicker
@@ -1058,7 +1058,7 @@ textTransform: "uppercase",
               {/* Logo Upload */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
-                  📷 شعار المعرض *
+                  📷 شعار الفرع *
                 </label>
                 <div
                   onDragOver={handleDragOver}

@@ -32,4 +32,81 @@ router.get('/subscriptions', asyncHandler(async (req,res)=>{
   res.json({success:true,data:result.rows});
 }));
 
+router.get('/requests', asyncHandler(async (req, res) => {
+  const result = await query(`
+    SELECT ss.id, ss.plan, ss.amount, ss.currency, ss.status, ss.approval_status,
+           ss.starts_at, ss.expires_at, ss.created_at, ss.reviewed_at, ss.rejection_reason,
+           l.id AS branch_id, l.showroom_name AS branch_name, l.city, l.country, l.address,
+           l.latitude, l.longitude, l.is_active, l.subscription_status,
+           u.id AS supplier_id, u.name AS supplier_name, u.email AS supplier_email,
+           u.phone AS supplier_phone
+    FROM showroom_subscriptions ss
+    JOIN locations l ON l.id = ss.showroom_id
+    JOIN users u ON u.id = ss.supplier_id
+    ORDER BY CASE WHEN ss.approval_status = 'pending' THEN 0 ELSE 1 END, ss.created_at DESC
+    LIMIT 300
+  `);
+  res.json({ success: true, data: result.rows });
+}));
+
+router.get('/requests/:id', asyncHandler(async (req, res, next) => {
+  const result = await query(`
+    SELECT ss.*, l.id AS branch_id, l.showroom_name AS branch_name, l.city, l.country,
+           l.address, l.latitude, l.longitude, l.is_active, l.subscription_status,
+           u.id AS supplier_id, u.name AS supplier_name, u.email AS supplier_email,
+           u.phone AS supplier_phone
+    FROM showroom_subscriptions ss
+    JOIN locations l ON l.id = ss.showroom_id
+    JOIN users u ON u.id = ss.supplier_id
+    WHERE ss.id = $1
+  `, [req.params.id]);
+  if (!result.rows[0]) return next(new AppError('طلب الفرع غير موجود', 404));
+  res.json({ success: true, data: result.rows[0] });
+}));
+
+router.put('/requests/:id/approve', asyncHandler(async (req, res, next) => {
+  const result = await query(`
+    UPDATE showroom_subscriptions ss
+    SET approval_status = 'approved', reviewed_by = $1, reviewed_at = NOW(),
+        rejection_reason = NULL, updated_at = NOW()
+    WHERE ss.id = $2 AND ss.approval_status = 'pending'
+    RETURNING ss.id, ss.showroom_id, ss.supplier_id, ss.status
+  `, [req.user.id, req.params.id]);
+  const request = result.rows[0];
+  if (!request) return next(new AppError('الطلب غير موجود أو تمت مراجعته مسبقاً', 409));
+  const branch = await query(`
+    UPDATE locations
+    SET is_active = CASE WHEN $1 = 'paid' THEN TRUE ELSE FALSE END,
+        subscription_status = CASE WHEN $1 = 'paid' THEN 'active' ELSE 'pending_payment' END,
+        updated_at = NOW()
+    WHERE id = $2
+    RETURNING id, is_active, subscription_status
+  `, [request.status, request.showroom_id]);
+  await query(`
+    INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تمت الموافقة على الفرع', 'تمت الموافقة على طلب الفرع ويمكنك استخدامه بعد إكمال الدفع إن لزم.', 'system', $2, 'showroom_subscription')
+  `, [request.supplier_id, request.id]);
+  res.json({ success: true, data: { request, branch: branch.rows[0] }, message: 'تمت الموافقة على الفرع' });
+}));
+
+router.put('/requests/:id/reject', asyncHandler(async (req, res, next) => {
+  const reason = String(req.body.reason || '').trim();
+  if (!reason) return next(new AppError('سبب رفض الفرع مطلوب', 400));
+  const result = await query(`
+    UPDATE showroom_subscriptions ss
+    SET approval_status = 'rejected', reviewed_by = $1, reviewed_at = NOW(),
+        rejection_reason = $2, updated_at = NOW()
+    WHERE ss.id = $3 AND ss.approval_status = 'pending'
+    RETURNING ss.id, ss.showroom_id, ss.supplier_id
+  `, [req.user.id, reason, req.params.id]);
+  const request = result.rows[0];
+  if (!request) return next(new AppError('الطلب غير موجود أو تمت مراجعته مسبقاً', 409));
+  await query(`UPDATE locations SET is_active = FALSE, subscription_status = 'suspended', updated_at = NOW() WHERE id = $1`, [request.showroom_id]);
+  await query(`
+    INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تم رفض طلب الفرع', $2, 'system', $3, 'showroom_subscription')
+  `, [request.supplier_id, `تم رفض طلب الفرع. السبب: ${reason}`, request.id]);
+  res.json({ success: true, message: 'تم رفض طلب الفرع' });
+}));
+
 module.exports=router;

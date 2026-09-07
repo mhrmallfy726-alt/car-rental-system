@@ -76,7 +76,7 @@ export default function AddCar() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (images.length === 0) return toast.error('يرجى إضافة صورة واحدة على الأقل للسيارة');
-    if (!showroom?.id) return toast.error('يرجى اختيار المعرض الحالي من لوحة التحكم أولاً');
+    if (!showroom?.id) return toast.error('يرجى اختيار الفرع الحالي من لوحة التحكم أولاً');
 
     // تحقق إضافي من الأسعار
     if (parseFloat(formData.price_per_day) <= 0) {
@@ -135,7 +135,7 @@ export default function AddCar() {
               </div>
             </div>
 
-            {/* صف 3: الفئة والمعرض الحالي */}
+            {/* صف 3: الفئة والفرع الحالي */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الفئة</label>
                 <select name="category_id" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.category_id} onChange={handleChange}>
@@ -143,8 +143,8 @@ export default function AddCar() {
                 </select>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#52636d', fontSize: '0.9rem', gap: '4px' }}>
-                <strong style={{ color: '#173a52' }}>المعرض الحالي</strong>
-                <span>{showroom ? `${showroom.showroom_name || `معرض ${showroom.city}`} · ${showroom.city}` : 'اختر معرضاً من القائمة الجانبية'}</span>
+                <strong style={{ color: '#173a52' }}>الفرع الحالي</strong>
+                <span>{showroom ? `${showroom.showroom_name || `فرع ${showroom.city}`} · ${showroom.city}` : 'اختر فرعاً من القائمة الجانبية'}</span>
                 {showroom?.address && <small>{showroom.address}</small>}
               </div>
             </div>

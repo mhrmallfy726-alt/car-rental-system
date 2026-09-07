@@ -26,7 +26,7 @@ router.post('/checkout', asyncHandler(async (req, res, next) => {
     if (subscription.status !== 'pending') throw new AppError('حالة الاشتراك لا تسمح بالدفع', 400);
 
     const settings = await client.query('SELECT enabled FROM showroom_subscription_settings WHERE id = 1');
-    if (settings.rows[0] && !settings.rows[0].enabled) throw new AppError('اشتراكات المعارض متوقفة حالياً', 403);
+    if (settings.rows[0] && !settings.rows[0].enabled) throw new AppError('اشتراكات الفروع متوقفة حالياً', 403);
 
     const startsAt = new Date();
     const expiresAt = new Date(startsAt);
@@ -57,10 +57,12 @@ router.post('/checkout', asyncHandler(async (req, res, next) => {
 
     await client.query(`
       UPDATE locations
-      SET is_active=TRUE, subscription_status='active', subscription_plan=$1,
+      SET is_active=CASE WHEN $4 = 'approved' THEN TRUE ELSE FALSE END,
+          subscription_status=CASE WHEN $4 = 'approved' THEN 'active' ELSE 'pending_approval' END,
+          subscription_plan=$1,
           subscription_started_at=$2, subscription_expires_at=$3, updated_at=NOW()
-      WHERE id=$4 AND supplier_id=$5
-    `, [subscription.plan, startsAt, expiresAt, subscription.showroom_id, req.user.id]);
+      WHERE id=$5 AND supplier_id=$6
+    `, [subscription.plan, startsAt, expiresAt, subscription.approval_status, subscription.showroom_id, req.user.id]);
 
     await client.query(`
       INSERT INTO ledger_entries (payment_id, supplier_id, entry_type, direction, amount, currency, description, metadata)
@@ -70,20 +72,20 @@ router.post('/checkout', asyncHandler(async (req, res, next) => {
       req.user.id,
       subscription.amount,
       subscription.currency,
-      `اشتراك معرض ${subscription.showroom_name}`,
+      `اشتراك فرع ${subscription.showroom_name}`,
       JSON.stringify({ type: 'showroom_subscription', plan: subscription.plan, showroom_id: subscription.showroom_id }),
     ]);
 
     await client.query(`
       INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type)
       VALUES ($1,$2,$3,'system',$4,'showroom_subscription')
-    `, [req.user.id, 'تم تفعيل المعرض', `تم تفعيل معرض «${subscription.showroom_name}» في ${subscription.city} حتى ${expiresAt.toISOString().slice(0,10)}.`, subscription.id]);
+    `, [req.user.id, subscription.approval_status === 'approved' ? 'تم تفعيل الفرع' : 'طلب فرع بانتظار المراجعة', subscription.approval_status === 'approved' ? `تم تفعيل فرع «${subscription.showroom_name}» في ${subscription.city}.` : `تم استلام طلب فرع «${subscription.showroom_name}» في ${subscription.city}، وسيتم تفعيله بعد موافقة الإدارة.`, subscription.id]);
 
     await client.query('COMMIT');
     res.status(201).json({
       success: true,
-      data: { payment: payment.rows[0], subscription: { ...subscription, status: 'paid', starts_at: startsAt, expires_at: expiresAt }, showroom_status: 'active' },
-      message: 'تم دفع الاشتراك وتفعيل المعرض بنجاح',
+      data: { payment: payment.rows[0], subscription: { ...subscription, status: 'paid', starts_at: startsAt, expires_at: expiresAt }, showroom_status: subscription.approval_status === 'approved' ? 'active' : 'pending_approval' },
+      message: subscription.approval_status === 'approved' ? 'تم الدفع وتفعيل الفرع' : 'تم الدفع، والفرع بانتظار موافقة الإدارة',
     });
   } catch (error) {
     await client.query('ROLLBACK');
