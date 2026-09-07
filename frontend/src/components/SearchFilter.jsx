@@ -13,7 +13,9 @@ export default function SearchFilter({
   const applyLocationChange = (location) => {
     setSearchParams((prev) => ({
       ...prev,
-      location: location?.name || '',
+      // Prefer the normalized city because the database stores supplier
+      // locations by city, while `name` may be a long formatted address.
+      location: location?.city || location?.name || '',
       latitude: location?.latitude ?? '',
       longitude: location?.longitude ?? '',
       radius: 10,

@@ -80,12 +80,16 @@ export default function Cars() {
       // The search page stores the selected place as `location`, while the
       // cars page stores it as `search`. Send both when coordinates are
       // present so the API can fall back to city matching for legacy rows.
-      const queryFilters = {
-        ...filters,
-        ...(filters.latitude && filters.longitude && filters.search?.trim()
-          ? { location: filters.search.trim() }
-          : {}),
-      };
+      const hasGeoLocation = Boolean(filters.latitude && filters.longitude && filters.search?.trim());
+      const queryFilters = hasGeoLocation
+        ? {
+            ...filters,
+            location: filters.search.trim(),
+            // The selected place is already handled by the location filter.
+            // Do not apply the same value a second time as a text search.
+            search: '',
+          }
+        : filters;
       const res = await carsAPI.getAll(queryFilters);
       setCars(res.data.data);
     } catch (error) {

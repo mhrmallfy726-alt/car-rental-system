@@ -70,7 +70,9 @@ router.get('/', asyncHandler(async (req, res) => {
     if (locationText) {
       sql += ` OR c.location_id::text = $${paramIndex}
         OR loc.city ILIKE $${paramIndex}
-        OR COALESCE(loc.address, '') ILIKE $${paramIndex}`;
+        OR COALESCE(loc.address, '') ILIKE $${paramIndex}
+        OR COALESCE(u.city, '') ILIKE $${paramIndex}
+        OR COALESCE(u.address, '') ILIKE $${paramIndex}`;
       params.push(`%${locationText}%`);
       paramIndex++;
     }
