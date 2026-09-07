@@ -9,14 +9,13 @@ import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Pal
 export default function AddCar() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
   const [formData, setFormData] = useState({
     make: '', model: '', year: new Date().getFullYear(),
-    category_id: '', location_id: '', color: '',
+    category_id: '', color: '',
     license_plate: '', seats: 5, doors: 4,
     transmission: 'automatic', fuel_type: 'petrol',
     price_per_day: '', description: '', mileage: 0
@@ -28,11 +27,9 @@ export default function AddCar() {
 
   const fetchOptions = async () => {
     try {
-      const [catRes, locRes] = await Promise.all([carsAPI.getCategories(), carsAPI.getLocations()]);
+      const catRes = await carsAPI.getCategories();
       setCategories(catRes.data.data);
-      setLocations(locRes.data.data);
       if (catRes.data.data.length > 0) setFormData(prev => ({ ...prev, category_id: catRes.data.data[0].id }));
-      if (locRes.data.data.length > 0) setFormData(prev => ({ ...prev, location_id: locRes.data.data[0].id }));
     } catch (error) {
       toast.error('فشل جلب البيانات الأساسية');
     }
@@ -135,17 +132,15 @@ export default function AddCar() {
               </div>
             </div>
 
-            {/* صف 3: الفئة والموقع */}
+            {/* صف 3: الفئة وموقع المورد */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الفئة</label>
                 <select name="category_id" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.category_id} onChange={handleChange}>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name_ar || c.name}</option>)}
                 </select>
               </div>
-              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>المدينة المتاحة بها</label>
-                <select name="location_id" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.location_id} onChange={handleChange}>
-                  {locations.map(l => <option key={l.id} value={l.id}>{l.city}</option>)}
-                </select>
+              <div style={{ display: 'flex', alignItems: 'center', color: '#52636d', fontSize: '0.9rem' }}>
+                سيتم حفظ السيارة تلقائياً في موقع المورد المسجل.
               </div>
             </div>
 

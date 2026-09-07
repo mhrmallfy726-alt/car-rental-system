@@ -74,7 +74,20 @@ router.get('/', asyncHandler(async (req, res) => {
   if (transmission) { sql += ` AND c.transmission = $${paramIndex++}`; params.push(transmission); }
   if (fuel_type) { sql += ` AND c.fuel_type = $${paramIndex++}`; params.push(fuel_type); }
   if (seats) { sql += ` AND c.seats >= $${paramIndex++}`; params.push(seats); }
-  if (search) { sql += ` AND (c.make ILIKE $${paramIndex} OR c.model ILIKE $${paramIndex})`; params.push(`%${search}%`); paramIndex++; }
+  if (search) {
+    sql += ` AND (
+      c.make ILIKE $${paramIndex}
+      OR c.model ILIKE $${paramIndex}
+      OR COALESCE(cat.name, '') ILIKE $${paramIndex}
+      OR COALESCE(cat.name_ar, '') ILIKE $${paramIndex}
+      OR COALESCE(loc.city, '') ILIKE $${paramIndex}
+      OR COALESCE(loc.address, '') ILIKE $${paramIndex}
+      OR COALESCE(u.city, '') ILIKE $${paramIndex}
+      OR COALESCE(u.address, '') ILIKE $${paramIndex}
+    )`;
+    params.push(`%${search.trim()}%`);
+    paramIndex++;
+  }
 
   // لا تعرض السيارة إذا كان لها حجز مؤكد يتداخل مع الفترة المطلوبة.
   if (requestedStart && requestedEnd) {
@@ -178,17 +191,45 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 // ========================
 router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) => {
   const {
-    category_id, location_id, make, model, year, color,
+    category_id, make, model, year, color,
     license_plate, seats, doors, transmission, fuel_type,
     price_per_day, description, mileage, features
   } = req.body;
+
+  // موقع السيارة هو موقع المورد المسجل، وليس قيمة يرسلها نموذج إضافة السيارة.
+  const supplierResult = await query(
+    'SELECT city, address FROM users WHERE id = $1',
+    [req.user.id]
+  );
+  const supplier = supplierResult.rows[0];
+  if (!supplier?.city?.trim()) {
+    throw new AppError('يرجى تحديث موقع المورد قبل إضافة سيارة', 400);
+  }
+
+  let supplierLocation = (await query(
+    `SELECT id FROM locations
+     WHERE is_active = true
+       AND LOWER(TRIM(city)) = LOWER(TRIM($1))
+     ORDER BY created_at ASC NULLS LAST
+     LIMIT 1`,
+    [supplier.city || '']
+  )).rows[0];
+
+  if (!supplierLocation) {
+    supplierLocation = (await query(
+      `INSERT INTO locations (city, address, latitude, longitude, is_active)
+       VALUES ($1, $2, $3, $4, true)
+       RETURNING id`,
+      [supplier.city.trim(), supplier.address || null, null, null]
+    )).rows[0];
+  }
 
   const result = await query(`
     INSERT INTO cars (supplier_id, category_id, location_id, make, model, year, color,
       license_plate, seats, doors, transmission, fuel_type, price_per_day, discount_percentage, description, mileage)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
     RETURNING *
-  `, [req.user.id, category_id, location_id, make, model, year, color,
+  `, [req.user.id, category_id, supplierLocation.id, make, model, year, color,
       license_plate, seats || 5, doors || 4, transmission || 'automatic',
       fuel_type || 'petrol', price_per_day, 0, description, mileage || 0]);
 
