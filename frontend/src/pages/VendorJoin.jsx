@@ -140,10 +140,6 @@ export default function Join() {
 
     const extension = file.name.split('.').pop()?.toLowerCase();
     const isPdf = file.type === 'application/pdf' || extension === 'pdf';
-    // const isPdf = file.type === 'application/pdf' || extension === 'pdf';
-
-
-    const isPdf  = file.type === 'application/pdf' || extension === 'pdf';
     if (!isPdf) {
       toast.error('السجل التجاري يجب أن يكون ملف PDF فقط');
       e.target.value = '';

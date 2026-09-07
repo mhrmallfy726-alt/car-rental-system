@@ -65,7 +65,7 @@ router.get('/', asyncHandler(async (req, res) => {
     params.push(Number(latitude), Number(longitude), radiusKm);
     paramIndex += 3;
   } else if (location) {
-    sql += ` AND (c.location_id::text = $${paramIndex} OR loc.city ILIKE $${paramIndex} OR COALESCE(loc.address, '') ILIKE $${paramIndex})`;
+    sql += ` AND (COALESCE(u.city, '') ILIKE $${paramIndex} OR COALESCE(u.address, '') ILIKE $${paramIndex})`;
     params.push(location.trim().startsWith('%') ? location.trim() : `%${location.trim()}%`);
     paramIndex++;
   }
@@ -75,16 +75,8 @@ router.get('/', asyncHandler(async (req, res) => {
   if (fuel_type) { sql += ` AND c.fuel_type = $${paramIndex++}`; params.push(fuel_type); }
   if (seats) { sql += ` AND c.seats >= $${paramIndex++}`; params.push(seats); }
   if (search) {
-    sql += ` AND (
-      c.make ILIKE $${paramIndex}
-      OR c.model ILIKE $${paramIndex}
-      OR COALESCE(cat.name, '') ILIKE $${paramIndex}
-      OR COALESCE(cat.name_ar, '') ILIKE $${paramIndex}
-      OR COALESCE(loc.city, '') ILIKE $${paramIndex}
-      OR COALESCE(loc.address, '') ILIKE $${paramIndex}
-      OR COALESCE(u.city, '') ILIKE $${paramIndex}
-      OR COALESCE(u.address, '') ILIKE $${paramIndex}
-    )`;
+    // خانة البحث الرئيسية مخصصة لموقع المورد فقط.
+    sql += ` AND (COALESCE(u.city, '') ILIKE $${paramIndex} OR COALESCE(u.address, '') ILIKE $${paramIndex})`;
     params.push(`%${search.trim()}%`);
     paramIndex++;
   }
