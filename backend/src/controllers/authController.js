@@ -682,21 +682,53 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   res.json({ success: true, user: result.rows[0] });
 });
 
+const requestPasswordChangeOTP = asyncHandler(async (req, res, next) => {
+  const userResult = await query('SELECT id, email, name FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
+  const user = userResult.rows[0];
+  if (!user?.email) return next(new AppError('لا يوجد بريد إلكتروني مرتبط بالحساب', 400));
+
+  const otp = generateOTP();
+  const tokenHash = crypto.createHash('sha256').update(`${user.email.toLowerCase()}:${otp}`).digest('hex');
+  await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL', [user.id]);
+  await query(`INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`, [user.id, tokenHash]);
+  await sendEmail(user.email, 'رمز تأكيد تغيير كلمة المرور', `<h2>تأكيد تغيير كلمة المرور</h2><p>مرحباً ${user.name || ''}، استخدم الرمز التالي لإكمال العملية:</p><h1>${otp}</h1><p>الرمز صالح لمدة 10 دقائق.</p>`);
+  res.json({ success: true, message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
+});
+
 const changePassword = asyncHandler(async (req, res, next) => {
-  const { current_password, new_password, confirm_password } = req.body;
-  if (!current_password || !new_password || !confirm_password) {
-    return next(new AppError('يرجى إدخال كلمة المرور الحالية والجديدة وتأكيدها', 400));
+  const { current_password, new_password, confirm_password, otp } = req.body;
+  if (!current_password || !new_password || !confirm_password || !otp) {
+    return next(new AppError('يرجى إدخال كلمة المرور الحالية والرمز وكلمة المرور الجديدة وتأكيدها', 400));
   }
+  if (!/^\d{6}$/.test(String(otp))) return next(new AppError('رمز التحقق يجب أن يتكون من 6 أرقام', 400));
   if (!isStrongPassword(new_password)) return next(new AppError('كلمة المرور الجديدة يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا', 400));
   if (new_password !== confirm_password) return next(new AppError('كلمات المرور الجديدة غير متطابقة', 400));
 
-  const current = await query('SELECT password FROM users WHERE id = $1', [req.user.id]);
-  if (!current.rows.length || !(await bcrypt.compare(current_password, current.rows[0].password))) {
-    return next(new AppError('كلمة المرور الحالية غير صحيحة', 400));
+  const client = await require('../config/database').getClient();
+  try {
+    await client.query('BEGIN');
+    const current = await client.query('SELECT password, email FROM users WHERE id = $1 FOR UPDATE', [req.user.id]);
+    if (!current.rows.length || !(await bcrypt.compare(current_password, current.rows[0].password))) {
+      await client.query('ROLLBACK');
+      return next(new AppError('كلمة المرور الحالية غير صحيحة', 400));
+    }
+    const tokenHash = crypto.createHash('sha256').update(`${current.rows[0].email.toLowerCase()}:${otp}`).digest('hex');
+    const token = await client.query('SELECT id FROM password_reset_tokens WHERE user_id = $1 AND token_hash = $2 AND used_at IS NULL AND expires_at > NOW() FOR UPDATE', [req.user.id, tokenHash]);
+    if (!token.rows.length) {
+      await client.query('ROLLBACK');
+      return next(new AppError('رمز التحقق غير صحيح أو منتهي الصلاحية', 400));
+    }
+    const hashedPassword = await bcrypt.hash(new_password, 12);
+    await client.query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [hashedPassword, req.user.id]);
+    await client.query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1', [token.rows[0].id]);
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
   }
-  const hashedPassword = await bcrypt.hash(new_password, 12);
-  await query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [hashedPassword, req.user.id]);
-  res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
 });
 
 // ========================
@@ -764,6 +796,7 @@ module.exports = {
   getMe,
   uploadDocs,
   updateProfile,
+  requestPasswordChangeOTP,
   changePassword,
   uploadBrandLogo,
   requestPasswordReset,
