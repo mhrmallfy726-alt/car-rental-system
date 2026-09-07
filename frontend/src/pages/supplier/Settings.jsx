@@ -184,7 +184,7 @@ export default function SupplierSettings() {
                         <input type="text" name="name" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.name} onChange={handleChange} required />
                       </div>
                       <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>اسم الشركة / المعرض</label>
+                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>اسم الشركة</label>
                         <input type="text" name="company_name" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.company_name} onChange={handleChange} required />
                       </div>
                     </div>

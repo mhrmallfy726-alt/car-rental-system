@@ -339,14 +339,26 @@ router.delete('/:id', protect, authorize('supplier', 'admin'), asyncHandler(asyn
 // @access  Supplier
 // ========================
 router.get('/my/list', protect, authorize('supplier'), asyncHandler(async (req, res) => {
+  const { location_id } = req.query;
+  const params = [req.user.id];
+  let locationFilter = '';
+  if (location_id) {
+    const ownedLocation = await query(
+      `SELECT id FROM locations WHERE id = $1 AND supplier_id = $2 AND COALESCE(is_active, TRUE) = TRUE`,
+      [location_id, req.user.id]
+    );
+    if (!ownedLocation.rows.length) return res.status(403).json({ success: false, message: 'الفرع المحدد غير تابع لحسابك أو غير نشط' });
+    params.push(location_id);
+    locationFilter = ' AND c.location_id = $2';
+  }
   const result = await query(`
     SELECT c.*, cat.name as category_name, loc.city as location_city,
            (SELECT image_url FROM car_images WHERE car_id = c.id AND is_primary = true LIMIT 1) as primary_image
     FROM cars c
     LEFT JOIN categories cat ON c.category_id = cat.id
     LEFT JOIN locations loc ON c.location_id = loc.id
-    WHERE c.supplier_id = $1 ORDER BY c.created_at DESC
-  `, [req.user.id]);
+    WHERE c.supplier_id = $1${locationFilter} ORDER BY c.created_at DESC
+  `, params);
 
   res.json({ success: true, data: result.rows });
 }));

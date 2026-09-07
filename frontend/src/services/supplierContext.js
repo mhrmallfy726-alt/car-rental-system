@@ -21,8 +21,10 @@ export function getSelectedShowroom() {
 
 export function setSelectedShowroom(showroom) {
   localStorage.setItem('supplierShowroom', JSON.stringify(showroom));
+  window.dispatchEvent(new CustomEvent('supplierShowroomChanged', { detail: showroom }));
 }
 
 export function clearSelectedShowroom() {
   localStorage.removeItem('supplierShowroom');
+  window.dispatchEvent(new CustomEvent('supplierShowroomChanged', { detail: null }));
 }

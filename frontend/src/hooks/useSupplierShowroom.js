@@ -20,7 +20,12 @@ export function useSupplierShowroom() {
     return null;
   };
 
-  useEffect(() => { load().catch(() => {}); }, []);
+  useEffect(() => {
+    load().catch(() => {});
+    const onChanged = (event) => setShowroom(event.detail || null);
+    window.addEventListener('supplierShowroomChanged', onChanged);
+    return () => window.removeEventListener('supplierShowroomChanged', onChanged);
+  }, []);
 
   return { showroom, options, reload: load };
 }
