@@ -109,6 +109,10 @@ export default function UserSettings() {
   };
 
   const isSupplier = user?.role === 'supplier';
+  const verification = isSupplier ? (user.verification_status || (user.is_verified ? 'approved' : 'pending')) : (user?.is_verified ? 'approved' : 'pending');
+  const verificationText = verification === 'approved' ? 'الحساب معتمد' : verification === 'rejected' ? 'تم رفض التوثيق' : 'بانتظار التوثيق';
+  const verificationColor = verification === 'approved' ? teal : verification === 'rejected' ? '#b42318' : '#9a6b16';
+  const verificationBackground = verification === 'approved' ? '#eaf6f2' : verification === 'rejected' ? '#fff0f0' : '#fff7e5';
   const tabs = [
     ['profile', 'الحساب والبيانات', User],
     ...(isSupplier ? [['company', 'هوية الشركة', Building2]] : []),
@@ -120,7 +124,7 @@ export default function UserSettings() {
     <main dir="rtl" style={{ minHeight: '100vh', background: soft, padding: '28px 20px', color: navy }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 18, marginBottom: 24 }}>
-          <div><span style={{ color: teal, fontSize: 12, fontWeight: 900 }}>إدارة الحساب</span><h1 style={{ margin: '5px 0', fontSize: 30 }}>الإعدادات</h1><p style={{ margin: 0, color: '#71828a' }}>تحكم ببياناتك، هوية شركتك وأمان حسابك من مكان واحد.</p></div>
+          <div><span style={{ color: teal, fontSize: 12, fontWeight: 900 }}>إدارة الحساب</span><h1 style={{ margin: '5px 0', fontSize: 30 }}>الإعدادات</h1><p style={{ margin: 0, color: '#71828a' }}>تحكم ببياناتك، هوية شركتك وأمان حسابك من مكان واحد.</p><span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10, padding: '7px 11px', borderRadius: 20, background: verificationBackground, color: verificationColor, fontSize: 12, fontWeight: 900 }}><ShieldCheck size={15} />{verificationText}</span>{verification === 'rejected' && user?.rejection_reason && <small style={{ display: 'block', color: '#b42318', marginTop: 6 }}>سبب الرفض: {user.rejection_reason}</small>}</div>
           <div style={{ width: 52, height: 52, borderRadius: 16, background: navy, color: '#fff', display: 'grid', placeItems: 'center' }}><SettingsIcon /></div>
         </header>
         <div style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
