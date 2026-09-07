@@ -276,6 +276,7 @@ import toast from 'react-hot-toast';
 
 import logo from '../../assets/LOGO.png';
 import { Car, Mail, Lock, User, Phone, ChevronLeft, ShieldCheck, Briefcase,KeyRound } from 'lucide-react';
+import { validateStrongPassword } from '../../utils/inputValidation';
 
 export default function Register() {
 
@@ -301,6 +302,10 @@ export default function Register() {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
       toast.error('الرجاء إدخال جميع الحقول المطلوبة');
+      return;
+    }
+    if (!validateStrongPassword(formData.password)) {
+      toast.error('كلمة المرور يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا');
       return;
     }
 
@@ -532,6 +537,9 @@ textTransform: "uppercase",
               <input 
                 type="password" 
                 name="password" 
+                data-password-policy="strong"
+                minLength="10"
+                maxLength="72"
                 placeholder="••••••••" 
                 value={formData.password} 
                 onChange={handleChange} 
@@ -547,6 +555,7 @@ textTransform: "uppercase",
                 }}
               />
             </div>
+            <p style={{ color: '#6c757d', fontSize: '0.75rem', marginTop: '6px' }}>استخدم 10 أحرف على الأقل مع حرف كبير وحرف صغير ورقم ورمز خاص.</p>
           </div>
 
           <button 

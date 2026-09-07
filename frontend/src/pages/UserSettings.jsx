@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { User, Bell, Lock, ShieldCheck, Save } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { authAPI } from '../services/api';
+import { validateStrongPassword } from '../utils/inputValidation';
 
 import { getImageUrl } from '../utils/imageUtils';
 export default function UserSettings() {
@@ -103,7 +104,7 @@ export default function UserSettings() {
 
   const handleSaveSecurity = async (e) => {
     e.preventDefault();
-    if (settings.new_password.length < 8) return toast.error('كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف');
+    if (!validateStrongPassword(settings.new_password)) return toast.error('كلمة المرور الجديدة يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا');
     if (settings.new_password !== settings.confirm_password) {
       return toast.error('كلمات المرور الجديدة غير متطابقة');
     }
@@ -261,7 +262,8 @@ export default function UserSettings() {
               <div className="grid-2 gap-16">
                 <div className="form-group">
                   <label className="form-label">كلمة المرور الجديدة</label>
-                  <input type="password" name="new_password" className="form-input" value={settings.new_password} onChange={handleChange} required />
+                <input type="password" name="new_password" data-password-policy="strong" minLength="10" maxLength="72" className="form-input" value={settings.new_password} onChange={handleChange} required />
+                <p className="text-xs text-secondary mt-4">يجب أن تحتوي على 10 أحرف على الأقل، وحرف كبير وصغير ورقم ورمز خاص.</p>
                 </div>
                 <div className="form-group">
                   <label className="form-label">تأكيد كلمة المرور الجديدة</label>

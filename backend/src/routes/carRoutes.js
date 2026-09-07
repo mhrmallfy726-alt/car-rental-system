@@ -5,6 +5,23 @@ const { uploadCarImages } = require('../middleware/upload');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 
+const vehicleTextPattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{0,79}$/u;
+const licensePlatePattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,19}$/u;
+const isIntegerInRange = (value, min, max) => Number.isInteger(Number(value)) && Number(value) >= min && Number(value) <= max;
+const validateVehicleFields = ({ make, model, year, color, license_plate, seats, doors, price_per_day, mileage, description }) => {
+  if (make !== undefined && !vehicleTextPattern.test(String(make).trim())) return 'اسم الشركة المصنعة يقبل الحروف والأرقام والمسافات والشرطة فقط وبحد أقصى 80 حرفًا';
+  if (model !== undefined && !vehicleTextPattern.test(String(model).trim())) return 'الموديل يقبل الحروف والأرقام والمسافات والشرطة فقط وبحد أقصى 80 حرفًا';
+  if (color !== undefined && color !== null && color !== '' && !vehicleTextPattern.test(String(color).trim())) return 'اللون يقبل الحروف والأرقام والمسافات والشرطة فقط';
+  if (license_plate !== undefined && !licensePlatePattern.test(String(license_plate).trim())) return 'رقم اللوحة يقبل الحروف والأرقام والمسافات والشرطة فقط وبحد أقصى 20 حرفًا';
+  if (year !== undefined && !isIntegerInRange(year, 1980, new Date().getFullYear() + 1)) return 'سنة الصنع يجب أن تكون بين 1980 والعام القادم';
+  if (seats !== undefined && !isIntegerInRange(seats, 1, 9)) return 'عدد المقاعد يجب أن يكون بين 1 و9';
+  if (doors !== undefined && !isIntegerInRange(doors, 2, 5)) return 'عدد الأبواب يجب أن يكون بين 2 و5';
+  if (price_per_day !== undefined && (!Number.isFinite(Number(price_per_day)) || Number(price_per_day) <= 0)) return 'السعر اليومي يجب أن يكون أكبر من صفر';
+  if (mileage !== undefined && !isIntegerInRange(mileage, 0, 10000000)) return 'المسافة المقطوعة يجب أن تكون رقمًا صحيحًا غير سالب';
+  if (description !== undefined && String(description).length > 1000) return 'وصف السيارة يجب ألا يتجاوز 1000 حرف';
+  return null;
+};
+
 // ========================
 // @desc    Get all cars (with filters)
 // @route   GET /api/cars
@@ -209,6 +226,9 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     price_per_day, description, mileage, features, location_id
   } = req.body;
 
+  const vehicleValidationError = validateVehicleFields({ make, model, year, color, license_plate, seats, doors, price_per_day, mileage, description });
+  if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
+
   if (!location_id) {
     throw new AppError('يرجى اختيار المعرض الحالي قبل إضافة السيارة', 400);
   }
@@ -305,6 +325,9 @@ router.put('/:id', protect, authorize('supplier'), asyncHandler(async (req, res,
   if (car.rows[0].supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
 
   const { make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, description, mileage, status } = req.body;
+
+  const vehicleValidationError = validateVehicleFields({ make, model, year, color, seats, doors, price_per_day, mileage, description });
+  if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
 
   const result = await query(`
     UPDATE cars SET make = COALESCE($1, make), model = COALESCE($2, model), year = COALESCE($3, year),

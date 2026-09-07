@@ -6,6 +6,7 @@ import api from '../../services/api';
 import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Palette, DoorOpen, Gauge, User } from 'lucide-react';
+import { sanitizeFieldValue } from '../../utils/inputValidation';
 
 export default function AddCar() {
   const navigate = useNavigate();
@@ -39,13 +40,14 @@ export default function AddCar() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const sanitizedValue = sanitizeFieldValue(e.target, value);
     // تحقق بسيط للحقول الرقمية لتجنب القيم السالبة
-    if (name === 'price_per_day' && parseFloat(value) < 0) return;
+    if (name === 'price_per_day' && parseFloat(sanitizedValue) < 0) return;
     if (name === 'year') {
       const currentYear = new Date().getFullYear();
-      if (value < 1980 || value > currentYear + 1) return; // +1 للسماح بموديلات العام القادم
+      if (sanitizedValue < 1980 || sanitizedValue > currentYear + 1) return; // +1 للسماح بموديلات العام القادم
     }
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, [name]: sanitizedValue });
   };
 
   const handleImageChange = (e) => {
@@ -118,10 +120,10 @@ export default function AddCar() {
             {/* صف 1: الصانع والموديل */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الشركة المصنعة</label>
-                <input type="text" name="make" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange} placeholder="مثال: Toyota" />
+                <input type="text" name="make" maxLength="80" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange} placeholder="مثال: Toyota" />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الموديل</label>
-                <input type="text" name="model" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} placeholder="مثال: Camry" />
+                <input type="text" name="model" maxLength="80" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} placeholder="مثال: Camry" />
               </div>
             </div>
 
@@ -131,7 +133,7 @@ export default function AddCar() {
                 <input type="number" name="year" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.year} onChange={handleChange} min="1980" max={new Date().getFullYear() + 1} />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رقم اللوحة</label>
-                <input type="text" name="license_plate" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.license_plate} onChange={handleChange} dir="ltr" />
+                <input type="text" name="license_plate" maxLength="20" pattern="[A-Za-z0-9\u0621-\u064A\u0660-\u0669\s-]+" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.license_plate} onChange={handleChange} dir="ltr" />
               </div>
             </div>
 
@@ -165,13 +167,13 @@ export default function AddCar() {
             {/* صف 6: الحقول المضافة (المقاعد، الأبواب، اللون، نوع الوقود، المسافة) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}><User size={14} style={{ display: 'inline', marginLeft: '4px' }} /> عدد المقاعد</label>
-                <input type="number" name="seats" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.seats} onChange={handleChange} min="1" max="9" />
+                <input type="number" name="seats" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.seats} onChange={handleChange} min="1" max="9" step="1" />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}><DoorOpen size={14} style={{ display: 'inline', marginLeft: '4px' }} /> عدد الأبواب</label>
-                <input type="number" name="doors" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.doors} onChange={handleChange} min="2" max="5" />
+                <input type="number" name="doors" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.doors} onChange={handleChange} min="2" max="5" step="1" />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}><Palette size={14} style={{ display: 'inline', marginLeft: '4px' }} /> اللون</label>
-                <input type="text" name="color" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.color} onChange={handleChange} placeholder="مثال: أبيض" />
+                <input type="text" name="color" maxLength="80" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.color} onChange={handleChange} placeholder="مثال: أبيض" />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}><Fuel size={14} style={{ display: 'inline', marginLeft: '4px' }} /> نوع الوقود</label>
                 <select name="fuel_type" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.fuel_type} onChange={handleChange}>
@@ -179,13 +181,13 @@ export default function AddCar() {
                 </select>
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}><Gauge size={14} style={{ display: 'inline', marginLeft: '4px' }} /> المسافة المقطوعة (كم)</label>
-                <input type="number" name="mileage" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.mileage} onChange={handleChange} min="0" step="1" />
+                <input type="number" name="mileage" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.mileage} onChange={handleChange} min="0" max="10000000" step="1" />
               </div>
             </div>
 
             {/* الوصف */}
             <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>وصف السيارة</label>
-              <textarea name="description" className="form-input" rows="4" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.description} onChange={handleChange} placeholder="اكتب تفاصيل ومميزات السيارة..."></textarea>
+              <textarea name="description" maxLength="1000" className="form-input" rows="4" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={formData.description} onChange={handleChange} placeholder="اكتب تفاصيل ومميزات السيارة..."></textarea>
             </div>
 
             {/* رفع الصور */}

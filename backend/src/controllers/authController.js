@@ -416,6 +416,7 @@ const { sendOTP } = require("./verificationController");
 const crypto = require('crypto');
 const { sendEmail, generateOTP } = require('../services/emailService');
 const { normalizePhoneNumber } = require('../utils/phone');
+const isStrongPassword = (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s])[\x21-\x7E]{10,72}$/.test(String(value || ''));
 //ايميل
 // ========================
 // @desc    Register a new user
@@ -430,6 +431,9 @@ const register = asyncHandler(async (req, res, next) => {
 
   if (!name || !email || !password) {
     return next(new AppError('الرجاء إدخال الاسم، البريد الإلكتروني، وكلمة المرور', 400));
+  }
+  if (!isStrongPassword(password)) {
+    return next(new AppError('كلمة المرور يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا', 400));
   }
 
   const normalizedPhone = normalizePhoneNumber(phone);
@@ -683,7 +687,7 @@ const changePassword = asyncHandler(async (req, res, next) => {
   if (!current_password || !new_password || !confirm_password) {
     return next(new AppError('يرجى إدخال كلمة المرور الحالية والجديدة وتأكيدها', 400));
   }
-  if (new_password.length < 8) return next(new AppError('كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف', 400));
+  if (!isStrongPassword(new_password)) return next(new AppError('كلمة المرور الجديدة يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا', 400));
   if (new_password !== confirm_password) return next(new AppError('كلمات المرور الجديدة غير متطابقة', 400));
 
   const current = await query('SELECT password FROM users WHERE id = $1', [req.user.id]);
@@ -739,7 +743,7 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const otp = String(req.body.otp || '').trim();
   const password = String(req.body.password || '');
-  if (!email || !/^\d{6}$/.test(otp) || password.length < 8) return next(new AppError('أدخل البريد والرمز وكلمة مرور من 8 أحرف على الأقل', 400));
+  if (!email || !/^\d{6}$/.test(otp) || !isStrongPassword(password)) return next(new AppError('أدخل البريد والرمز وكلمة مرور قوية من 10 أحرف على الأقل', 400));
   const tokenHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
   const client = await require('../config/database').getClient();
   try {
