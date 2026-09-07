@@ -1,274 +1,37 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Building2, CreditCard, ImagePlus, LockKeyhole, Save, Settings, ShieldCheck, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Settings, CreditCard, Building, ShieldCheck, Save, Upload, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { authAPI } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
-
 import { getImageUrl } from '../../utils/imageUtils';
+
+const navy = '#173a52';
+const teal = '#178263';
+const input = { width: '100%', boxSizing: 'border-box', border: '1px solid #dbe6e8', borderRadius: 12, padding: '12px 13px', color: navy, background: '#fff', outline: 'none' };
+const primary = { border: 0, borderRadius: 11, padding: '12px 17px', background: teal, color: '#fff', fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 };
+const secondary = { border: '1px solid #cfe1df', borderRadius: 11, padding: '11px 15px', background: '#fff', color: teal, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' };
+
 export default function SupplierSettings() {
   const { user, fetchMe } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('company'); // 'company', 'payment', 'booking'
+  const [tab, setTab] = useState('company');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [form, setForm] = useState({ name: '', phone: '', address: '', brand_description: '', bank_name: '', iban: '', auto_accept_bookings: false });
 
-  const [settings, setSettings] = useState({
-    name: user?.name || '',
-    company_name: user?.name || '',
-    phone: user?.phone || '',
-    address: user?.address || '',
-    iban: user?.iban || '',
-    bank_name: user?.bank_name || '',
-    brand_description: user?.brand_description || '',
-    tax_id: user?.tax_id || '',
-    auto_accept_bookings: user?.auto_accept_bookings || false
-  });
-  const [loading, setLoading] = useState(false);
-  const [logoPreview, setLogoPreview] = useState(
-    user?.brand_logo ? (user.brand_logo.startsWith('http') ? user.brand_logo : getImageUrl(user.brand_logo)) : null
-  );
-  const [uploadingLogo, setUploadingLogo] = useState(false);
+  useEffect(() => { if (user) setForm((prev) => ({ ...prev, name: user.name || '', phone: user.phone || '', address: user.address || '', brand_description: user.brand_description || '', bank_name: user.bank_name || '', iban: user.iban || '', auto_accept_bookings: user.auto_accept_bookings ?? false })); }, [user]);
+  const change = (event) => { const { name, value, type, checked } = event.target; setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value })); };
+  const save = async (event) => { event.preventDefault(); setSaving(true); try { await authAPI.updateProfile(form); await fetchMe(); toast.success('تم حفظ إعدادات المورد'); } catch (error) { toast.error(error.response?.data?.message || 'تعذر حفظ الإعدادات'); } finally { setSaving(false); } };
+  const chooseLogo = (event) => { const selected = event.target.files?.[0]; if (!selected) return; if (!['image/jpeg', 'image/png', 'image/webp'].includes(selected.type) || selected.size > 2 * 1024 * 1024) return toast.error('اختر JPG أو PNG أو WEBP بحجم أقصى 2 ميجابايت'); setFile(selected); setPreview(URL.createObjectURL(selected)); };
+  const uploadLogo = async () => { if (!file) return; const data = new FormData(); data.append('avatar', file); setUploading(true); try { await authAPI.uploadBrandLogo(data); setFile(null); setPreview(null); await fetchMe(); toast.success('تم تحديث شعار الشركة'); } catch (error) { toast.error(error.response?.data?.message || 'تعذر رفع الشعار'); } finally { setUploading(false); } };
+  const tabs = [['company', 'هوية الشركة', Building2], ['payment', 'المدفوعات', CreditCard], ['booking', 'الحجوزات', ShieldCheck]];
 
-  const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setSettings({ ...settings, [e.target.name]: value });
-  };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    // التحقق من حجم الصورة (أقل من 2 ميجابايت)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
-      return;
-    }
-    setLogoPreview(URL.createObjectURL(file));
-    // رفع تلقائي بعد اختيار الصورة (تحسين UX)
-    uploadLogo(file);
-  };
-
-  const uploadLogo = async (file) => {
-    if (!file) return;
-    setUploadingLogo(true);
-    try {
-      const fd = new FormData();
-      fd.append('avatar', file);
-      await authAPI.uploadBrandLogo(fd);
-      toast.success('تم رفع الشعار بنجاح');
-      if (fetchMe) await fetchMe();
-    } catch (error) {
-      toast.error('فشل رفع الشعار: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setUploadingLogo(false);
-    }
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await authAPI.updateProfile({
-        name: settings.name,           // إضافة name المفقود
-        company_name: settings.company_name,
-        phone: settings.phone,
-        address: settings.address,
-        iban: settings.iban,
-        bank_name: settings.bank_name,
-        auto_accept_bookings: settings.auto_accept_bookings,
-        brand_description: settings.brand_description,
-        tax_id: settings.tax_id
-      });
-      toast.success('تم حفظ الإعدادات بنجاح');
-      if (fetchMe) await fetchMe();
-    } catch (error) {
-      toast.error('فشل الحفظ: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div style={{ display: 'flex', background: '#f8f9fa', minHeight: '100vh' }}>
-      <SupplierSidebar />
-      <div style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '24px' }}>
-        {/* رأس الصفحة */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#0a58ca' }}>
-            <Settings size={24} /> إعدادات المورد
-          </h1>
-        </div>
-
-        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-          {/* القائمة الجانبية (responsive) */}
-          <div style={{ flex: '1', minWidth: '220px', maxWidth: '280px' }}>
-            <div style={{ background: 'white', borderRadius: '12px', padding: '16px', position: 'sticky', top: '90px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <button
-                  onClick={() => setActiveTab('company')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 16px', borderRadius: '8px', border: 'none',
-                    background: activeTab === 'company' ? '#e9ecef' : 'transparent',
-                    color: activeTab === 'company' ? '#0a58ca' : '#6c757d',
-                    fontWeight: activeTab === 'company' ? 'bold' : 'normal',
-                    width: '100%', textAlign: 'right', cursor: 'pointer'
-                  }}
-                >
-                  <Building size={18} /> بيانات الشركة
-                </button>
-                <button
-                  onClick={() => setActiveTab('payment')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 16px', borderRadius: '8px', border: 'none',
-                    background: activeTab === 'payment' ? '#e9ecef' : 'transparent',
-                    color: activeTab === 'payment' ? '#0a58ca' : '#6c757d',
-                    fontWeight: activeTab === 'payment' ? 'bold' : 'normal',
-                    width: '100%', textAlign: 'right', cursor: 'pointer'
-                  }}
-                >
-                  <CreditCard size={18} /> بيانات الدفع
-                </button>
-                <button
-                  onClick={() => setActiveTab('booking')}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '12px 16px', borderRadius: '8px', border: 'none',
-                    background: activeTab === 'booking' ? '#e9ecef' : 'transparent',
-                    color: activeTab === 'booking' ? '#0a58ca' : '#6c757d',
-                    fontWeight: activeTab === 'booking' ? 'bold' : 'normal',
-                    width: '100%', textAlign: 'right', cursor: 'pointer'
-                  }}
-                >
-                  <ShieldCheck size={18} /> إعدادات الحجز
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* نموذج الإعدادات (يظهر حسب التبويب النشط) */}
-          <div style={{ flex: '3', minWidth: '280px' }}>
-            <div style={{ background: 'white', borderRadius: '12px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <form onSubmit={handleSave}>
-                {/* تبويب بيانات الشركة */}
-                {activeTab === 'company' && (
-                  <div>
-                    <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center', color: '#0a58ca' }}>
-                      <Building size={20} /> بيانات الشركة (الظاهرة للعملاء)
-                    </h3>
-
-                    {/* رفع الشعار */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', marginBottom: '24px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px dashed #dee2e6' }}>
-                      <div style={{ width: '72px', height: '72px', borderRadius: '50%', overflow: 'hidden', background: '#e9ecef', border: '2px solid #dee2e6', flexShrink: 0 }}>
-                        {logoPreview ? (
-                          <img src={logoPreview} alt="logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <User size={32} color="#6c757d" />
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: 'bold', marginBottom: '4px', fontSize: '0.9rem' }}>شعار الشركة / صورة المورد</p>
-                        <p style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '8px' }}>يظهر للعملاء في صفحات السيارات وبجانب تقييماتك</p>
-                        <input type="file" accept="image/*" id="logo_upload" style={{ display: 'none' }} onChange={handleLogoChange} />
-                        <label htmlFor="logo_upload" style={{ background: '#6c757d', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <Upload size={14} /> اختر صورة
-                        </label>
-                        {uploadingLogo && <span style={{ marginRight: '12px', fontSize: '0.8rem', color: '#0a58ca' }}>جاري الرفع...</span>}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>اسم المستخدم (للحساب)</label>
-                        <input type="text" name="name" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.name} onChange={handleChange} required />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>اسم الشركة</label>
-                        <input type="text" name="company_name" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.company_name} onChange={handleChange} required />
-                      </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رقم الهاتف</label>
-                        <input type="tel" name="phone" className="form-input" dir="ltr" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.phone} onChange={handleChange} />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الرقم الضريبي (اختياري)</label>
-                        <input type="text" name="tax_id" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.tax_id} onChange={handleChange} />
-                      </div>
-                    </div>
-                    <div style={{ marginTop: '16px' }}>
-                      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>العنوان</label>
-                      <input type="text" name="address" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.address} onChange={handleChange} />
-                    </div>
-                    <div style={{ marginTop: '16px' }}>
-                      <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>وصف العلامة التجارية / نبذة عن المورد</label>
-                      <textarea name="brand_description" rows="3" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.brand_description} onChange={handleChange} placeholder="اكتب نبذة قصيرة تظهر للعملاء..."></textarea>
-                    </div>
-                  </div>
-                )}
-
-                {/* تبويب بيانات الدفع */}
-                {activeTab === 'payment' && (
-                  <div>
-                    <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center', color: '#0a58ca' }}>
-                      <CreditCard size={20} /> بيانات الدفع (لاستلام الأرباح)
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>اسم البنك</label>
-                        <input type="text" name="bank_name" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} value={settings.bank_name} onChange={handleChange} required />
-                      </div>
-                      <div>
-                        <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رقم الحساب الدولي (IBAN)</label>
-                        <input type="text" name="iban" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', direction: 'ltr', textAlign: 'left' }} value={settings.iban} onChange={handleChange} placeholder="SA..." required />
-                      </div>
-                    </div>
-                    <p style={{ fontSize: '0.7rem', color: '#6c757d', marginTop: '8px' }}>سيتم تحويل أرباحك إلى هذا الحساب في نهاية كل شهر بناءً على سياسة المنصة.</p>
-                  </div>
-                )}
-
-                {/* تبويب إعدادات الحجز */}
-                {activeTab === 'booking' && (
-                  <div>
-                    <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center', color: '#0a58ca' }}>
-                      <ShieldCheck size={20} /> إعدادات الحجز والعمليات
-                    </h3>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                      <input type="checkbox" name="auto_accept_bookings" checked={settings.auto_accept_bookings} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
-                      قبول الحجوزات تلقائياً (سيتم تأكيد الحجز مباشرة دون الحاجة لموافقتك اليدوية)
-                    </label>
-                  </div>
-                )}
-
-                {/* أزرار الحفظ (تظهر في جميع التبويبات) */}
-                <div style={{ borderTop: '1px solid #e9ecef', paddingTop: '24px', marginTop: '24px' }}>
-                  <button type="submit" disabled={loading} style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ الإعدادات</>}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* أنماط عامة و responsive */}
-      <style>{`
-        @media (max-width: 768px) {
-          [style*="display: flex"][style*="gap: 24px"] {
-            flex-direction: column;
-          }
-          [style*="max-width: 280px"] {
-            max-width: 100% !important;
-          }
-        }
-        .form-input:focus {
-          outline: none;
-          border-color: #86b7fe;
-          box-shadow: 0 0 0 2px rgba(13,110,253,0.25);
-        }
-      `}</style>
-    </div>
-  );
+  return <div dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f4f8f8', color: navy }}><SupplierSidebar /><main style={{ flex: 1, padding: '30px 24px' }}><div style={{ maxWidth: 1050, margin: '0 auto' }}><header style={{ display: 'flex', justifyContent: 'space-between', gap: 18, alignItems: 'center', marginBottom: 25 }}><div><span style={{ color: teal, fontWeight: 900, fontSize: 12 }}>بوابة المورد</span><h1 style={{ margin: '5px 0', fontSize: 30 }}>إعدادات الشركة</h1><p style={{ margin: 0, color: '#71828a' }}>حدّث هوية مكتب التأجير وبيانات التسوية وقواعد استقبال الحجوزات.</p></div><div style={{ width: 52, height: 52, borderRadius: 16, background: navy, color: '#fff', display: 'grid', placeItems: 'center' }}><Settings size={23} /></div></header><div style={{ display: 'grid', gridTemplateColumns: '230px minmax(0, 1fr)', gap: 18, alignItems: 'start' }}><aside style={{ background: '#fff', border: '1px solid #e3eeee', borderRadius: 18, padding: 10, position: 'sticky', top: 20 }}>{tabs.map(([id, label, Icon]) => <button key={id} type="button" onClick={() => setTab(id)} style={{ width: '100%', border: 0, borderRadius: 12, padding: 13, marginBottom: 5, display: 'flex', gap: 9, alignItems: 'center', textAlign: 'right', cursor: 'pointer', background: tab === id ? '#eaf6f2' : 'transparent', color: tab === id ? teal : '#71828a', fontWeight: 900 }}><Icon size={18} />{label}</button>)}<Link to="/settings" style={{ ...secondary, width: '100%', boxSizing: 'border-box', marginTop: 10, justifyContent: 'center', fontSize: 12 }}><LockKeyhole size={16} />الأمان وOTP</Link></aside><section style={{ background: '#fff', border: '1px solid #e3eeee', borderRadius: 18, padding: 24, boxShadow: '0 8px 24px rgba(23,58,82,.05)' }}><form onSubmit={save}>{tab === 'company' && <><Title icon={Building2} title="هوية الشركة" subtitle="بيانات تظهر للعملاء في صفحات السيارات والحجوزات" /><div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f7fbfa', borderRadius: 15, marginBottom: 20 }}><img src={preview || (user?.brand_logo ? (user.brand_logo.startsWith('http') ? user.brand_logo : getImageUrl(user.brand_logo)) : 'https://via.placeholder.com/84?text=Logo')} alt="شعار الشركة" style={{ width: 84, height: 84, borderRadius: 18, objectFit: 'contain', background: '#fff', border: '1px solid #dbe6e8' }} /><div><b>شعار المكتب</b><p style={{ margin: '5px 0 10px', color: '#71828a', fontSize: 12 }}>صورة واضحة تساعد العملاء على تمييز شركتك.</p><input id="supplier-logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseLogo} style={{ display: 'none' }} /><label htmlFor="supplier-logo" style={secondary}><ImagePlus size={16} />اختيار صورة</label>{file && <button type="button" onClick={uploadLogo} disabled={uploading} style={{ ...primary, marginRight: 8 }}>{uploading ? 'جاري الرفع...' : 'حفظ الشعار'}</button>}</div></div><div style={grid}><Field label="اسم الحساب"><input name="name" value={form.name} onChange={change} required style={input} /></Field><Field label="رقم الهاتف"><input name="phone" value={form.phone} onChange={change} dir="ltr" style={input} /></Field></div><Field label="العنوان"><input name="address" value={form.address} onChange={change} style={input} /></Field><Field label="نبذة الشركة"><textarea name="brand_description" value={form.brand_description} onChange={change} rows="5" maxLength="1000" style={{ ...input, resize: 'vertical' }} placeholder="اكتب نبذة عن خدمات التأجير والفروع..." /></Field></>}{tab === 'payment' && <><Title icon={CreditCard} title="بيانات التسوية" subtitle="تستخدم هذه البيانات لتحويل مستحقات شركتك" /><div style={grid}><Field label="اسم البنك"><input name="bank_name" value={form.bank_name} onChange={change} style={input} /></Field><Field label="رقم IBAN"><input name="iban" value={form.iban} onChange={change} dir="ltr" placeholder="SA..." style={input} /></Field></div><div style={{ marginTop: 18, padding: 15, borderRadius: 13, background: '#fff9e9', color: '#806a22', fontSize: 12 }}>راجع رقم الحساب قبل الحفظ. لا تتم مشاركة بيانات التسوية مع العملاء.</div></>}{tab === 'booking' && <><Title icon={ShieldCheck} title="إعدادات الحجوزات" subtitle="حدد طريقة تعامل المكتب مع الطلبات الجديدة" /><label style={{ display: 'flex', gap: 12, alignItems: 'flex-start', border: '1px solid #e3eeee', borderRadius: 14, padding: 16, cursor: 'pointer' }}><input type="checkbox" name="auto_accept_bookings" checked={form.auto_accept_bookings} onChange={change} style={{ width: 19, height: 19, accentColor: teal }} /><span><b>قبول الحجوزات تلقائياً</b><small style={{ display: 'block', color: '#71828a', marginTop: 5 }}>سيتم تأكيد الحجز مباشرة عند توفر السيارة دون مراجعة يدوية.</small></span></label></>}<div style={{ borderTop: '1px solid #edf2f2', marginTop: 24, paddingTop: 18 }}><button disabled={saving} style={primary}><Save size={17} />{saving ? 'جاري الحفظ...' : 'حفظ التغييرات'}</button></div></form></section></div></div></main><style>{`@media(max-width:800px){main{padding:20px 14px!important}main>div>div{grid-template-columns:1fr!important}aside{position:static!important;display:flex;overflow:auto;gap:4px}aside button{white-space:nowrap;width:auto!important;margin:0!important}section{padding:18px!important}}@media(max-width:540px){.supplier-settings-grid{grid-template-columns:1fr!important}}`}</style></div>;
 }
+
+const grid = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 15, marginBottom: 17 };
+function Field({ label, children }) { return <label style={{ display: 'grid', gap: 7, color: navy, fontWeight: 800, fontSize: 13, marginBottom: 17 }}>{label}{children}</label>; }
+function Title({ icon: Icon, title, subtitle }) { return <div style={{ display: 'flex', gap: 12, alignItems: 'center', borderBottom: '1px solid #edf2f2', paddingBottom: 16, marginBottom: 20 }}><div style={{ width: 40, height: 40, borderRadius: 12, background: '#eaf6f2', color: teal, display: 'grid', placeItems: 'center' }}><Icon size={20} /></div><div><h2 style={{ margin: 0, fontSize: 19 }}>{title}</h2><p style={{ margin: '4px 0 0', color: '#71828a', fontSize: 12 }}>{subtitle}</p></div></div>; }

@@ -1,354 +1,149 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { User, Bell, Lock, ShieldCheck, Save } from 'lucide-react';
+import { Bell, Building2, CheckCircle2, KeyRound, Lock, Mail, Save, ShieldCheck, Smartphone, User, Upload } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { authAPI } from '../services/api';
 import { validateStrongPassword } from '../utils/inputValidation';
-
 import { getImageUrl } from '../utils/imageUtils';
+
+const navy = '#173a52';
+const teal = '#178263';
+const soft = '#f4f8f8';
+
+const Field = ({ label, children, hint }) => (
+  <label style={{ display: 'grid', gap: 7, color: navy, fontWeight: 800, fontSize: 13 }}>
+    {label}
+    {children}
+    {hint && <span style={{ color: '#71828a', fontSize: 11, fontWeight: 500 }}>{hint}</span>}
+  </label>
+);
+
+const inputStyle = { width: '100%', border: '1px solid #dbe6e8', borderRadius: 12, padding: '12px 13px', background: '#fff', color: navy, outline: 'none', boxSizing: 'border-box' };
+
 export default function UserSettings() {
   const { user, fetchMe } = useAuthStore();
-  const [settings, setSettings] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    brand_description: user?.brand_description || '',
-    notifications_email: true,
-    notifications_sms: false,
-    current_password: '',
-    new_password: '',
-    confirm_password: '',
-    iban: user?.iban || '',
-    bank_name: user?.bank_name || '',
-    auto_accept_bookings: user?.auto_accept_bookings || false
-  });
-  const [brandLogo, setBrandLogo] = useState(user?.brand_logo || null);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState({
+    name: '', email: '', phone: '', address: '', brand_description: '',
+    current_password: '', new_password: '', confirm_password: '', otp: '',
+    iban: '', bank_name: '', auto_accept_bookings: false,
+    notifications_email: true, notifications_sms: false,
+  });
+  const [brandLogo, setBrandLogo] = useState(null);
 
+  useEffect(() => { fetchMe(); }, [fetchMe]);
   useEffect(() => {
-    fetchMe();
-  }, []);
-
-  // Update local settings if user data changes from fetchMe
-  useEffect(() => {
-    if (user) {
-      setSettings(prev => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        phone: user.phone || prev.phone,
-        brand_description: user.brand_description || prev.brand_description,
-        iban: user.iban || prev.iban,
-        bank_name: user.bank_name || prev.bank_name,
-        auto_accept_bookings: user.auto_accept_bookings ?? prev.auto_accept_bookings
-      }));
-      setBrandLogo(user.brand_logo);
-    }
+    if (!user) return;
+    setSettings((prev) => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.phone || '', address: user.address || '', brand_description: user.brand_description || '', iban: user.iban || '', bank_name: user.bank_name || '', auto_accept_bookings: user.auto_accept_bookings ?? false }));
+    setBrandLogo(user.brand_logo || null);
   }, [user]);
 
-  const handleChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setSettings({ ...settings, [e.target.name]: value });
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setSettings((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
+  const saveProfile = async (event) => {
+    event.preventDefault();
     setLoading(true);
     try {
-      await authAPI.updateProfile({
-        name: settings.name,
-        phone: settings.phone,
-        address: settings.address || '',
-        brand_description: settings.brand_description,
-        iban: settings.iban,
-        bank_name: settings.bank_name,
-        auto_accept_bookings: settings.auto_accept_bookings
-      });
-      toast.success('تم تحديث الملف الشخصي بنجاح');
-    } catch (error) {
-      toast.error('فشل التحديث: ' + (error.response?.data?.message || error.message));
-    } finally {
-      setLoading(false);
-    }
+      await authAPI.updateProfile({ name: settings.name, phone: settings.phone, address: settings.address, brand_description: settings.brand_description, iban: settings.iban, bank_name: settings.bank_name, auto_accept_bookings: settings.auto_accept_bookings });
+      await fetchMe();
+      toast.success('تم حفظ بيانات الحساب بنجاح');
+    } catch (error) { toast.error(error.response?.data?.message || 'تعذر حفظ بيانات الحساب'); }
+    finally { setLoading(false); }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const handleUploadLogo = async () => {
-    if (!selectedFile) return;
-
-    const formData = new FormData();
-    formData.append('avatar', selectedFile);
-
+  const requestOtp = async () => {
+    setOtpLoading(true);
     try {
-      setLoading(true);
-      const res = await authAPI.uploadBrandLogo(formData);
-      setBrandLogo(res.data.data.brand_logo);
+      await authAPI.requestPasswordChangeOTP();
+      setOtpSent(true);
+      toast.success('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
+    } catch (error) { toast.error(error.response?.data?.message || 'تعذر إرسال رمز التحقق'); }
+    finally { setOtpLoading(false); }
+  };
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+    if (!otpSent) return toast.error('اطلب رمز التحقق أولاً');
+    if (!validateStrongPassword(settings.new_password)) return toast.error('كلمة المرور يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا');
+    if (settings.new_password !== settings.confirm_password) return toast.error('كلمات المرور الجديدة غير متطابقة');
+    setLoading(true);
+    try {
+      await authAPI.changePassword({ current_password: settings.current_password, new_password: settings.new_password, confirm_password: settings.confirm_password, otp: settings.otp });
+      toast.success('تم تغيير كلمة المرور بنجاح');
+      setOtpSent(false);
+      setSettings((prev) => ({ ...prev, current_password: '', new_password: '', confirm_password: '', otp: '' }));
+    } catch (error) { toast.error(error.response?.data?.message || 'تعذر تغيير كلمة المرور'); }
+    finally { setLoading(false); }
+  };
+
+  const chooseLogo = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) return toast.error('اختر صورة JPG أو PNG أو WEBP بحجم أقصى 2 ميجابايت');
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const uploadLogo = async () => {
+    if (!selectedFile) return;
+    const data = new FormData();
+    data.append('avatar', selectedFile);
+    setLoading(true);
+    try {
+      const response = await authAPI.uploadBrandLogo(data);
+      setBrandLogo(response.data.data.brand_logo);
       setSelectedFile(null);
       setPreviewUrl(null);
-      toast.success('تم تحديث الشعار بنجاح');
-    } catch (error) {
-      toast.error('فشل رفع الشعار');
-    } finally {
-      setLoading(false);
-    }
+      await fetchMe();
+      toast.success('تم تحديث شعار الشركة');
+    } catch (error) { toast.error(error.response?.data?.message || 'تعذر رفع الشعار'); }
+    finally { setLoading(false); }
   };
 
-  const handleSaveSecurity = async (e) => {
-    e.preventDefault();
-    if (!validateStrongPassword(settings.new_password)) return toast.error('كلمة المرور الجديدة يجب أن تكون 10 أحرف على الأقل وتحتوي حرفًا كبيرًا وصغيرًا ورقمًا ورمزًا خاصًا');
-    if (settings.new_password !== settings.confirm_password) {
-      return toast.error('كلمات المرور الجديدة غير متطابقة');
-    }
-    setLoading(true);
-    try {
-      await authAPI.changePassword({
-        current_password: settings.current_password,
-        new_password: settings.new_password,
-        confirm_password: settings.confirm_password
-      });
-      toast.success('تم تغيير كلمة المرور بنجاح');
-      setSettings(prev => ({ ...prev, current_password: '', new_password: '', confirm_password: '' }));
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر تغيير كلمة المرور');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const isSupplier = user?.role === 'supplier';
+  const tabs = [
+    ['profile', 'الحساب والبيانات', User],
+    ...(isSupplier ? [['company', 'هوية الشركة', Building2]] : []),
+    ['security', 'الأمان وكلمة المرور', KeyRound],
+    ['notifications', 'الإشعارات', Bell],
+  ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f8f9fa',
-      padding: '40px 20px'
-    }}>
-      <div className="container">
-      <div className="flex-between mb-32 border-b pb-16" style={{ borderColor: 'var(--border)' }}>
-        <h1 className="font-xl font-bold flex gap-8 align-center text-primary"><User /> إعدادات الحساب</h1>
-      </div>
-
-      <div className="flex gap-24 flex-wrap">
-
-        {/* Navigation */}
-        <div style={{ flex: '1', minWidth: '250px', maxWidth: '300px' }}>
-          <div className="card p-16 sticky" style={{ top: '90px' }}>
-            <div className="flex flex-col gap-8">
-              <a href="#profile" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-primary bg-gray">
-                <User size={18} /> الملف الشخصي
-              </a>
-              {user?.role === 'supplier' && (
-                <a href="#brand" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-muted hover-bg-gray">
-                  <ShieldCheck size={18} /> هوية الشركة (الماركة)
-                </a>
-              )}
-              <a href="#security" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-muted hover-bg-gray">
-                <Lock size={18} /> الأمان وكلمة المرور
-              </a>
-              <a href="#notifications" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-muted hover-bg-gray">
-                <Bell size={18} /> الإشعارات
-              </a>
-              {user?.role === 'supplier' && (
-                <a href="#payment" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-muted hover-bg-gray">
-                  <Save size={18} /> بيانات الدفع
-                </a>
-              )}
-              <a href="#verification" className="btn btn-secondary flex-start gap-8 w-full border-none text-right text-muted hover-bg-gray">
-                <ShieldCheck size={18} /> التوثيق
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: '3', minWidth: '300px' }} className="flex flex-col gap-32">
-
-          {/* Profile Section */}
-          <div id="profile" className="card p-32 fade-in-up">
-            <h3 className="font-bold border-b pb-8 mb-16 text-primary flex gap-8 align-center"><User size={20} /> الملف الشخصي</h3>
-            <form onSubmit={handleSaveProfile} className="flex flex-col gap-16">
-              <div className="grid-2 gap-16">
-                <div className="form-group">
-                  <label className="form-label">الاسم الكامل</label>
-                  <input type="text" name="name" className="form-input" value={settings.name} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">رقم الهاتف</label>
-                  <input type="tel" name="phone" className="form-input" value={settings.phone} onChange={handleChange} dir="ltr" />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">البريد الإلكتروني</label>
-                <input type="email" className="form-input text-muted" value={settings.email} disabled />
-                <p className="text-xs text-secondary mt-4">لا يمكن تغيير البريد الإلكتروني حالياً. للتغيير، تواصل مع الدعم الفني.</p>
-              </div>
-              <div className="mt-8 text-right">
-                <button type="submit" className="btn btn-primary" disabled={loading}>
-                  <Save size={16} style={{ marginLeft: '6px' }} />
-                  {loading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Brand Section (Supplier Only) */}
-          {user?.role === 'supplier' && (
-            <div id="brand" className="card p-32 fade-in-up">
-              <h3 className="font-bold border-b pb-8 mb-16 text-primary flex gap-8 align-center"><ShieldCheck size={20} /> هوية الشركة (Brand)</h3>
-
-              <div className="flex gap-24 align-center mb-24 p-16 bg-base border-radius-md" style={{ border: '1px dashed var(--border)' }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', background: '#fff', border: '2px solid var(--primary)', flexShrink: 0 }}>
-                  <img
-                    src={previewUrl || (brandLogo ? (brandLogo.startsWith('http') ? brandLogo : getImageUrl(brandLogo)) : 'https://via.placeholder.com/80?text=Logo')}
-                    alt="شعار الشركة"
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h4 className="font-bold mb-8">شعار الشركة (اللوجو)</h4>
-                  <p className="text-sm text-secondary mb-12">يظهر الشعار للعملاء في صفحة تفاصيل السيارات الخاصة بك.</p>
-                  <div className="flex gap-12 align-center">
-                    <input type="file" id="brandLogoInput" style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} disabled={loading} />
-                    <label htmlFor="brandLogoInput" className="btn btn-secondary btn-sm cursor-pointer">
-                      {selectedFile ? 'تغيير الصورة المختارة' : 'اختيار شعار جديد'}
-                    </label>
-                    {selectedFile && (
-                      <button onClick={handleUploadLogo} className="btn btn-primary btn-sm" disabled={loading}>
-                        {loading ? 'جاري الحفظ...' : 'حفظ الشعار الجديد'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <form onSubmit={handleSaveProfile} className="flex flex-col gap-16">
-                <div className="form-group">
-                  <label className="form-label">نبذة عن الشركة (وصف الماركة)</label>
-                  <textarea
-                    name="brand_description"
-                    className="form-input"
-                    rows="4"
-                    placeholder="اكتب نبذة مختصرة عن شركتك، خبرتك، ومميزات خدماتك لتشجيع العملاء على الحجز..."
-                    value={settings.brand_description}
-                    onChange={handleChange}
-                  />
-                  <p className="text-xs text-muted mt-4">هذا الوصف سيظهر للعملاء عند استعراض سياراتك.</p>
-                </div>
-                <div className="mt-8 text-right">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    <Save size={16} style={{ marginLeft: '6px' }} />
-                    حفظ الوصف
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Security Section */}
-          <div id="security" className="card p-32 fade-in-up">
-            <h3 className="font-bold border-b pb-8 mb-16 text-primary flex gap-8 align-center"><Lock size={20} /> تغيير كلمة المرور</h3>
-            <form onSubmit={handleSaveSecurity} className="flex flex-col gap-16">
-              <div className="form-group">
-                <label className="form-label">كلمة المرور الحالية</label>
-                <input type="password" name="current_password" className="form-input" value={settings.current_password} onChange={handleChange} required />
-              </div>
-              <div className="grid-2 gap-16">
-                <div className="form-group">
-                  <label className="form-label">كلمة المرور الجديدة</label>
-                <input type="password" name="new_password" data-password-policy="strong" minLength="10" maxLength="72" className="form-input" value={settings.new_password} onChange={handleChange} required />
-                <p className="text-xs text-secondary mt-4">يجب أن تحتوي على 10 أحرف على الأقل، وحرف كبير وصغير ورقم ورمز خاص.</p>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">تأكيد كلمة المرور الجديدة</label>
-                  <input type="password" name="confirm_password" className="form-input" value={settings.confirm_password} onChange={handleChange} required />
-                </div>
-              </div>
-              <div className="mt-8 text-right">
-                <button type="submit" className="btn btn-secondary" disabled={loading}>
-                  تحديث كلمة المرور
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Notifications Section */}
-          <div id="notifications" className="card p-32 fade-in-up">
-            <h3 className="font-bold border-b pb-8 mb-16 text-primary flex gap-8 align-center"><Bell size={20} /> تفضيلات الإشعارات</h3>
-            <div className="flex flex-col gap-16">
-              <label className="filter-checkbox font-bold">
-                <input type="checkbox" name="notifications_email" checked={settings.notifications_email} onChange={handleChange} />
-                تلقي إشعارات الحجوزات والتحديثات عبر البريد الإلكتروني
-              </label>
-              <label className="filter-checkbox font-bold">
-                <input type="checkbox" name="notifications_sms" checked={settings.notifications_sms} onChange={handleChange} />
-                تلقي رسائل نصية قصيرة (SMS) للتذكير بموعد الاستلام والتسليم
-              </label>
-            </div>
-          </div>
-
-          {/* Payment & Booking Section (Supplier Only) */}
-          {user?.role === 'supplier' && (
-            <div id="payment" className="card p-32 fade-in-up">
-              <h3 className="font-bold border-b pb-8 mb-16 text-primary flex gap-8 align-center"><Save size={20} /> بيانات الدفع والحجز</h3>
-              <form onSubmit={handleSaveProfile} className="flex flex-col gap-16">
-                <div className="grid-2 gap-16">
-                  <div className="form-group">
-                    <label className="form-label">اسم البنك</label>
-                    <input type="text" name="bank_name" className="form-input" value={settings.bank_name} onChange={handleChange} placeholder="مثال: بنك الراجحي" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">رقم الآيبان (IBAN)</label>
-                    <input type="text" name="iban" className="form-input" value={settings.iban} onChange={handleChange} dir="ltr" placeholder="SA..." />
-                  </div>
-                </div>
-                
-                <div className="mt-16">
-                  <h4 className="font-bold mb-12">إعدادات الحجز</h4>
-                  <label className="flex gap-8 align-center cursor-pointer">
-                    <input type="checkbox" name="auto_accept_bookings" checked={settings.auto_accept_bookings} onChange={handleChange} />
-                    <span>قبول الحجوزات تلقائياً (تأكيد فوري للعميل)</span>
-                  </label>
-                </div>
-
-                <div className="mt-16 text-right">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    حفظ بيانات الدفع
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Verification Section */}
-          <div id="verification" className={`card p-32 fade-in-up ${user?.is_verified ? 'border-success' : 'border-warning'}`} style={{ border: `1px solid ${user?.is_verified ? 'var(--accent)' : '#ffc107'}` }}>
-            <h3 className={`font-bold border-b pb-8 mb-16 flex gap-8 align-center ${user?.is_verified ? 'text-success' : 'text-warning'}`}>
-              <ShieldCheck size={20} /> حالة التوثيق (KYC)
-            </h3>
-            <div className="flex-between align-center">
-              <div>
-                <p className={`font-bold mb-4 ${user?.is_verified ? 'text-success' : 'text-warning'}`}>
-                  {user?.is_verified ? 'حسابك موثق بالكامل' : 'حسابك قيد المراجعة / غير موثق'}
-                </p>
-                <p className="text-sm text-secondary">
-                  {user?.is_verified 
-                    ? 'تم التحقق من هويتك ورخصة القيادة بنجاح. يمكنك استئجار السيارات بكل حرية.' 
-                    : 'يجب عليك إكمال توثيق الهوية (البطاقة الشخصية ورخصة القيادة) لتتمكن من إتمام الحجوزات في المنصة.'}
-                </p>
-              </div>
-              <ShieldCheck size={48} className={`${user?.is_verified ? 'text-success' : 'text-warning'} opacity-50`} />
-            </div>
-          </div>
-
+    <main dir="rtl" style={{ minHeight: '100vh', background: soft, padding: '28px 20px', color: navy }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 18, marginBottom: 24 }}>
+          <div><span style={{ color: teal, fontSize: 12, fontWeight: 900 }}>إدارة الحساب</span><h1 style={{ margin: '5px 0', fontSize: 30 }}>الإعدادات</h1><p style={{ margin: 0, color: '#71828a' }}>تحكم ببياناتك، هوية شركتك وأمان حسابك من مكان واحد.</p></div>
+          <div style={{ width: 52, height: 52, borderRadius: 16, background: navy, color: '#fff', display: 'grid', placeItems: 'center' }}><SettingsIcon /></div>
+        </header>
+        <div style={{ display: 'grid', gridTemplateColumns: '250px minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+          <aside style={{ background: '#fff', border: '1px solid #e3eeee', borderRadius: 18, padding: 10, position: 'sticky', top: 20 }}>
+            {tabs.map(([id, label, Icon]) => <button key={id} type="button" onClick={() => setActiveTab(id)} style={{ width: '100%', border: 0, borderRadius: 12, padding: '13px 12px', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'right', cursor: 'pointer', background: activeTab === id ? '#eaf6f2' : 'transparent', color: activeTab === id ? teal : '#71828a', fontWeight: 800 }}><Icon size={18} />{label}</button>)}
+            <div style={{ margin: '14px 5px 4px', padding: 12, borderRadius: 13, background: '#f6faf9', color: '#71828a', fontSize: 11, lineHeight: 1.8 }}><ShieldCheck size={17} color={teal} /><br />بياناتك محمية، وتغيير كلمة المرور يتطلب رمز تحقق يرسل إلى بريدك الإلكتروني.</div>
+          </aside>
+          <section style={{ display: 'grid', gap: 18 }}>
+            {activeTab === 'profile' && <Card title="بيانات الحساب" icon={User} subtitle="المعلومات الأساسية المستخدمة للتواصل معك"><form onSubmit={saveProfile} style={{ display: 'grid', gap: 17 }}><div style={grid}><Field label="الاسم الكامل"><input name="name" value={settings.name} onChange={handleChange} required style={inputStyle} /></Field><Field label="رقم الهاتف"><input name="phone" type="tel" value={settings.phone} onChange={handleChange} dir="ltr" style={inputStyle} /></Field></div><Field label="البريد الإلكتروني" hint="لا يمكن تغييره من هذه الصفحة"><input value={settings.email} disabled style={{ ...inputStyle, background: '#f5f7f7', color: '#71828a' }} /></Field><Field label="العنوان"><input name="address" value={settings.address} onChange={handleChange} style={inputStyle} /></Field><button disabled={loading} style={primaryButton}><Save size={17} />{loading ? 'جاري الحفظ...' : 'حفظ بيانات الحساب'}</button></form></Card>}
+            {activeTab === 'company' && isSupplier && <Card title="هوية الشركة" icon={Building2} subtitle="المعلومات التي تظهر للعملاء عند استعراض سياراتك"><div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f7fbfa', borderRadius: 15, marginBottom: 18 }}><img src={previewUrl || (brandLogo ? (brandLogo.startsWith('http') ? brandLogo : getImageUrl(brandLogo)) : 'https://via.placeholder.com/80?text=Logo')} alt="شعار الشركة" style={{ width: 82, height: 82, borderRadius: 18, objectFit: 'contain', background: '#fff', border: '1px solid #dbe6e8' }} /><div><b>شعار الشركة</b><p style={{ color: '#71828a', fontSize: 12, margin: '5px 0 10px' }}>JPG أو PNG أو WEBP، وبحد أقصى 2 ميجابايت.</p><input id="account-logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseLogo} style={{ display: 'none' }} /><label htmlFor="account-logo" style={secondaryButton}> <Upload size={15} /> اختيار صورة</label>{selectedFile && <button type="button" onClick={uploadLogo} disabled={loading} style={{ ...primaryButton, display: 'inline-flex', marginRight: 8 }}>{loading ? 'جاري الرفع...' : 'حفظ الشعار'}</button>}</div></div><form onSubmit={saveProfile} style={{ display: 'grid', gap: 17 }}><Field label="نبذة عن الشركة"><textarea name="brand_description" value={settings.brand_description} onChange={handleChange} maxLength="1000" rows="5" style={{ ...inputStyle, resize: 'vertical' }} placeholder="اكتب نبذة مختصرة عن خدمات التأجير وفروعك..." /></Field><div style={grid}><Field label="اسم البنك"><input name="bank_name" value={settings.bank_name} onChange={handleChange} style={inputStyle} /></Field><Field label="رقم IBAN"><input name="iban" value={settings.iban} onChange={handleChange} dir="ltr" style={inputStyle} placeholder="SA..." /></Field></div><button disabled={loading} style={primaryButton}><Save size={17} />حفظ هوية الشركة</button></form></Card>}
+            {activeTab === 'security' && <Card title="الأمان وكلمة المرور" icon={KeyRound} subtitle="سيتم إرسال رمز تحقق إلى بريدك قبل تنفيذ التغيير"><form onSubmit={changePassword} style={{ display: 'grid', gap: 17 }}><Field label="كلمة المرور الحالية"><input type="password" name="current_password" value={settings.current_password} onChange={handleChange} required style={inputStyle} /></Field><div style={grid}><Field label="كلمة المرور الجديدة" hint="10 أحرف على الأقل: كبير، صغير، رقم ورمز"><input type="password" name="new_password" value={settings.new_password} onChange={handleChange} minLength="10" maxLength="72" required style={inputStyle} /></Field><Field label="تأكيد كلمة المرور"><input type="password" name="confirm_password" value={settings.confirm_password} onChange={handleChange} required style={inputStyle} /></Field></div>{otpSent && <Field label="رمز التحقق OTP" hint="تحقق من بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق"><input name="otp" value={settings.otp} onChange={handleChange} inputMode="numeric" maxLength="6" pattern="[0-9]{6}" required style={{ ...inputStyle, letterSpacing: 6, textAlign: 'center', fontSize: 20 }} /></Field>}<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}><button type="button" onClick={requestOtp} disabled={otpLoading} style={secondaryButton}><Mail size={17} />{otpLoading ? 'جاري إرسال الرمز...' : otpSent ? 'إعادة إرسال OTP' : 'إرسال رمز التحقق'}</button>{otpSent && <button type="submit" disabled={loading} style={primaryButton}><Lock size={17} />{loading ? 'جاري التغيير...' : 'تأكيد تغيير كلمة المرور'}</button>}</div></form></Card>}
+            {activeTab === 'notifications' && <Card title="تفضيلات الإشعارات" icon={Bell} subtitle="حدد القنوات التي تفضل استقبال تنبيهات المنصة عبرها"><div style={{ display: 'grid', gap: 13 }}><Toggle checked={settings.notifications_email} onChange={handleChange} name="notifications_email" icon={Mail} label="إشعارات البريد الإلكتروني" description="الحجوزات والتحديثات المهمة على حسابك." /><Toggle checked={settings.notifications_sms} onChange={handleChange} name="notifications_sms" icon={Smartphone} label="رسائل الجوال" description="التذكير بمواعيد الاستلام والتسليم." /><div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: '#fff9e9', color: '#8a6818', fontSize: 12 }}>يمكنك حفظ هذه التفضيلات عند تفعيل مركز الإشعارات في إعدادات المنصة.</div></div></Card>}
+          </section>
         </div>
       </div>
-      </div>
-    </div>
+      <style>{`@media (max-width: 760px){main>div>div{grid-template-columns:1fr!important}aside{position:static!important;display:flex;overflow:auto;gap:4px}aside button{white-space:nowrap;width:auto!important;margin:0!important}.grid-settings{grid-template-columns:1fr!important}}`}</style>
+    </main>
   );
 }
+
+const grid = { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 15 };
+const primaryButton = { border: 0, borderRadius: 11, padding: '12px 16px', background: teal, color: '#fff', fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 'fit-content' };
+const secondaryButton = { border: '1px solid #cfe1df', borderRadius: 11, padding: '11px 14px', background: '#fff', color: teal, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 7, width: 'fit-content' };
+function SettingsIcon() { return <KeyRound size={23} />; }
+function Card({ title, subtitle, icon: Icon, children }) { return <div style={{ background: '#fff', border: '1px solid #e3eeee', borderRadius: 18, padding: 23, boxShadow: '0 8px 24px rgba(23,58,82,.05)' }}><div style={{ display: 'flex', gap: 12, alignItems: 'center', borderBottom: '1px solid #edf2f2', paddingBottom: 16, marginBottom: 20 }}><div style={{ width: 40, height: 40, borderRadius: 12, background: '#eaf6f2', color: teal, display: 'grid', placeItems: 'center' }}><Icon size={20} /></div><div><h2 style={{ margin: 0, fontSize: 19, color: navy }}>{title}</h2><p style={{ margin: '4px 0 0', color: '#71828a', fontSize: 12 }}>{subtitle}</p></div></div>{children}</div>; }
+function Toggle({ checked, onChange, name, icon: Icon, label, description }) { return <label style={{ display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #e3eeee', borderRadius: 14, padding: 14, cursor: 'pointer' }}><input type="checkbox" name={name} checked={checked} onChange={onChange} style={{ width: 18, height: 18, accentColor: teal }} /><Icon size={19} color={teal} /><span><b style={{ color: navy }}>{label}</b><small style={{ display: 'block', color: '#71828a', marginTop: 3 }}>{description}</small></span></label>; }
