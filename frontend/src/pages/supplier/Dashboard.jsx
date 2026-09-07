@@ -8,9 +8,11 @@ import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, 
 
 import { format } from 'date-fns';
 import { getImageUrl } from '../../utils/imageUtils';
+import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { showroom, options } = useSupplierShowroom();
   const [stats, setStats] = useState({
     totalCars: 0,
     revenue: 0,
@@ -30,13 +32,20 @@ export default function SupplierDashboard() {
   };
 
   const fetchData = useCallback(async (showToast = false) => {
+    if (!showroom && options.length > 1) {
+      setStats({ totalCars: 0, revenue: 0, activeReservations: 0, avgRating: 0, activeDeals: 0, discountedCars: [] });
+      setRecentReservations([]);
+      setLoading(false);
+      return;
+    }
     if (showToast === false && refreshing) setRefreshing(true);
     else setLoading(true);
 
     try {
+      const params = showroom?.id ? { location_id: showroom.id } : undefined;
       const [carsRes, resvRes] = await Promise.all([
-        carsAPI.getMyCars(),
-        reservationsAPI.getMy()
+        carsAPI.getMyCars(params),
+        reservationsAPI.getMy(params)
       ]);
 
       const cars = carsRes.data.data || [];
@@ -78,7 +87,7 @@ export default function SupplierDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [refreshing]);
+  }, [options.length, refreshing, showroom?.id]);
 
   useEffect(() => {
     fetchData();
@@ -104,7 +113,7 @@ export default function SupplierDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>مرحباً {user?.name || 'مورد'}</h1>
-            <p style={{ color: '#6c757d' }}>إليك نظرة عامة على نشاطك</p>
+            <p style={{ color: '#6c757d' }}>{showroom ? `إليك نظرة عامة على عمليات ${showroom.showroom_name || showroom.city}` : 'اختر فرعاً لعرض بياناته وعملياته'}</p>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={handleRefresh} disabled={refreshing} style={{ background: '#6c757d', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>

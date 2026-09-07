@@ -5,9 +5,11 @@ import SupplierSidebar from '../../components/SupplierSidebar';
 import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Edit, Trash2, Percent, Settings } from 'lucide-react';
 import { getCarImage } from '../../utils/imageUtils';
+import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 
 export default function MyCars() {
   const navigate = useNavigate();
+  const { showroom } = useSupplierShowroom();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingDiscount, setEditingDiscount] = useState(null);
@@ -16,11 +18,11 @@ export default function MyCars() {
 
   useEffect(() => {
     fetchCars();
-  }, []);
+  }, [showroom?.id]);
 
   const fetchCars = async () => {
     try {
-      const res = await carsAPI.getMyCars();
+      const res = await carsAPI.getMyCars(showroom?.id ? { location_id: showroom.id } : undefined);
       setCars(res.data.data);
     } catch (error) {
       toast.error('فشل جلب السيارات');

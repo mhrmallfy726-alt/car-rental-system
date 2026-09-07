@@ -7,6 +7,7 @@ import { Calendar, LayoutDashboard, Car, Plus, CheckCircle, XCircle, Camera, Upl
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { getImageUrl } from '../../utils/imageUtils';
+import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 
 const getReservationEventDate = (reservation, type) => {
   const atValue = type === 'before' ? reservation.pickup_at : reservation.return_at;
@@ -25,6 +26,7 @@ export default function SupplierReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { showroom } = useSupplierShowroom();
 
   // Handover State
   const [showHandover, setShowHandover] = useState(false);
@@ -77,11 +79,11 @@ export default function SupplierReservations() {
 
   useEffect(() => {
     fetchReservations();
-  }, []);
+  }, [showroom?.id]);
 
   const fetchReservations = async () => {
     try {
-      const res = await reservationsAPI.getMy();
+      const res = await reservationsAPI.getMy(showroom?.id ? { location_id: showroom.id } : undefined);
       const rows = res.data.data || [];
       const disputedRows = await Promise.all(rows.filter((reservation) => reservation.status === 'disputed').map(async (reservation) => {
         try {

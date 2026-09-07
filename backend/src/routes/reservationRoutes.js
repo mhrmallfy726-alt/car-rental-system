@@ -109,6 +109,9 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
 // @access  Private
 // ========================
 router.get('/my', protect, asyncHandler(async (req, res) => {
+  const { location_id } = req.query;
+  const params = [req.user.id];
+  let locationFilter = '';
   let sql;
   if (req.user.role === 'customer') {
       sql = `SELECT r.*,
@@ -121,17 +124,26 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
            JOIN users u ON r.supplier_id = u.id
            WHERE r.customer_id = $1 ORDER BY r.created_at DESC`;
   } else {
+    if (location_id) {
+      const ownedLocation = await query(
+        `SELECT id FROM locations WHERE id = $1 AND supplier_id = $2 AND COALESCE(is_active, TRUE) = TRUE`,
+        [location_id, req.user.id]
+      );
+      if (!ownedLocation.rows.length) return res.status(403).json({ success: false, message: 'الفرع المحدد غير تابع لحسابك أو غير نشط' });
+      params.push(location_id);
+      locationFilter = ' AND c.location_id = $2';
+    }
     sql = `SELECT r.*, c.make, c.model, c.year, u.name as customer_name,
            COALESCE((SELECT image_url FROM car_images WHERE car_id = c.id AND is_primary = true LIMIT 1), 
                     (SELECT image_url FROM car_images WHERE car_id = c.id LIMIT 1)) as car_image
            FROM reservations r 
            JOIN cars c ON r.car_id = c.id 
            JOIN users u ON r.customer_id = u.id
-           WHERE r.supplier_id = $1
+           WHERE r.supplier_id = $1${locationFilter}
              AND EXISTS (SELECT 1 FROM payments p WHERE p.reservation_id = r.id AND p.status = 'paid')
            ORDER BY r.created_at DESC`;
   }
-  const result = await query(sql, [req.user.id]);
+  const result = await query(sql, params);
   res.json({ success: true, data: result.rows });
 }));
 
