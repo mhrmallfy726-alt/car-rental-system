@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   CalendarDays,
+  Car,
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
@@ -216,7 +217,19 @@ export default function CarDetail() {
       return;
     }
   
-    const query = new URLSearchParams(searchParams).toString();
+    const query = new URLSearchParams({
+      location: searchParams.location || '',
+      startDate: searchParams.startDate || '',
+      endDate: searchParams.endDate || '',
+      pickupTime: searchParams.pickupTime || '09:00',
+      returnTime: searchParams.returnTime || '18:00',
+      withDriver: searchParams.withDriver || 'false',
+      min_price: searchParams.minPrice || '',
+      max_price: searchParams.maxPrice || '',
+      latitude: searchParams.latitude || '',
+      longitude: searchParams.longitude || '',
+      radius: String(searchParams.radius || 10),
+    }).toString();
     navigate(`/cars?${query}`);
   };
   
@@ -299,7 +312,19 @@ export default function CarDetail() {
             </div>
             <button
               type="button"
-              onClick={() => navigate(`/cars?${routerLocation.search.replace(/^\\?/, '')}`)}
+              onClick={() => navigate(`/search?${new URLSearchParams({
+                location: searchParams.location || '',
+                startDate: searchParams.startDate || '',
+                endDate: searchParams.endDate || '',
+                pickupTime: searchParams.pickupTime || '09:00',
+                returnTime: searchParams.returnTime || '18:00',
+                withDriver: searchParams.withDriver || 'false',
+                min_price: searchParams.minPrice || '',
+                max_price: searchParams.maxPrice || '',
+                latitude: searchParams.latitude || '',
+                longitude: searchParams.longitude || '',
+                radius: String(searchParams.radius || 10),
+              }).toString()}`)}
               className="car-search-summary-edit"
             >
               تعديل البحث
@@ -359,6 +384,16 @@ radius: 10,
               <span>خدمة السائق</span>
               <strong>{searchParams.withDriver === 'true' ? 'مع سائق' : 'بدون سائق'}</strong>
             </div>
+
+            {(searchParams.minPrice || searchParams.maxPrice) && (
+              <div className="car-search-summary-item">
+                <Settings2 size={18} />
+                <span>نطاق السعر</span>
+                <strong>
+                  {searchParams.minPrice || '0'} — {searchParams.maxPrice || 'بدون حد'} USD / يوم
+                </strong>
+              </div>
+            )}
 
             {(searchParams.latitude && searchParams.longitude) && (
               <div className="car-search-summary-item">
