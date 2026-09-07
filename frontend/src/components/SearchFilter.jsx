@@ -10,6 +10,16 @@ export default function SearchFilter({
   handleSearch,
 }) {
 
+  const applyLocationChange = (location) => {
+    setSearchParams((prev) => ({
+      ...prev,
+      location: location?.name || '',
+      latitude: location?.latitude ?? '',
+      longitude: location?.longitude ?? '',
+      radius: 10,
+    }));
+  };
+
 return (
   <>
     <form onSubmit={handleSearch} className="hero-search-container fade-in" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '20px' }}>
@@ -21,30 +31,14 @@ return (
     Number(searchParams.longitude) || 44.1910,
   ]}
   mode="pickup"
-  onLocationChange={(location) => {
-    setSearchParams((prev) => ({
-      ...prev,
-      location: location.name,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      radius: 10,
-    }));
-  }}
+  onLocationChange={applyLocationChange}
 />
     <label>موقع الاستلام</label>
     <div style={{ position: 'relative' }}>
       <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
       <LocationSearch
 value={searchParams.location}
-onChange={(location) => {
-setSearchParams((prev) => ({
-...prev,
-location: location.name,
-latitude: location.latitude,
-longitude: location.longitude,
-radius: 10,
-}));
-}}
+  onChange={applyLocationChange}
 />             </div>
 
   </div>

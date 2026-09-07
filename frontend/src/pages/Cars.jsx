@@ -21,7 +21,9 @@ export default function Cars() {
 
   const [filters, setFilters] = useState({
     category: initialParams.get('category') || '',
-    search: initialParams.get('location') || '',
+    // Accept both names because the home page uses `location` while the
+    // cars API uses `search` for the main search field.
+    search: initialParams.get('search') || initialParams.get('location') || '',
     min_price: '',
     max_price: '',
     transmission: '',
@@ -75,7 +77,16 @@ export default function Cars() {
 
     setLoading(true);
     try {
-      const res = await carsAPI.getAll(filters);
+      // The search page stores the selected place as `location`, while the
+      // cars page stores it as `search`. Send both when coordinates are
+      // present so the API can fall back to city matching for legacy rows.
+      const queryFilters = {
+        ...filters,
+        ...(filters.latitude && filters.longitude && filters.search?.trim()
+          ? { location: filters.search.trim() }
+          : {}),
+      };
+      const res = await carsAPI.getAll(queryFilters);
       setCars(res.data.data);
     } catch (error) {
       toast.error('فشل جلب السيارات');
@@ -103,7 +114,8 @@ export default function Cars() {
   };
 
   const handleFilterChange = (name, value) => {
-    setFilters(prev => ({ ...prev, [name]: value }));
+    const nextValue = name === 'category' && value !== '' ? String(value) : value;
+    setFilters(prev => ({ ...prev, [name]: nextValue }));
     // عند تغيير التواريخ، امسح الخطأ فوراً
     if (name === 'startDate' || name === 'endDate' || name === 'pickup_time' || name === 'return_time') {
       setDateError('');
@@ -123,7 +135,10 @@ export default function Cars() {
       endDate: '',
       pickup_time: '09:00',
       return_time: '18:00',
-      withDriver: 'false'
+      withDriver: 'false',
+      latitude: '',
+      longitude: '',
+      radius: 10
     });
     setDateError('');
   };
@@ -224,8 +239,8 @@ export default function Cars() {
                       <input
                         type="radio"
                         name="category"
-                        checked={filters.category === cat.id}
-                        onChange={() => handleFilterChange('category', filters.category === cat.id ? '' : cat.id)}
+                        checked={String(filters.category) === String(cat.id)}
+                        onChange={() => handleFilterChange('category', String(filters.category) === String(cat.id) ? '' : cat.id)}
                       />
                       {cat.displayName}
                     </label>

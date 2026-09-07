@@ -55,7 +55,8 @@ router.get('/', asyncHandler(async (req, res) => {
     && Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
   if (hasCoordinates) {
     const radiusKm = Math.min(Math.max(Number(radius) || 10, 1), 100);
-    sql += ` AND loc.latitude IS NOT NULL
+    const locationText = String(location || '').trim();
+    sql += ` AND (loc.latitude IS NOT NULL
       AND loc.longitude IS NOT NULL
       AND 6371 * 2 * ASIN(SQRT(
         POWER(SIN(RADIANS(loc.latitude::double precision - $${paramIndex}::double precision) / 2), 2) +
@@ -64,6 +65,16 @@ router.get('/', asyncHandler(async (req, res) => {
       )) <= $${paramIndex + 2}`;
     params.push(Number(latitude), Number(longitude), radiusKm);
     paramIndex += 3;
+    // Older location rows may not have coordinates. Keep those cars searchable
+    // by the selected city/address instead of returning an empty result set.
+    if (locationText) {
+      sql += ` OR c.location_id::text = $${paramIndex}
+        OR loc.city ILIKE $${paramIndex}
+        OR COALESCE(loc.address, '') ILIKE $${paramIndex}`;
+      params.push(`%${locationText}%`);
+      paramIndex++;
+    }
+    sql += ')';
   } else if (location) {
     sql += ` AND (c.location_id::text = $${paramIndex} OR loc.city ILIKE $${paramIndex} OR COALESCE(loc.address, '') ILIKE $${paramIndex})`;
     params.push(location.trim().startsWith('%') ? location.trim() : `%${location.trim()}%`);
