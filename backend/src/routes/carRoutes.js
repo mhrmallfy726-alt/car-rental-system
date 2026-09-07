@@ -312,7 +312,15 @@ router.get('/my/list', protect, authorize('supplier'), asyncHandler(async (req, 
 // @access  Public
 // ========================
 router.get('/categories/list', asyncHandler(async (req, res) => {
-  const result = await query('SELECT * FROM categories WHERE is_active = true ORDER BY name');
+  // قد تحتوي قواعد البيانات القديمة على صفوف مكررة بسبب غياب قيد فريد على الاسم.
+  // أعد فئة واحدة فقط لكل اسم، حتى لا تظهر الخيارات مكررة في نماذج الإضافة والتعديل.
+  const result = await query(`
+    SELECT DISTINCT ON (LOWER(TRIM(name))) *
+    FROM categories
+    WHERE is_active = true
+    ORDER BY LOWER(TRIM(name)), created_at ASC NULLS LAST, id
+  `);
+  result.rows.sort((a, b) => a.name.localeCompare(b.name));
   res.json({ success: true, data: result.rows });
 }));
 
