@@ -48,6 +48,17 @@ async function notifyReservationWhatsApp(reservationId, status, reason = null) {
   }
 }
 
+function getCancellationPolicy(reservation) {
+  const pickupAt = reservation.pickup_at
+    ? new Date(reservation.pickup_at)
+    : new Date(`${reservation.start_date}T${reservation.pickup_time || '09:00'}:00`);
+  const hoursRemaining = (pickupAt.getTime() - Date.now()) / (60 * 60 * 1000);
+  if (!Number.isFinite(hoursRemaining) || hoursRemaining <= 0) return { hoursRemaining: 0, refundRate: 0, refundPercent: 0, feePercent: 100, canCancel: false };
+  if (hoursRemaining >= 72) return { hoursRemaining, refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
+  if (hoursRemaining >= 24) return { hoursRemaining, refundRate: 0.75, refundPercent: 75, feePercent: 25, canCancel: true };
+  return { hoursRemaining, refundRate: 0.5, refundPercent: 50, feePercent: 50, canCancel: true };
+}
+
 // ========================
 // @desc    Create reservation
 // @route   POST /api/reservations
@@ -219,19 +230,22 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
   if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
   if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز', 400));
 
-  const refund = await refundReservationPayment(id, cancellation_reason || 'تم إلغاء الحجز');
+  const policy = r.customer_id === req.user.id ? getCancellationPolicy(r) : { refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
+  if (!policy.canCancel) return next(new AppError('لا يمكن إلغاء الحجز بعد موعد الاستلام', 400));
+  const policyReason = `${cancellation_reason || 'تم إلغاء الحجز'} — سياسة الإلغاء: استرداد ${policy.refundPercent}% وخصم ${policy.feePercent}%`;
+  const refund = await refundReservationPayment(id, policyReason, policy.refundRate);
   const result = await query(`UPDATE reservations SET status = 'cancelled', cancellation_reason = $1, cancelled_by = $2, cancelled_at = NOW() WHERE id = $3 RETURNING *`,
-    [cancellation_reason, req.user.id, id]);
+    [policyReason, req.user.id, id]);
   const recipientId = r.customer_id === req.user.id ? r.supplier_id : r.customer_id;
   const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
     VALUES ($1, 'تم إلغاء الحجز', $2, 'reservation', $3, 'reservation') RETURNING *`,
-    [recipientId, `تم إلغاء الحجز${cancellation_reason ? `: ${cancellation_reason}` : ''}${refund ? ' وتمت إعادة المبلغ للعميل.' : '.'}`, id]);
+    [recipientId, `تم إلغاء الحجز. سياسة الإلغاء: استرداد ${policy.refundPercent}% وخصم ${policy.feePercent}%.${refund ? ` مبلغ الاسترداد: ${refund.refund_amount} ${refund.currency}.` : ''}`, id]);
   const io = req.app.get('io');
   if (io && notificationResult.rows[0]) io.to(`user_${recipientId}`).emit('new_notification', notificationResult.rows[0]);
 
-  void notifyReservationWhatsApp(id, 'cancelled', cancellation_reason || null);
+  void notifyReservationWhatsApp(id, 'cancelled', policyReason);
 
-  res.json({ success: true, data: result.rows[0], refund: refund ? { status: 'refunded', amount: refund.amount, currency: refund.currency } : { status: 'not_required' } });
+  res.json({ success: true, data: result.rows[0], cancellation_policy: policy, refund: refund ? { status: refund.refund_rate === 1 ? 'refunded' : 'partially_refunded', amount: refund.refund_amount, currency: refund.currency } : { status: 'not_required' } });
 }));
 
 // ========================

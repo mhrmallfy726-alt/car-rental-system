@@ -8,6 +8,25 @@ import { Calendar, CreditCard, XCircle, CheckCircle, Star, X, MessageSquare, Ale
 import '../../styles/customer-reservations.css';
 
 import { getImageUrl } from '../../utils/imageUtils';
+
+const getCancellationPolicy = (reservation) => {
+  const pickupAt = reservation.pickup_at
+    ? new Date(reservation.pickup_at)
+    : new Date(`${reservation.start_date}T${reservation.pickup_time || '09:00'}:00`);
+  const hours = (pickupAt.getTime() - Date.now()) / (60 * 60 * 1000);
+  if (!Number.isFinite(hours) || hours <= 0) return { hours: 0, refund: 0, fee: 100, canCancel: false };
+  if (hours >= 72) return { hours, refund: 100, fee: 0, canCancel: true };
+  if (hours >= 24) return { hours, refund: 75, fee: 25, canCancel: true };
+  return { hours, refund: 50, fee: 50, canCancel: true };
+};
+
+const formatRemaining = (hours) => {
+  if (hours <= 0) return 'انتهى موعد الاستلام';
+  const days = Math.floor(hours / 24);
+  const remainingHours = Math.floor(hours % 24);
+  return `${days ? `${days} يوم و` : ''}${remainingHours} ساعة`;
+};
+
 export default function MyReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +64,9 @@ export default function MyReservations() {
   };
 
   const handleCancel = async (id) => {
-    if (!window.confirm('هل أنت متأكد من إلغاء هذا الحجز؟ لا يمكن التراجع.')) return;
+    const reservation = reservations.find((item) => item.id === id);
+    const policy = reservation ? getCancellationPolicy(reservation) : null;
+    if (!window.confirm(`سياسة الإلغاء الحالية: استرداد ${policy?.refund ?? 0}% وخصم ${policy?.fee ?? 100}%. هل تريد المتابعة؟`)) return;
     try {
       await reservationsAPI.cancel(id, { cancellation_reason: 'تم الإلغاء من قبل العميل' });
       toast.success('تم إلغاء الحجز');
@@ -244,7 +265,9 @@ export default function MyReservations() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {reservations.map(res => (
+            {reservations.map(res => {
+              const cancellationPolicy = getCancellationPolicy(res);
+              return (
               <div key={res.id} style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : getImageUrl(res.car_image)) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '12px' }} />
 
@@ -283,7 +306,7 @@ export default function MyReservations() {
                     </Link>
                   )}
                   {canCancel(res.status) && (
-                    <button onClick={() => handleCancel(res.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                    <button disabled={!cancellationPolicy.canCancel} title={!cancellationPolicy.canCancel ? 'انتهى موعد الاستلام' : undefined} onClick={() => handleCancel(res.id)} style={{ background: cancellationPolicy.canCancel ? '#dc3545' : '#adb5bd', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: cancellationPolicy.canCancel ? 'pointer' : 'not-allowed' }}>
                       <XCircle size={16} /> إلغاء الحجز
                     </button>
                   )}
@@ -303,8 +326,14 @@ export default function MyReservations() {
                     </button>
                   )}
                 </div>
+                {canCancel(res.status) && (
+                  <div style={{ width: '100%', background: cancellationPolicy.refund === 100 ? '#eefaf3' : cancellationPolicy.refund === 75 ? '#fff8e6' : '#fff0f0', color: '#495057', borderRadius: '10px', padding: '10px 12px', fontSize: '0.78rem', lineHeight: 1.7 }}>
+                    <strong>سياسة الإلغاء:</strong> متبقي {formatRemaining(cancellationPolicy.hours)} على موعد الاستلام. الاسترداد المتوقع <b>{cancellationPolicy.refund}%</b>، والخصم <b>{cancellationPolicy.fee}%</b> من قيمة الدفع.
+                  </div>
+                )}
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

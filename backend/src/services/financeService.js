@@ -93,7 +93,8 @@ const createReservationCharge = async ({ reservationId, customerId, savedCardId,
   }
 };
 
-const refundReservationPayment = async (reservationId, reason = 'إلغاء أو رفض الحجز') => {
+const refundReservationPayment = async (reservationId, reason = 'إلغاء أو رفض الحجز', refundRate = 1) => {
+  const normalizedRate = Math.min(1, Math.max(0, Number(refundRate)));
   const client = await getClient();
   try {
     await client.query('BEGIN');
@@ -106,19 +107,20 @@ const refundReservationPayment = async (reservationId, reason = 'إلغاء أو
       const balanceResult = await client.query('SELECT simulated_balance_yer FROM saved_cards WHERE id = $1 FOR UPDATE', [gateway.saved_card_id]);
       if (balanceResult.rows.length) {
         const before = Number(balanceResult.rows[0].simulated_balance_yer || 0);
-        const after = Number((before + Number(gateway.amount_yer)).toFixed(2));
+        const after = Number((before + Number(gateway.amount_yer) * normalizedRate).toFixed(2));
         await client.query('UPDATE saved_cards SET simulated_balance_yer = $1 WHERE id = $2', [after, gateway.saved_card_id]);
         await client.query(`UPDATE payment_gateway_transactions SET status = 'refunded', balance_before_yer = $1, balance_after_yer = $2 WHERE id = $3`, [before, after, gateway.id]);
       }
     }
-    await client.query(`UPDATE payments SET status = 'refunded', refund_amount = amount, refund_reason = $1, refunded_at = NOW() WHERE id = $2`, [reason, payment.id]);
+    const refundAmount = Number((Number(payment.amount) * normalizedRate).toFixed(2));
+    await client.query(`UPDATE payments SET status = $1, refund_amount = $2, refund_reason = $3, refunded_at = NOW() WHERE id = $4`, [normalizedRate === 1 ? 'refunded' : 'partially_refunded', refundAmount, reason, payment.id]);
     const originalLedger = await client.query(`SELECT entry_type, amount FROM ledger_entries WHERE payment_id = $1 AND entry_type IN ('platform_fee', 'supplier_payable') AND direction = 'credit'`, [payment.id]);
-    await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, 'refund', 'debit', $4, $5, $6, $7::jsonb)`, [payment.id, reservationId, payment.supplier_id, payment.amount, payment.currency, reason, JSON.stringify({ simulated: true, refund_of: payment.id })]);
+    await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, 'refund', 'debit', $4, $5, $6, $7::jsonb)`, [payment.id, reservationId, payment.supplier_id, refundAmount, payment.currency, reason, JSON.stringify({ simulated: true, refund_of: payment.id, refund_rate: normalizedRate })]);
     for (const entry of originalLedger.rows) {
-      await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, $4, 'debit', $5, $6, $7, $8::jsonb)`, [payment.id, reservationId, payment.supplier_id, entry.entry_type, entry.amount, payment.currency, `عكس ${entry.entry_type} بسبب الاسترداد`, JSON.stringify({ simulated: true, refund_of: payment.id })]);
+      await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, $4, 'debit', $5, $6, $7, $8::jsonb)`, [payment.id, reservationId, payment.supplier_id, entry.entry_type, Number((Number(entry.amount) * normalizedRate).toFixed(2)), payment.currency, `عكس ${entry.entry_type} بسبب الاسترداد`, JSON.stringify({ simulated: true, refund_of: payment.id, refund_rate: normalizedRate })]);
     }
     await client.query('COMMIT');
-    return payment;
+    return { ...payment, refund_amount: refundAmount, refund_rate: normalizedRate };
   } catch (error) { await client.query('ROLLBACK'); throw error; }
   finally { client.release(); }
 };
