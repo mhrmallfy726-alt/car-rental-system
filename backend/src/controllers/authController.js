@@ -641,6 +641,30 @@ const uploadDocs = asyncHandler(async (req, res, next) => {
   });
 });
 
+const resubmitSupplierDocuments = asyncHandler(async (req, res, next) => {
+  if (req.user.role !== 'supplier') return next(new AppError('هذا الإجراء متاح للموردين فقط', 403));
+  if (!req.files || !Object.values(req.files).some((files) => files?.length)) {
+    return next(new AppError('اختر ملفًا واحدًا على الأقل لإعادة الإرسال', 400));
+  }
+
+  const files = req.files;
+  const result = await query(
+    `UPDATE users SET
+      avatar = COALESCE($1, avatar),
+      commercial_register = COALESCE($2, commercial_register),
+      owner_id = COALESCE($3, owner_id),
+      verification_status = 'pending',
+      is_verified = FALSE,
+      rejection_reason = NULL
+     WHERE id = $4 AND role = 'supplier'
+     RETURNING id, verification_status, rejection_reason`,
+    [files.avatar?.[0]?.filename || null, files.commercial_register?.[0]?.filename || null, files.owner_id?.[0]?.filename || null, req.user.id]
+  );
+
+  if (!result.rows.length) return next(new AppError('حساب المورد غير موجود', 404));
+  res.json({ success: true, message: 'تمت إعادة إرسال المستندات للمراجعة', data: result.rows[0] });
+});
+
 // ========================
 // @desc    Update user profile (name, phone)
 // @route   PUT /api/auth/update-profile
@@ -795,6 +819,7 @@ module.exports = {
   login,
   getMe,
   uploadDocs,
+  resubmitSupplierDocuments,
   updateProfile,
   requestPasswordChangeOTP,
   changePassword,

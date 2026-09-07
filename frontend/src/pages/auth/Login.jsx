@@ -185,6 +185,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import logo from '../../assets/LOGO.png';
 import { Car, Mail, Lock, ChevronLeft } from 'lucide-react';
@@ -198,6 +199,8 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [supplierStatus, setSupplierStatus] = useState(null);
+  const [supplierFiles, setSupplierFiles] = useState({ avatar: null, commercial_register: null, owner_id: null });
+  const [resubmittingDocuments, setResubmittingDocuments] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -260,6 +263,32 @@ export default function Login() {
   
     // فشل تسجيل الدخول
     toast.error(res.error || res.message || "فشل تسجيل الدخول");
+  };
+
+  const handleSupplierFileChange = (event) => {
+    const { name, files } = event.target;
+    setSupplierFiles((current) => ({ ...current, [name]: files?.[0] || null }));
+  };
+
+  const handleResubmitDocuments = async () => {
+    const selectedFiles = Object.entries(supplierFiles).filter(([, file]) => file);
+    if (!selectedFiles.length) {
+      toast.error('اختر الملف المطلوب تصحيحه أولاً');
+      return;
+    }
+    const formData = new FormData();
+    selectedFiles.forEach(([field, file]) => formData.append(field, file));
+    setResubmittingDocuments(true);
+    try {
+      const response = await authAPI.resubmitSupplierDocuments(formData);
+      toast.success(response.data?.message || 'تمت إعادة إرسال المستندات للمراجعة');
+      setSupplierStatus({ verification_status: 'pending' });
+      setSupplierFiles({ avatar: null, commercial_register: null, owner_id: null });
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر إعادة إرسال المستندات');
+    } finally {
+      setResubmittingDocuments(false);
+    }
   };
 
   return (
@@ -423,6 +452,12 @@ export default function Login() {
       {supplierStatus.verification_status === "rejected" && (
         <>
 
+          <div className="mb-5 rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-5 text-right">
+            <div className="mb-2 font-bold text-red-800">سبب الرفض</div>
+            <p className="m-0 leading-7 text-red-700">{supplierStatus.reason || 'يرجى مراجعة المستندات وإعادة إرسال الملف المطلوب.'}</p>
+            <p className="mt-3 text-xs text-gray-600">اختر الملف الذي يحتاج إلى تصحيح ثم اضغط «إعادة إرسال للمراجعة».</p>
+          </div>
+
           {/* السجل التجاري */}
           {supplierStatus.commercial_register_reason && (
             <div className="mb-5 border rounded-xl p-4 bg-red-50">
@@ -442,7 +477,9 @@ export default function Login() {
               <input
                 type="file"
                 name="commercial_register"
-                className="mt-3 w-full"
+                accept="application/pdf"
+                onChange={handleSupplierFileChange}
+                className="mt-3 w-full rounded-lg border border-gray-200 bg-white p-2 text-sm"
               />
 
             </div>
@@ -467,7 +504,9 @@ export default function Login() {
               <input
                 type="file"
                 name="owner_id"
-                className="mt-3 w-full"
+                accept="image/*,.pdf"
+                onChange={handleSupplierFileChange}
+                className="mt-3 w-full rounded-lg border border-gray-200 bg-white p-2 text-sm"
               />
 
             </div>
@@ -492,7 +531,9 @@ export default function Login() {
               <input
                 type="file"
                 name="avatar"
-                className="mt-3 w-full"
+                accept="image/*"
+                onChange={handleSupplierFileChange}
+                className="mt-3 w-full rounded-lg border border-gray-200 bg-white p-2 text-sm"
               />
 
             </div>
@@ -517,9 +558,11 @@ export default function Login() {
 
         {supplierStatus.verification_status === "rejected" && (
           <button
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            onClick={handleResubmitDocuments}
+            disabled={resubmittingDocuments}
+            className="rounded-lg bg-blue-600 px-5 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            إعادة إرسال الوثائق
+            {resubmittingDocuments ? 'جاري الإرسال...' : 'إعادة إرسال للمراجعة'}
           </button>
         )}
 

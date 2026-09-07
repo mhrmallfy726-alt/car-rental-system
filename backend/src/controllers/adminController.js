@@ -75,7 +75,8 @@ const rejectSupplier = async (req,res)=>{
 
   try{
 
-    const {reason}=req.body;
+    const reason = String(req.body.reason || '').trim();
+    if (!reason) return res.status(400).json({ success: false, message: 'اكتب سبب الرفض قبل المتابعة' });
 
     const result = await query(`
       UPDATE users

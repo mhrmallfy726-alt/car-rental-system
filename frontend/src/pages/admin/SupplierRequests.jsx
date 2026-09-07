@@ -490,8 +490,11 @@ export default function SupplierRequests() {
 
         <button
           onClick={() => {
-            const reason =
-              document.getElementById("rejectReason").value;
+            const reason = document.getElementById("rejectReason").value.trim();
+            if (!reason) {
+              window.alert("اكتب سبب الرفض قبل المتابعة");
+              return;
+            }
 
             handleReject(selectedRequest.id, reason);
           }}
