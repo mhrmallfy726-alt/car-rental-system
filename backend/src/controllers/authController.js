@@ -590,7 +590,7 @@ if (employee) {
 // ========================
 const getMe = asyncHandler(async (req, res, next) => {
    const result = await query(
-    'SELECT id, name, email, role, phone, avatar, brand_logo, brand_description, address, iban, bank_name, auto_accept_bookings, is_verified, is_active FROM users WHERE id = $1',
+    'SELECT id, name, email, role, phone, avatar, brand_logo, brand_description, address, iban, bank_name, auto_accept_bookings, is_verified, verification_status, rejection_reason, is_active FROM users WHERE id = $1',
     [req.user.id]
   );
 
