@@ -356,6 +356,9 @@ export default function Cars() {
                   return (
                     <Link
                       key={car.id}
+                      onClick={() => {
+                        sessionStorage.setItem('car-rental-search-context', JSON.stringify(filters));
+                      }}
                       to={{
                         pathname: `/cars/${car.id}`,
                         search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', withDriver: filters.withDriver || 'false', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || 10), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),

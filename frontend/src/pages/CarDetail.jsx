@@ -32,6 +32,14 @@ export default function CarDetail() {
 
   const searchQuery = new URLSearchParams(routerLocation.search);
   const carriedSearch = routerLocation.state?.search || {};
+  const storedSearch = (() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      return JSON.parse(window.sessionStorage.getItem('car-rental-search-context') || '{}');
+    } catch {
+      return {};
+    }
+  })();
   const { isAuthenticated, isCustomer } = useAuthStore();
 
   const [car, setCar] = useState(null);
@@ -52,53 +60,69 @@ export default function CarDetail() {
   const [searchParams, setSearchParams] = useState(() => ({
     location:
       carriedSearch.search ||
+      storedSearch.search ||
       carriedSearch.location ||
+      storedSearch.location ||
       searchQuery.get('location') ||
       '',
     startDate:
       carriedSearch.startDate ||
+      storedSearch.startDate ||
       searchQuery.get('startDate') ||
       '',
     endDate:
       carriedSearch.endDate ||
+      storedSearch.endDate ||
       searchQuery.get('endDate') ||
       '',
     pickupTime:
       carriedSearch.pickup_time ||
+      storedSearch.pickup_time ||
+      storedSearch.pickupTime ||
       carriedSearch.pickupTime ||
       searchQuery.get('pickupTime') ||
       '09:00',
     returnTime:
       carriedSearch.return_time ||
+      storedSearch.return_time ||
+      storedSearch.returnTime ||
       carriedSearch.returnTime ||
       searchQuery.get('returnTime') ||
       '18:00',
     withDriver:
       carriedSearch.withDriver ||
+      storedSearch.withDriver ||
       carriedSearch.with_driver ||
       searchQuery.get('withDriver') ||
       searchQuery.get('with_driver') ||
       'false',
     minPrice:
       carriedSearch.min_price ||
+      storedSearch.min_price ||
+      storedSearch.minPrice ||
       carriedSearch.minPrice ||
       searchQuery.get('minPrice') ||
       '',
     maxPrice:
       carriedSearch.max_price ||
+      storedSearch.max_price ||
+      storedSearch.maxPrice ||
       carriedSearch.maxPrice ||
       searchQuery.get('maxPrice') ||
       '',
     latitude:
       carriedSearch.latitude ||
+      storedSearch.latitude ||
       searchQuery.get('latitude') ||
       '',
     longitude:
       carriedSearch.longitude ||
+      storedSearch.longitude ||
       searchQuery.get('longitude') ||
       '',
     radius:
       carriedSearch.radius ||
+      storedSearch.radius ||
       searchQuery.get('radius') ||
       10,
   }));
