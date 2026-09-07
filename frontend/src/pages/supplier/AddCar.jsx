@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
 import api from '../../services/api';
+import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Palette, DoorOpen, Gauge, User } from 'lucide-react';
 
 export default function AddCar() {
   const navigate = useNavigate();
+  const { showroom } = useSupplierShowroom();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
@@ -74,6 +76,7 @@ export default function AddCar() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (images.length === 0) return toast.error('يرجى إضافة صورة واحدة على الأقل للسيارة');
+    if (!showroom?.id) return toast.error('يرجى اختيار المعرض الحالي من لوحة التحكم أولاً');
 
     // تحقق إضافي من الأسعار
     if (parseFloat(formData.price_per_day) <= 0) {
@@ -83,7 +86,7 @@ export default function AddCar() {
     setLoading(true);
     try {
       // Step 1: Create car
-      const carRes = await carsAPI.create(formData);
+      const carRes = await carsAPI.create({ ...formData, location_id: showroom.id });
       const carId = carRes.data.data.id;
 
       // Step 2: Upload images
@@ -132,15 +135,17 @@ export default function AddCar() {
               </div>
             </div>
 
-            {/* صف 3: الفئة وموقع المورد */}
+            {/* صف 3: الفئة والمعرض الحالي */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الفئة</label>
                 <select name="category_id" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.category_id} onChange={handleChange}>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name_ar || c.name}</option>)}
                 </select>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', color: '#52636d', fontSize: '0.9rem' }}>
-                سيتم حفظ السيارة تلقائياً في موقع المورد المسجل.
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#52636d', fontSize: '0.9rem', gap: '4px' }}>
+                <strong style={{ color: '#173a52' }}>المعرض الحالي</strong>
+                <span>{showroom ? `${showroom.showroom_name || `معرض ${showroom.city}`} · ${showroom.city}` : 'اختر معرضاً من القائمة الجانبية'}</span>
+                {showroom?.address && <small>{showroom.address}</small>}
               </div>
             </div>
 
@@ -209,7 +214,7 @@ export default function AddCar() {
               )}
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading || !showroom?.id}>
               {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ وإرسال للمراجعة</>}
             </button>
           </form>

@@ -206,35 +206,26 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
   const {
     category_id, make, model, year, color,
     license_plate, seats, doors, transmission, fuel_type,
-    price_per_day, description, mileage, features
+    price_per_day, description, mileage, features, location_id
   } = req.body;
 
-  // موقع السيارة هو موقع المورد المسجل، وليس قيمة يرسلها نموذج إضافة السيارة.
-  const supplierResult = await query(
-    'SELECT city, address FROM users WHERE id = $1',
-    [req.user.id]
-  );
-  const supplier = supplierResult.rows[0];
-  if (!supplier?.city?.trim()) {
-    throw new AppError('يرجى تحديث موقع المورد قبل إضافة سيارة', 400);
+  if (!location_id) {
+    throw new AppError('يرجى اختيار المعرض الحالي قبل إضافة السيارة', 400);
   }
 
-  let supplierLocation = (await query(
-    `SELECT id FROM locations
-     WHERE is_active = true
-       AND LOWER(TRIM(city)) = LOWER(TRIM($1))
-     ORDER BY created_at ASC NULLS LAST
-     LIMIT 1`,
-    [supplier.city || '']
+  // The selected showroom is represented by a supplier-owned locations row.
+  // Never trust a client-provided location belonging to another supplier.
+  const supplierLocation = (await query(
+    `SELECT id
+     FROM locations
+     WHERE id = $1
+       AND supplier_id = $2
+       AND COALESCE(is_active, TRUE) = TRUE
+       AND COALESCE(subscription_status, 'active') = 'active'`,
+    [location_id, req.user.id]
   )).rows[0];
-
   if (!supplierLocation) {
-    supplierLocation = (await query(
-      `INSERT INTO locations (city, address, latitude, longitude, is_active)
-       VALUES ($1, $2, $3, $4, true)
-       RETURNING id`,
-      [supplier.city.trim(), supplier.address || null, null, null]
-    )).rows[0];
+    throw new AppError('المعرض المحدد غير متاح أو لا يتبع حسابك', 403);
   }
 
   const result = await query(`
