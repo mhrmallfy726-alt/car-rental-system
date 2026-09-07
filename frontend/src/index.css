@@ -1783,3 +1783,19 @@ textarea:focus-visible {
   }
 }
 
+
+
+/* Search details summary shown above results */
+.cars-search-summary { width: calc(100% - 40px); max-width: 1180px; margin: 20px auto 0; padding: 18px 20px; border: 1px solid rgba(212,175,55,.3); border-radius: 20px; background: linear-gradient(135deg,#fffdf6,#fff); box-shadow: 0 10px 28px rgba(23,58,82,.07); }
+.cars-search-summary-heading { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
+.cars-search-summary-heading span { color:#b38a20; font-size:12px; font-weight:900; }
+.cars-search-summary-heading h2 { margin:5px 0 0; color:#173a52; font-size:20px; font-weight:950; }
+.cars-search-summary-edit { border:1px solid #d4af37; border-radius:10px; padding:9px 13px; color:#173a52; background:transparent; font-size:12px; font-weight:900; cursor:pointer; }
+.cars-search-summary-edit:hover { color:#fff; background:#173a52; }
+.cars-search-summary-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+.cars-search-summary-item { display:grid; grid-template-columns:auto 1fr; column-gap:8px; align-items:center; min-height:62px; border:1px solid #edf0f1; border-radius:14px; padding:10px 12px; background:#fff; }
+.cars-search-summary-item svg { grid-row:span 2; color:#d4af37; }
+.cars-search-summary-item span { color:#8a969c; font-size:11px; }
+.cars-search-summary-item strong { color:#173a52; font-size:12px; font-weight:900; }
+@media(max-width:760px){.cars-search-summary{width:calc(100% - 28px);padding:15px}.cars-search-summary-heading{align-items:stretch;flex-direction:column}.cars-search-summary-edit{width:100%}.cars-search-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.cars-search-summary-grid{grid-template-columns:1fr}}

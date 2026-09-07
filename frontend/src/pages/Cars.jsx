@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../services/api';
 import AdvertisementBanner from '../components/AdvertisementBanner';
-import { Search, Filter, Star, User, Settings, CheckCircle, ShieldCheck, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Heart } from 'lucide-react';
+import { Search, Filter, Star, User, Settings, CheckCircle, ShieldCheck, Car, MapPin, Gauge, Fuel, Percent, X, Calendar, Clock3, Heart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
@@ -188,6 +188,26 @@ export default function Cars() {
     fetchCars();
   };
 
+  const hasSearchDetails = Boolean(
+    filters.search || filters.startDate || filters.endDate || filters.min_price || filters.max_price || filters.withDriver === 'true'
+  );
+  const editSearch = () => {
+    const query = new URLSearchParams({
+      location: filters.search || '',
+      startDate: filters.startDate || '',
+      endDate: filters.endDate || '',
+      pickupTime: filters.pickup_time || '09:00',
+      returnTime: filters.return_time || '18:00',
+      withDriver: filters.withDriver || 'false',
+      min_price: filters.min_price || '',
+      max_price: filters.max_price || '',
+      latitude: filters.latitude || '',
+      longitude: filters.longitude || '',
+      radius: String(filters.radius || 10),
+    }).toString();
+    navigate(`/search?${query}`);
+  };
+
   return (
     <div className="page" style={{ background: '#f8f9fa', minHeight: '100vh', paddingTop: '72px' }}>
 
@@ -223,6 +243,24 @@ export default function Cars() {
         </div>
       </section>
       <AdvertisementBanner placement="cars" />
+      {hasSearchDetails && (
+        <section className="cars-search-summary" aria-label="تفاصيل البحث الحالي">
+          <div className="cars-search-summary-heading">
+            <div>
+              <span>بحثك الحالي</span>
+              <h2>تفاصيل الاستئجار المطلوبة</h2>
+            </div>
+            <button type="button" onClick={editSearch} className="cars-search-summary-edit">تعديل البحث</button>
+          </div>
+          <div className="cars-search-summary-grid">
+            {filters.search && <SummaryItem icon={MapPin} label="موقع الاستلام" value={filters.search} />}
+            {filters.startDate && <SummaryItem icon={Calendar} label="فترة الاستئجار" value={`${filters.startDate}${filters.endDate ? ` — ${filters.endDate}` : ''}`} />}
+            <SummaryItem icon={Clock3} label="الأوقات" value={`${filters.pickup_time || '09:00'} — ${filters.return_time || '18:00'}`} />
+            <SummaryItem icon={Car} label="خدمة السائق" value={filters.withDriver === 'true' ? 'مع سائق' : 'بدون سائق'} />
+            {(filters.min_price || filters.max_price) && <SummaryItem icon={Settings} label="نطاق السعر" value={`${filters.min_price || '0'} — ${filters.max_price || 'بدون حد'} USD / يوم`} />}
+          </div>
+        </section>
+      )}
       <div className="container py-40">
         <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }} className="cars-layout">
 
@@ -476,4 +514,9 @@ export default function Cars() {
       ` }} />
     </div>
   );
+}
+
+
+function SummaryItem({ icon: Icon, label, value }) {
+  return <div className="cars-search-summary-item"><Icon size={18} /><span>{label}</span><strong>{value}</strong></div>;
 }
