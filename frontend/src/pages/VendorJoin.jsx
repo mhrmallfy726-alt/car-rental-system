@@ -140,9 +140,6 @@ export default function Join() {
 
     const extension = file.name.split('.').pop()?.toLowerCase();
     const isPdf = file.type === 'application/pdf' || extension === 'pdf';
-
-
-    const isPdf  = file.type === 'application/pdf' || extension === 'pdf';
     if (!isPdf) {
       toast.error('السجل التجاري يجب أن يكون ملف PDF فقط');
       e.target.value = '';
@@ -155,8 +152,6 @@ export default function Join() {
       return;
     }
 
-
-    setUploadProgress(prev => ({ ...prev, commercial: 100 }));
     setFiles(prev => ({
       ...prev,
       commercial: file,
@@ -164,7 +159,7 @@ export default function Join() {
       commercialPreview: null,
     }));
     // Simulate upload progress
-    setUploadProgress(prev => ({ ...prev, commercial: 100 }));
+    setUploadProgress(prev => ({ ...prev, commercial: 0 }));
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         const newProgress = prev.commercial + Math.random() * 30;
