@@ -141,6 +141,8 @@ export default function Join() {
     const extension = file.name.split('.').pop()?.toLowerCase();
     const isPdf = file.type === 'application/pdf' || extension === 'pdf';
 
+
+    const isPdf  = file.type === 'application/pdf' || extension === 'pdf';
     if (!isPdf) {
       toast.error('السجل التجاري يجب أن يكون ملف PDF فقط');
       e.target.value = '';
@@ -153,6 +155,7 @@ export default function Join() {
       return;
     }
 
+
     setUploadProgress(prev => ({ ...prev, commercial: 100 }));
     setFiles(prev => ({
       ...prev,
@@ -160,6 +163,18 @@ export default function Join() {
       commercialName: file.name,
       commercialPreview: null,
     }));
+    // Simulate upload progress
+    setUploadProgress(prev => ({ ...prev, commercial: 100 }));
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        const newProgress = prev.commercial + Math.random() * 30;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          return { ...prev, commercial: 100 };
+        }
+        return { ...prev, commercial: newProgress };
+      });
+    }, 200);
 
     e.target.value = '';
   };
@@ -1164,6 +1179,8 @@ textTransform: "uppercase",
                       </p>
                       <p style={{ fontSize: '0.75rem', color: '#6c757d', margin: 0 }}>
                         ملف PDF فقط - حتى 5MB
+                        PDF أو - حتى 5MB
+ 9084012 (Save local changes before update)
                       </p>
                     </div>
                   )}

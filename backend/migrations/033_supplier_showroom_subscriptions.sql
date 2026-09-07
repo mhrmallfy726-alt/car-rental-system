@@ -13,12 +13,9 @@ ALTER TABLE locations
 UPDATE locations l
 SET supplier_id = x.supplier_id
 FROM (
-<<<<<<< ours
 SELECT location_id, MIN(supplier_id::text)::uuid AS supplier_id
-=======
   -- PostgreSQL has no MIN(uuid) aggregate; all rows here have one distinct supplier.
   SELECT location_id, MIN(supplier_id::text)::uuid AS supplier_id
->>>>>>> theirs
   FROM cars
   WHERE location_id IS NOT NULL
   GROUP BY location_id

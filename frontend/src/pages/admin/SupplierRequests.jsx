@@ -3,12 +3,12 @@ import {
   Search,
   RefreshCw,
   Eye,
+  CheckCircle,
+  XCircle,
   Building2,
   Clock
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
-import AdminSidebar from "../../components/AdminSidebar";
-import toast from "react-hot-toast";
 // const res = await adminAPI.getSupplierRequests();
 
 export default function SupplierRequests() {
@@ -22,21 +22,7 @@ export default function SupplierRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000')
-    .replace(/\/$/, '')
-    .replace(/\/api$/, '');
-
-  const getUploadUrl = (value) => {
-    if (!value) return null;
-    if (/^https?:\/\//i.test(value)) return value;
-    const normalized = String(value).replace(/^\/+/, '');
-    return `${API_URL}/${normalized.startsWith('uploads/') ? normalized : `uploads/${normalized}`}`;
-  };
-
-  const selectedLogoUrl = getUploadUrl(selectedRequest?.brand_logo || selectedRequest?.avatar);
-  const selectedCommercialRegisterUrl = getUploadUrl(selectedRequest?.commercial_register);
-  const selectedOwnerIdUrl = getUploadUrl(selectedRequest?.owner_id);
+  const API_URL = "http://localhost:5000";
 
   const loadRequests = async () => {
 
@@ -48,8 +34,8 @@ export default function SupplierRequests() {
       setRequests(res.data.requests || []);
 
     } catch (err) {
+
       console.error(err);
-      toast.error(err.response?.data?.message || "تعذر تحميل طلبات الموردين");
 
     } finally {
 
@@ -60,45 +46,49 @@ export default function SupplierRequests() {
   };
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadRequests();
-    }, 0);
-    return () => window.clearTimeout(timer);
+
+    loadRequests();
+
   }, []);
 
   const handleApprove = async (id) => {
+
     try {
-      setActionLoading(true);
-      await adminAPI.approveSupplier(id);
-      toast.success("تم اعتماد المورد بنجاح");
+
+        await adminAPI.approveSupplier(id);
+
       setOpenModal(false);
-      setSelectedRequest(null);
-      await loadRequests();
+
+      loadRequests();
+
     } catch (err) {
+
       console.error(err);
-      toast.error(err.response?.data?.message || "تعذر اعتماد المورد");
-    } finally {
-      setActionLoading(false);
+
     }
+
   };
 
   const handleReject = async (id, reason) => {
+
     try {
-      setActionLoading(true);
-      await adminAPI.rejectSupplier(id, reason);
-      toast.success("تم رفض طلب المورد");
+
+        await adminAPI.rejectSupplier(id, reason);
+
       setOpenModal(false);
-      setSelectedRequest(null);
-      await loadRequests();
+
+      loadRequests();
+
     } catch (err) {
+
       console.error(err);
-      toast.error(err.response?.data?.message || "تعذر رفض طلب المورد");
-    } finally {
-      setActionLoading(false);
+
     }
+
   };
 
   const filteredRequests = requests.filter((item) => {
+    // console.log(selectedRequest);
     return (
 
       item.company_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -114,19 +104,11 @@ export default function SupplierRequests() {
     <>
       <div
         style={{
-          display: "flex",
-          minHeight: "100vh",
+          padding: "30px",
           background: "#f7f8fc",
+          minHeight: "100vh",
         }}
       >
-        <AdminSidebar />
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-            padding: "30px",
-          }}
-        >
         {/* Header */}
 
         <div
@@ -310,7 +292,7 @@ export default function SupplierRequests() {
                         }}
                       >
                         <Eye size={16} />
-                        مشاهدة التفاصيل
+                        مراجعة
                       </button>
                     </td>
                   </tr>
@@ -411,27 +393,26 @@ export default function SupplierRequests() {
 
       <h3>الشعار</h3>
 
-      {selectedLogoUrl ? (
-        <img
-          src={selectedLogoUrl}
-          alt="شعار الشركة"
-          onClick={() => setPreviewImage(selectedLogoUrl)}
-          style={{
-            width: "120px",
-            height: "120px",
-            objectFit: "cover",
-            borderRadius: "10px",
-            cursor: "pointer",
-            border: "1px solid #ddd",
-          }}
-        />
-      ) : (
-        <p style={{ color: "#777" }}>لم يتم رفع شعار الشركة.</p>
-      )}
+      <img
+  src={`${API_URL}/uploads/${selectedRequest.avatar}`}
+  alt="شعار الشركة"
+  onClick={() =>
+    setPreviewImage(`${API_URL}/uploads/${selectedRequest.avatar}`)
+  }
+  style={{
+    width: "120px",
+    height: "120px",
+    objectFit: "cover",
+    borderRadius: "10px",
+    cursor: "pointer",
+    border: "1px solid #ddd",
+  }}
+/>
 
       <hr style={{ margin: "25px 0" }} />
 
       <h3>السجل التجاري</h3>
+
 
       {selectedCommercialRegisterUrl ? (
         <a
@@ -444,28 +425,34 @@ export default function SupplierRequests() {
       ) : (
         <p style={{ color: "#777" }}>لم يتم رفع السجل التجاري.</p>
       )}
-      <hr style={{ margin: "25px 0" }} />
+
+     
+      <a
+  href={`${API_URL}/uploads/${selectedRequest.commercial_register}`}
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  📄 عرض السجل التجاري
+</a>
+ <hr style={{ margin: "25px 0" }} />
 
       <h3>هوية المالك</h3>
 
-      {selectedOwnerIdUrl ? (
-        <img
-          src={selectedOwnerIdUrl}
-          alt="هوية المالك"
-          onClick={() => setPreviewImage(selectedOwnerIdUrl)}
-          style={{
-            width: "220px",
-            maxWidth: "100%",
-            maxHeight: "220px",
-            objectFit: "contain",
-            borderRadius: "10px",
-            cursor: "pointer",
-            border: "1px solid #ddd",
-          }}
-        />
-      ) : (
-        <p style={{ color: "#777" }}>لم يتم رفع هوية المالك.</p>
-      )}
+      <img
+  src={`${API_URL}/uploads/${selectedRequest.avatar}`}
+  alt="شعار الشركة"
+  onClick={() =>
+    setPreviewImage(`${API_URL}/uploads/${selectedRequest.avatar}`)
+  }
+  style={{
+    width: "120px",
+    height: "120px",
+    objectFit: "cover",
+    borderRadius: "10px",
+    cursor: "pointer",
+    border: "1px solid #ddd",
+  }}
+/>
       <hr style={{ margin: "30px 0" }} />
 
       <textarea
@@ -489,7 +476,6 @@ export default function SupplierRequests() {
       >
         <button
           onClick={() => handleApprove(selectedRequest.id)}
-          disabled={actionLoading}
           style={{
             background: "#16a34a",
             color: "#fff",
@@ -499,7 +485,7 @@ export default function SupplierRequests() {
             cursor: "pointer",
           }}
         >
-          {actionLoading ? "جاري التنفيذ..." : "اعتماد المورد"}
+          اعتماد المورد
         </button>
 
         <button
@@ -509,7 +495,6 @@ export default function SupplierRequests() {
 
             handleReject(selectedRequest.id, reason);
           }}
-          disabled={actionLoading}
           style={{
             background: "#dc2626",
             color: "#fff",
@@ -519,37 +504,12 @@ export default function SupplierRequests() {
             cursor: "pointer",
           }}
         >
-          {actionLoading ? "جاري التنفيذ..." : "رفض الطلب"}
+          رفض الطلب
         </button>
       </div>
     </div>
   </div>
 )}
-
-      {previewImage && (
-        <div
-          role="presentation"
-          onClick={() => setPreviewImage(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.8)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 10000,
-            padding: "20px",
-          }}
-        >
-          <img
-            src={previewImage}
-            alt="معاينة المستند"
-            onClick={(event) => event.stopPropagation()}
-            style={{ maxWidth: "90%", maxHeight: "90%", borderRadius: "10px" }}
-          />
-        </div>
-      )}
-        </div>
       </div>
     </>
   );

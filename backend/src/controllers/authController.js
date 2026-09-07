@@ -431,25 +431,22 @@ const register = asyncHandler(async (req, res, next) => {
   if (!name || !email || !password) {
     return next(new AppError('الرجاء إدخال الاسم، البريد الإلكتروني، وكلمة المرور', 400));
   }
-<<<<<<< ours
-=======
 
   const normalizedPhone = normalizePhoneNumber(phone);
   if (!normalizedPhone) {
     return next(new AppError('الرجاء إدخال رقم هاتف صحيح', 400));
   }
->>>>>>> theirs
+
 
   const existingUser = await query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
   if (existingUser.rows.length > 0) {
     return next(new AppError('البريد الإلكتروني مسجل مسبقاً', 400));
   }
-<<<<<<< ours
 
-  const userData = {
-    name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
-    phone, company_name, city, address, latitude, longitude,
-=======
+
+  // const userData = {
+  //   name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
+  // }
   const existingPhone = await query(
     'SELECT id FROM users WHERE phone_normalized = $1 LIMIT 1',
     [normalizedPhone]
@@ -461,7 +458,7 @@ const register = asyncHandler(async (req, res, next) => {
   const userData = {
     name: name.trim(), email: email.trim(), password, role: role === 'supplier' ? 'supplier' : 'customer',
     phone: normalizedPhone, company_name, city, address, latitude, longitude,
->>>>>>> theirs
+
     late_fee_price_per_hour, grace_period_hours,
     avatar: req.files?.avatar?.[0]?.filename || null,
     commercial_register: req.files?.commercial_register?.[0]?.filename || null,

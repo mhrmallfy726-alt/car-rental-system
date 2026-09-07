@@ -39,7 +39,7 @@ const roleNavItems = {
     { to: '/admin/dashboard', label: 'لوحة الإدارة' },
     { to: '/admin/users', label: 'المستخدمون' },
     { to: '/admin/cars', label: 'السيارات' },
-    { to: '/admin/supplier-requests', label: 'اعتماد الموردين' },
+    // { to: '/admin/supplier-requests', label: 'اعتماد الموردين' },
     { to: '/admin/advertisement-center', label: 'الإعلانات' },
     { to: '/admin/finance', label: 'المالية' },
     { to: '/admin/complaints', label: 'الشكاوى' },
