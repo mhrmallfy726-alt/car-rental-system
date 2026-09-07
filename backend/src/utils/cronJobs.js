@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { query } = require('../config/database');
 const { sendTemplateMessage } = require('../services/whatsappService');
+const { refundReservationPayment } = require('../services/financeService');
 
 async function createInAppNotification({ userId, title, message, type = 'reservation', referenceId, io }) {
   const result = await query(
@@ -85,6 +86,45 @@ const initCronJobs = (io) => {
 
   cron.schedule('*/15 * * * *', async () => {
     try {
+      const expired = await query(`
+        UPDATE reservations
+           SET status = 'cancelled',
+               cancellation_reason = 'انتهت مهلة موافقة المورد بعد 24 ساعة',
+               cancelled_at = NOW()
+         WHERE status = 'pending'
+           AND created_at <= NOW() - INTERVAL '24 hours'
+         RETURNING id, customer_id, supplier_id, car_id
+      `);
+      for (const reservation of expired.rows) {
+        try {
+          await refundReservationPayment(reservation.id, 'انتهت مهلة موافقة المورد بعد 24 ساعة');
+        } catch (error) {
+          console.error(`Reservation ${reservation.id} refund failed:`, error.message);
+        }
+        await query(`
+          UPDATE cars SET status = 'available'
+           WHERE id = $1
+             AND NOT EXISTS (
+               SELECT 1 FROM reservations
+                WHERE car_id = $1 AND status IN ('approved', 'awaiting_pickup', 'active', 'returned')
+             )
+        `, [reservation.car_id]);
+        await createInAppNotification({
+          userId: reservation.customer_id,
+          title: 'انتهت مهلة الحجز',
+          message: 'انتهت مهلة موافقة المورد بعد 24 ساعة وتم إلغاء الحجز وإعادة المبلغ إن كان مدفوعاً.',
+          referenceId: reservation.id,
+          io
+        });
+        await createInAppNotification({
+          userId: reservation.supplier_id,
+          title: 'انتهت مهلة الموافقة على الحجز',
+          message: 'تم إلغاء الحجز تلقائياً لعدم الموافقة عليه خلال 24 ساعة.',
+          referenceId: reservation.id,
+          io
+        });
+      }
+
       const pickupTomorrow = await query(`
         SELECT r.id, r.customer_id, r.supplier_id, r.pickup_at, r.pickup_time, r.pickup_location,
                u.name AS customer_name, u.phone AS customer_phone, c.make, c.model
