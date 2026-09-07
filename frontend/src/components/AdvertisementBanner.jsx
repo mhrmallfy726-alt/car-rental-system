@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, CarFront, Megaphone, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CarFront, Megaphone, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { advertisementsAPI } from '../services/api';
 
@@ -99,6 +99,7 @@ export default function AdvertisementBanner({ placement = 'home', carId, compact
   const [advertisements, setAdvertisements] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,6 +110,7 @@ export default function AdvertisementBanner({ placement = 'home', carId, compact
         if (!cancelled) {
           setAdvertisements(response.data?.data || []);
           setActiveIndex(0);
+          setIsOpen(true);
         }
       } catch (error) {
         console.error('Advertisement load error:', error);
@@ -133,43 +135,27 @@ export default function AdvertisementBanner({ placement = 'home', carId, compact
     if (activeIndex >= advertisements.length && advertisements.length > 0) setActiveIndex(0);
   }, [activeIndex, advertisements.length]);
 
-  if (loading || advertisements.length === 0) return null;
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleEscape = (event) => { if (event.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
+  if (loading || advertisements.length === 0 || !isOpen) return null;
 
   const currentAdvertisement = advertisements[activeIndex];
 
   return (
-    <section className="advertisement-showcase" dir="rtl" aria-label="الإعلانات">
-      <div className="advertisement-showcase-heading">
-        <div>
-          <span className="advertisement-eyebrow">عروض مختارة لك</span>
-          <h2>اكتشف عروض السيارات</h2>
-          <p>إعلان واحد في كل مرة حتى يحصل كل عرض على فرصة واضحة للظهور.</p>
-        </div>
-        {advertisements.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button type="button" aria-label="الإعلان السابق" onClick={() => setActiveIndex((current) => (current - 1 + advertisements.length) % advertisements.length)} style={sliderButtonStyle}><ArrowRight size={17} /></button>
-            <span style={{ minWidth: 58, textAlign: 'center', color: '#6c7a86', fontSize: 12, fontWeight: 800 }}>{activeIndex + 1} / {advertisements.length}</span>
-            <button type="button" aria-label="الإعلان التالي" onClick={() => setActiveIndex((current) => (current + 1) % advertisements.length)} style={sliderButtonStyle}><ArrowLeft size={17} /></button>
-          </div>
-        )}
+    <div className="advertisement-modal-backdrop" dir="rtl" role="dialog" aria-modal="true" aria-label="إعلان">
+      <div className="advertisement-modal">
+        <button type="button" className="advertisement-modal-close" onClick={() => setIsOpen(false)} aria-label="إغلاق الإعلان"><X size={20} /></button>
+        <div className="advertisement-modal-label"><Megaphone size={14} /> إعلان</div>
+        <div key={currentAdvertisement.id} className="advertisement-modal-content"><AdvertisementCard advertisement={currentAdvertisement} compact={compact} /></div>
+        {advertisements.length > 1 && <div className="advertisement-modal-controls"><button type="button" aria-label="الإعلان السابق" onClick={() => setActiveIndex((current) => (current - 1 + advertisements.length) % advertisements.length)} style={sliderButtonStyle}><ArrowRight size={17} /></button><span>{activeIndex + 1} / {advertisements.length}</span><button type="button" aria-label="الإعلان التالي" onClick={() => setActiveIndex((current) => (current + 1) % advertisements.length)} style={sliderButtonStyle}><ArrowLeft size={17} /></button></div>}
       </div>
-
-      <div className="advertisement-slider" style={{ position: 'relative', overflow: 'hidden', width: '100%' }}>
-        <div key={currentAdvertisement.id} style={{ animation: 'advertisementSlideIn 420ms ease both' }}>
-          <AdvertisementCard advertisement={currentAdvertisement} compact={compact} />
-        </div>
-      </div>
-
-      {advertisements.length > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 12 }}>
-          {advertisements.map((advertisement, index) => (
-            <button key={advertisement.id} type="button" aria-label={`الإعلان ${index + 1}`} onClick={() => setActiveIndex(index)} style={{ width: index === activeIndex ? 24 : 8, height: 8, padding: 0, border: 0, borderRadius: 999, background: index === activeIndex ? '#173a52' : '#cbd5db', cursor: 'pointer', transition: 'width 220ms ease' }} />
-          ))}
-        </div>
-      )}
-
-      <style>{`@keyframes advertisementSlideIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }`}</style>
-    </section>
+      <style>{`@keyframes advertisementModalIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
+    </div>
   );
 }
 

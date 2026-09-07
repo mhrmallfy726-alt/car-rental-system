@@ -1799,3 +1799,15 @@ textarea:focus-visible {
 .cars-search-summary-item strong { color:#173a52; font-size:10px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 @media(max-width:760px){.cars-search-summary{width:calc(100% - 28px);padding:9px 10px}.cars-search-summary-heading{align-items:center}.cars-search-summary-edit{width:auto}.cars-search-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:430px){.cars-search-summary-grid{grid-template-columns:1fr}}
+
+
+/* Advertisement modal */
+.advertisement-modal-backdrop { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; padding: 20px; background: rgba(9,23,38,.68); backdrop-filter: blur(5px); animation: advertisementBackdropIn .2s ease both; }
+.advertisement-modal { position: relative; width: min(620px, 100%); max-height: min(760px, calc(100vh - 40px)); overflow: auto; padding: 16px; border: 1px solid rgba(255,255,255,.3); border-radius: 22px; background: #fff; box-shadow: 0 24px 80px rgba(0,0,0,.32); animation: advertisementModalIn .28s ease both; }
+.advertisement-modal-close { position: absolute; z-index: 5; top: 12px; left: 12px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #e2e8ec; border-radius: 50%; color: #173a52; background: rgba(255,255,255,.94); cursor: pointer; }
+.advertisement-modal-close:hover { color: #fff; background: #173a52; }
+.advertisement-modal-label { display: inline-flex; align-items: center; gap: 6px; margin: 2px 0 10px; color: #b38a20; font-size: 11px; font-weight: 900; }
+.advertisement-modal-content .advertisement-card { display: block; box-shadow: none; }
+.advertisement-modal-controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; color: #6c7a86; font-size: 12px; font-weight: 800; }
+@keyframes advertisementBackdropIn { from { opacity: 0; } to { opacity: 1; } }
+@media(max-width:600px){ .advertisement-modal-backdrop { padding: 10px; } .advertisement-modal { padding: 12px; border-radius: 17px; } .advertisement-modal-content .advertisement-card-media { min-height: 190px; } }
