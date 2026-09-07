@@ -112,7 +112,11 @@ const refundReservationPayment = async (reservationId, reason = 'إلغاء أو
       }
     }
     await client.query(`UPDATE payments SET status = 'refunded', refund_amount = amount, refund_reason = $1, refunded_at = NOW() WHERE id = $2`, [reason, payment.id]);
+    const originalLedger = await client.query(`SELECT entry_type, amount FROM ledger_entries WHERE payment_id = $1 AND entry_type IN ('platform_fee', 'supplier_payable') AND direction = 'credit'`, [payment.id]);
     await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, 'refund', 'debit', $4, $5, $6, $7::jsonb)`, [payment.id, reservationId, payment.supplier_id, payment.amount, payment.currency, reason, JSON.stringify({ simulated: true, refund_of: payment.id })]);
+    for (const entry of originalLedger.rows) {
+      await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, $4, 'debit', $5, $6, $7, $8::jsonb)`, [payment.id, reservationId, payment.supplier_id, entry.entry_type, entry.amount, payment.currency, `عكس ${entry.entry_type} بسبب الاسترداد`, JSON.stringify({ simulated: true, refund_of: payment.id })]);
+    }
     await client.query('COMMIT');
     return payment;
   } catch (error) { await client.query('ROLLBACK'); throw error; }
@@ -121,7 +125,7 @@ const refundReservationPayment = async (reservationId, reason = 'إلغاء أو
 
 const getDashboard = async () => {
   const [summary, adPayments, reservationPayments, pendingPayouts] = await Promise.all([
-    query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS gross_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND advertisement_id IS NOT NULL),0)::numeric AS advertisement_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND reservation_id IS NOT NULL),0)::numeric AS reservation_revenue,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='platform_fee' AND direction='credit'),0)::numeric AS platform_commission,COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE entry_type='supplier_payable' AND direction='credit'),0)::numeric AS supplier_payable,COALESCE(SUM(amount) FILTER (WHERE status='refunded'),0)::numeric AS refunded_amount,COUNT(*) FILTER (WHERE status='paid')::int AS paid_transactions,COUNT(*) FILTER (WHERE status='pending')::int AS pending_transactions FROM payments`),
+    query(`SELECT COALESCE(SUM(amount) FILTER (WHERE status='paid'),0)::numeric AS gross_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND advertisement_id IS NOT NULL),0)::numeric AS advertisement_revenue,COALESCE(SUM(amount) FILTER (WHERE status='paid' AND reservation_id IS NOT NULL),0)::numeric AS reservation_revenue,COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE entry_type='platform_fee'),0)::numeric AS platform_commission,COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE entry_type='supplier_payable'),0)::numeric AS supplier_payable,COALESCE(SUM(amount) FILTER (WHERE status='refunded'),0)::numeric AS refunded_amount,COUNT(*) FILTER (WHERE status='paid')::int AS paid_transactions,COUNT(*) FILTER (WHERE status='pending')::int AS pending_transactions FROM payments`),
     query(`SELECT p.id,p.amount,p.currency,p.status,p.paid_at,p.provider_reference,a.title,u.name AS supplier_name FROM payments p LEFT JOIN advertisements a ON a.id=p.advertisement_id LEFT JOIN users u ON u.id=p.supplier_id WHERE p.advertisement_id IS NOT NULL ORDER BY p.created_at DESC LIMIT 100`),
     query(`SELECT p.id,p.reservation_id,p.amount,p.currency,p.status,p.paid_at,p.provider_reference,r.start_date,r.end_date,r.with_driver,c.make,c.model,su.name AS supplier_name,cu.name AS customer_name,COALESCE(fee.amount,0)::numeric AS commission,CASE WHEN p.amount > 0 THEN ROUND((COALESCE(fee.amount,0)/p.amount*100)::numeric,2) ELSE 0 END AS commission_rate,COALESCE(payable.amount,0)::numeric AS supplier_amount,CASE WHEN p.status='paid' AND COALESCE(fee.amount,0)+COALESCE(payable.amount,0)=p.amount THEN 'matched' ELSE 'check' END AS reconciliation_status FROM payments p LEFT JOIN reservations r ON r.id=p.reservation_id LEFT JOIN cars c ON c.id=r.car_id LEFT JOIN users su ON su.id=r.supplier_id LEFT JOIN users cu ON cu.id=r.customer_id LEFT JOIN LATERAL (SELECT amount FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee' AND direction='credit' LIMIT 1) fee ON TRUE LEFT JOIN LATERAL (SELECT amount FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable' AND direction='credit' LIMIT 1) payable ON TRUE WHERE p.reservation_id IS NOT NULL ORDER BY p.created_at DESC LIMIT 100`),
     query(`SELECT sp.*,u.name AS supplier_name FROM supplier_payouts sp JOIN users u ON u.id=sp.supplier_id WHERE sp.status IN ('pending','processing') ORDER BY sp.created_at ASC LIMIT 100`),
@@ -144,7 +148,7 @@ const createPayout = async (adminId, supplierId, amount, notes = '', currency = 
     if (ownsTransaction) await db.query('BEGIN');
     const balance = await db.query(
       `SELECT
-         COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit' AND currency=$2),0) AS payable,
+         COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE supplier_id=$1 AND entry_type='supplier_payable' AND currency=$2),0) AS payable,
          COALESCE((SELECT SUM(amount) FROM supplier_payouts WHERE supplier_id=$1 AND status IN ('paid','pending','processing') AND currency=$2),0) AS reserved_payouts
        FROM users WHERE id=$1 FOR UPDATE`,
       [supplierId, payoutCurrency],
@@ -174,7 +178,7 @@ const completePayout = async (adminId, payoutId, notes = '') => {
     const payout = await client.query(`SELECT * FROM supplier_payouts WHERE id=$1 AND status='pending' FOR UPDATE`, [payoutId]);
     if (!payout.rows.length) throw new Error('طلب التسوية غير موجود أو تمت معالجته');
     const current = payout.rows[0];
-    const balance = await client.query(`SELECT COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit' AND currency=$2),0) AS payable,COALESCE((SELECT SUM(amount) FROM supplier_payouts WHERE supplier_id=$1 AND status IN ('paid','pending','processing') AND currency=$2 AND id<>$3),0) AS reserved_payouts FROM users WHERE id=$1 FOR UPDATE`, [current.supplier_id, current.currency, payoutId]);
+    const balance = await client.query(`SELECT COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE supplier_id=$1 AND entry_type='supplier_payable' AND currency=$2),0) AS payable,COALESCE((SELECT SUM(amount) FROM supplier_payouts WHERE supplier_id=$1 AND status IN ('paid','pending','processing') AND currency=$2 AND id<>$3),0) AS reserved_payouts FROM users WHERE id=$1 FOR UPDATE`, [current.supplier_id, current.currency, payoutId]);
     const available = Number(balance.rows[0]?.payable || 0) - Number(balance.rows[0]?.reserved_payouts || 0);
     if (Number(current.amount) > available + 0.000001) throw new Error('لا يمكن إكمال التسوية: الرصيد المتاح للمورد غير كافٍ');
     const updated = await client.query(`UPDATE supplier_payouts SET status='paid',processed_by=$1,processed_at=NOW(),notes=COALESCE($2,notes) WHERE id=$3 RETURNING *`, [adminId, notes || null, payoutId]);
