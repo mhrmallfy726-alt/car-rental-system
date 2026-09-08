@@ -17,29 +17,26 @@ ALTER TABLE locations
   ADD COLUMN IF NOT EXISTS subscription_started_at TIMESTAMPTZ,
   ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
 
-
 -- Assign supplier to locations that belong to exactly one supplier.
-UPDATE locations AS l
-SET supplier_id = x.supplier_id
-FROM (
-  SELECT
-    location_id,
-    MIN(supplier_id::text)::uuid AS supplier_id
-  FROM cars
-  WHERE location_id IS NOT NULL
-  GROUP BY location_id
-  HAVING COUNT(DISTINCT supplier_id) = 1
-) AS x
-WHERE l.id = x.location_id
-  AND l.supplier_id IS NULL;
-
+-- UPDATE locations AS l
+-- SET supplier_id = x.supplier_id
+-- FROM (
+--   SELECT
+--     location_id,
+--     MIN(supplier_id::text)::uuid AS supplier_id
+--   FROM cars
+--   WHERE location_id IS NOT NULL
+--   GROUP BY location_id
+--   HAVING COUNT(DISTINCT supplier_id) = 1
+-- ) AS x
+-- WHERE l.id = x.location_id
+--   AND l.supplier_id IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_locations_supplier
   ON locations(supplier_id);
 
 CREATE INDEX IF NOT EXISTS idx_locations_subscription_status
   ON locations(subscription_status);
-
 
 CREATE TABLE IF NOT EXISTS showroom_subscription_settings (
   id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
@@ -53,11 +50,9 @@ CREATE TABLE IF NOT EXISTS showroom_subscription_settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-
 INSERT INTO showroom_subscription_settings (id)
 VALUES (1)
 ON CONFLICT (id) DO NOTHING;
-
 
 CREATE TABLE IF NOT EXISTS showroom_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -86,7 +81,6 @@ CREATE TABLE IF NOT EXISTS showroom_subscriptions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-
 CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_supplier
   ON showroom_subscriptions(supplier_id, created_at DESC);
 
@@ -96,16 +90,13 @@ CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_showroom
 CREATE INDEX IF NOT EXISTS idx_showroom_subscriptions_status
   ON showroom_subscriptions(status);
 
-
 ALTER TABLE payments
   ADD COLUMN IF NOT EXISTS showroom_subscription_id UUID
     REFERENCES showroom_subscriptions(id)
     ON DELETE SET NULL;
 
-
 ALTER TABLE showroom_subscriptions
   DROP CONSTRAINT IF EXISTS showroom_subscriptions_payment_id_fkey;
-
 
 ALTER TABLE showroom_subscriptions
   ADD CONSTRAINT showroom_subscriptions_payment_id_fkey
@@ -113,10 +104,8 @@ ALTER TABLE showroom_subscriptions
   REFERENCES payments(id)
   ON DELETE SET NULL;
 
-
 ALTER TABLE payments
   DROP CONSTRAINT IF EXISTS payments_single_subject;
-
 
 ALTER TABLE payments
   ADD CONSTRAINT payments_single_subject
@@ -126,10 +115,8 @@ ALTER TABLE payments
     OR showroom_subscription_id IS NOT NULL
   );
 
-
 CREATE INDEX IF NOT EXISTS idx_payments_showroom_subscription
   ON payments(showroom_subscription_id);
-
 
 CREATE OR REPLACE FUNCTION showroom_subscription_updated_at()
 RETURNS TRIGGER
@@ -140,16 +127,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
 DROP TRIGGER IF EXISTS showroom_subscription_updated_at_trigger
 ON showroom_subscriptions;
-
 
 CREATE TRIGGER showroom_subscription_updated_at_trigger
 BEFORE UPDATE ON showroom_subscriptions
 FOR EACH ROW
 EXECUTE FUNCTION showroom_subscription_updated_at();
-
 
 -- Synchronize existing showroom ownership.
 UPDATE locations AS l
