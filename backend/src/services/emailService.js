@@ -1,54 +1,111 @@
+const https = require('https');
 const otpGenerator = require('otp-generator');
-const nodemailer = require('nodemailer');
-const dns = require('dns');
 require('dotenv').config();
 
-dns.setDefaultResultOrder('ipv4first');
-
-const smtpPort = Number(process.env.SMTP_PORT || 587);
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: smtpPort,
-  secure: smtpPort === 465,
-  family: 4,
-  lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4, all: false }, callback);
-  },
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 8000,
-  greetingTimeout: 8000,
-  socketTimeout: 8000,
-});
-
 const generateOTP = () => {
-    return otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-      digits: true,
-    });
-  };
-const sendEmail = async (to, subject, html) => {
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
+  return otpGenerator.generate(6, {
+    upperCaseAlphabets: false,
+    lowerCaseAlphabets: false,
+    specialChars: false,
+    digits: true,
+  });
+};
+
+const brevoRequest = (payload) =>
+  new Promise((resolve, reject) => {
+    const request = https.request(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+          'content-length': Buffer.byteLength(payload),
+        },
+        timeout: 10000,
+      },
+      (response) => {
+        let body = '';
+
+        response.setEncoding('utf8');
+
+        response.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        response.on('end', () => {
+          const statusCode = response.statusCode || 500;
+
+          if (statusCode >= 200 && statusCode < 300) {
+            try {
+              resolve(body ? JSON.parse(body) : {});
+            } catch (error) {
+              resolve({});
+            }
+
+            return;
+          }
+
+          reject(
+            new Error(`Brevo API ${statusCode}: ${body}`)
+          );
+        });
+      }
+    );
+
+    request.on('timeout', () => {
+      request.destroy(
+        new Error('Brevo API connection timeout')
+      );
     });
 
-    console.log("Email sent successfully");
+    request.on('error', reject);
+
+    request.write(payload);
+    request.end();
+  });
+
+const sendEmail = async (to, subject, html) => {
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error('BREVO_API_KEY is not configured');
+  }
+
+  if (!process.env.EMAIL_FROM) {
+    throw new Error('EMAIL_FROM is not configured');
+  }
+
+  const payload = JSON.stringify({
+    sender: {
+      email: process.env.EMAIL_FROM,
+      name: process.env.EMAIL_FROM_NAME || 'Car Rental',
+    },
+    to: [
+      {
+        email: to,
+      },
+    ],
+    subject,
+    htmlContent: html,
+  });
+
+  try {
+    const result = await brevoRequest(payload);
+
+    console.log('Email sent successfully through Brevo');
+
+    return result;
   } catch (error) {
-    console.error("Email sending failed:", error);
+    console.error(
+      'Email sending failed:',
+      error.message
+    );
+
     throw error;
   }
 };
 
 module.exports = {
-    sendEmail,
-    generateOTP,
-  };
+  sendEmail,
+  generateOTP,
+};
