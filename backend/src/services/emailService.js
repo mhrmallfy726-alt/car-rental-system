@@ -2,47 +2,69 @@ const https = require('https');
 const otpGenerator = require('otp-generator');
 require('dotenv').config();
 
-const generateOTP = () => otpGenerator.generate(6, {
-  upperCaseAlphabets: false,
-  lowerCaseAlphabets: false,
-  specialChars: false,
-  digits: true,
-});
+const generateOTP = () => {
+  return otpGenerator.generate(6, {
+    upperCaseAlphabets: false,
+    lowerCaseAlphabets: false,
+    specialChars: false,
+    digits: true,
+  });
+};
 
-const brevoRequest = (payload) => new Promise((resolve, reject) => {
-  const request = https.request(
-    'https://api.brevo.com/v3/smtp/email',
-    {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'api-key': process.env.BREVO_API_KEY,
-        'content-type': 'application/json',
-        'content-length': Buffer.byteLength(payload),
+const brevoRequest = (payload) =>
+  new Promise((resolve, reject) => {
+    const request = https.request(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+          'content-length': Buffer.byteLength(payload),
+        },
+        timeout: 10000,
       },
-      timeout: 10000,
-    },
-    (response) => {
-      let body = '';
-      response.setEncoding('utf8');
-      response.on('data', (chunk) => { body += chunk; });
-      response.on('end', () => {
-        const statusCode = response.statusCode || 500;
-        if (statusCode >= 200 && statusCode < 300) {
-          resolve(body ? JSON.parse(body) : {});
-          return;
-        }
+      (response) => {
+        let body = '';
 
-        reject(new Error(`Brevo API ${statusCode}: ${body}`));
-      });
-    }
-  );
+        response.setEncoding('utf8');
 
-  request.on('timeout', () => request.destroy(new Error('Brevo API connection timeout')));
-  request.on('error', reject);
-  request.write(payload);
-  request.end();
-});
+        response.on('data', (chunk) => {
+          body += chunk;
+        });
+
+        response.on('end', () => {
+          const statusCode = response.statusCode || 500;
+
+          if (statusCode >= 200 && statusCode < 300) {
+            try {
+              resolve(body ? JSON.parse(body) : {});
+            } catch (error) {
+              resolve({});
+            }
+
+            return;
+          }
+
+          reject(
+            new Error(`Brevo API ${statusCode}: ${body}`)
+          );
+        });
+      }
+    );
+
+    request.on('timeout', () => {
+      request.destroy(
+        new Error('Brevo API connection timeout')
+      );
+    });
+
+    request.on('error', reject);
+
+    request.write(payload);
+    request.end();
+  });
 
 const sendEmail = async (to, subject, html) => {
   if (!process.env.BREVO_API_KEY) {
@@ -53,21 +75,32 @@ const sendEmail = async (to, subject, html) => {
     throw new Error('EMAIL_FROM is not configured');
   }
 
-  try {
-    const result = await brevoRequest(JSON.stringify({
-      sender: {
-        email: process.env.EMAIL_FROM,
-        name: process.env.EMAIL_FROM_NAME || 'Car Rental',
+  const payload = JSON.stringify({
+    sender: {
+      email: process.env.EMAIL_FROM,
+      name: process.env.EMAIL_FROM_NAME || 'Car Rental',
+    },
+    to: [
+      {
+        email: to,
       },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }));
+    ],
+    subject,
+    htmlContent: html,
+  });
+
+  try {
+    const result = await brevoRequest(payload);
 
     console.log('Email sent successfully through Brevo');
+
     return result;
   } catch (error) {
-    console.error('Email sending failed:', error.message);
+    console.error(
+      'Email sending failed:',
+      error.message
+    );
+
     throw error;
   }
 };
