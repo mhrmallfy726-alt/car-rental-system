@@ -57,7 +57,7 @@ export default function MarketingChoice() {
                 مساحة واحدة لفرص أكبر
               </div>
               <h1 style={{ margin: 0, color: INK, fontSize: isMobile ? 'clamp(2.2rem, 11vw, 3rem)' : 'clamp(3rem, 5vw, 4.8rem)', lineHeight: 1.15, fontWeight: 900, letterSpacing: '-0.04em' }}>
-                منصة التسويق الفاخرة
+               RENTAL CR
               </h1>
               <p style={{ margin: '18px 0 0', maxWidth: 620, color: '#546471', fontSize: isMobile ? 17 : 20, lineHeight: 1.9 }}>
                 اختر دورك وابدأ رحلتك في عالم تأجير السيارات بثقة، وضوح، وتجربة مصممة لتقربك من القرار المناسب.

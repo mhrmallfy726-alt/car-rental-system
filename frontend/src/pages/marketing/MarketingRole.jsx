@@ -56,7 +56,7 @@ const renterContent = {
   description: 'ابحث وقارن بين السيارات والخدمات داخل نظام تأجير واحد، مع تفاصيل تساعدك على اختيار ما يناسب رحلتك.',
   image: renterBenefits,
   heroButton: 'استكشف السيارات',
-  heroPath: '/register',
+  heroPath: '/search',
   accent: GOLD,
   accentSoft: '#fbf6e8',
   features: [
@@ -112,7 +112,7 @@ export default function MarketingRole({ role: roleProp }) {
               <p style={{ margin: '20px 0 28px', maxWidth: 590, color: '#5c6b76', fontSize: isMobile ? 17 : 20, lineHeight: 1.9 }}>{content.description}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
                 <Link to={content.heroPath} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '14px 24px', borderRadius: 13, background: content.accent, color: '#fff', fontWeight: 800, boxShadow: `0 14px 26px ${content.accent}35` }}>{content.heroButton}<ArrowLeft size={18} /></Link>
-                <Link to="/landing" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '14px 24px', borderRadius: 13, background: 'rgba(255,255,255,0.72)', color: NAVY, border: '1px solid rgba(26,58,82,0.18)', fontWeight: 800 }}>تغيير المسار</Link>
+                <Link to="/marketing" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '14px 24px', borderRadius: 13, background: 'rgba(255,255,255,0.72)', color: NAVY, border: '1px solid rgba(26,58,82,0.18)', fontWeight: 800 }}>تغيير المسار</Link>
               </div>
             </motion.div>
 

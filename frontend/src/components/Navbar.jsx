@@ -13,7 +13,7 @@ const publicNavItems = [
   { to: '/', label: 'الرئيسية' },
   { to: '/cars', label: 'استئجار سيارة' },
   { to: '/about', label: 'عن المنصة' },
-  { to: '/supplier/join', label: 'انضم كمورد' },
+  { to: '/supplier-benefits', label: 'انضم كمورد' },
 ];
 
 const roleNavItems = {

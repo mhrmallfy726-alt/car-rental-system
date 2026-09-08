@@ -447,7 +447,7 @@ export default function Landing() {
 
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
               <Link
-                to="/marketing"
+                to="/supplier-benefits"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
                   background: 'linear-gradient(135deg, #febb02, #f5a623)',
@@ -652,7 +652,7 @@ export default function Landing() {
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
             <Link
-              to="/cars"
+              to="/search"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
                 background: 'white', color: '#003580',
