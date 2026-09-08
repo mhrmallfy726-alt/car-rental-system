@@ -83,7 +83,7 @@ const handleError = (res, error, fallback = 'حدث خطأ في الإعلانا
 };
 
 const uploadedImagePath = (req) => (
-  req.file ? (req.file.url || req.file.path || `/uploads/advertisements/${req.file.filename}`) : null
+  req.file ? `/uploads/advertisements/${req.file.filename}` : null
 );
 
 const advertisementController = {
@@ -283,4 +283,5 @@ const advertisementController = {
   },
 };
 module.exports = advertisementController;
+
 
