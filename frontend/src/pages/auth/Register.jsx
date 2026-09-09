@@ -331,8 +331,8 @@ export default function Register() {
   
     try {
       const response = await authAPI.verifyOTP({
-        email: verifyEmail,
-        otp,
+        email: verificationEmail,
+        otp: otp.trim()
       });
       const data = response.data;
   
@@ -346,7 +346,7 @@ export default function Register() {
         }
   
       } else {
-        toast.error(data.message || "رمز التحقق غير صحيح");
+        toast.error(error.response?.data?.message || 'رمز التحقق غير صحيح');
       }
   
     } catch (error) {
@@ -354,7 +354,50 @@ export default function Register() {
       toast.error("حدث خطأ أثناء التحقق");
     }
   };
-
+  const handleResendOTP = async () => {
+    setResendLoading(true);
+    try {
+      const response = await api.post('/auth/resend-otp', { email: verificationEmail });
+      if (response.data.success) {
+        setOtp('');
+        toast.success('تم إرسال رمز تحقق جديد');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر إعادة إرسال الرمز');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+  const handleChangeVerificationEmail = async () => {
+    const nextEmail = emailDraft.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
+      toast.error('يرجى إدخال بريد إلكتروني صحيح');
+      return;
+    }
+    if (nextEmail === verificationEmail.toLowerCase()) {
+      setIsChangingEmail(false);
+      return;
+    }
+    setResendLoading(true);
+    try {
+      const response = await api.post('/auth/resend-otp', {
+        email: verificationEmail,
+        newEmail: nextEmail
+      });
+      if (response.data.success) {
+        setVerificationEmail(nextEmail);
+        setFormData((prev) => ({ ...prev, ownerEmail: nextEmail }));
+        setEmailDraft('');
+        setOtp('');
+        setIsChangingEmail(false);
+        toast.success('تم تغيير البريد وإرسال رمز جديد');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر تغيير البريد الإلكتروني');
+    } finally {
+      setResendLoading(false);
+    }
+  };
   return (
     <div style={{
       minHeight: '100vh',
