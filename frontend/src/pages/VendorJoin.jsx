@@ -27,7 +27,7 @@ export default function Join() {
     ownerPassword: '',
     ownerPasswordConfirm: '',
     
-    // معلومات الفرع
+    // معلومات المعرض
     showroomName: '',
     city: '',
     address: '',
@@ -139,7 +139,10 @@ export default function Join() {
     if (!file) return;
 
     const extension = file.name.split('.').pop()?.toLowerCase();
+
     const isPdf = file.type === 'application/pdf' || extension === 'pdf';
+
+    
     if (!isPdf) {
       toast.error('السجل التجاري يجب أن يكون ملف PDF فقط');
       e.target.value = '';
@@ -260,7 +263,7 @@ export default function Join() {
       return false;
     }
     if (!formData.showroomName.trim()) {
-      toast.error('يرجى إدخال اسم الفرع');
+      toast.error('يرجى إدخال اسم المعرض');
       return false;
     }
     if (!formData.city.trim()) {
@@ -288,7 +291,7 @@ export default function Join() {
 
   const validateStep3 = () => {
     if (!files.logo) {
-      toast.error('يرجى رفع شعار الفرع');
+      toast.error('يرجى رفع شعار المعرض');
       return false;
     }
     if (!files.commercial) {
@@ -492,7 +495,7 @@ textTransform: "uppercase",
             🚗 انضم كمورد سيارات
           </h1>
           <p style={{ color: '#6c757d', fontSize: '0.95rem' }}>
-            أكمل بيانات فرعك للانضمام إلى منصتنا
+            أكمل بيانات معرضك للانضمام إلى منصتنا
           </p>
         </div>
 
@@ -769,10 +772,10 @@ textTransform: "uppercase",
     style={{ color: '#0F766E' }}
   />
 
-  معلومات الفرع
+  معلومات المعرض
 </h2>
 
-{/* اسم الفرع */}
+{/* اسم المعرض */}
 <div style={{ marginBottom: '16px' }}>
   <label
     style={{
@@ -783,7 +786,7 @@ textTransform: "uppercase",
       color: '#1a1a1a',
     }}
   >
-    اسم الفرع *
+    اسم المعرض *
   </label>
 
   <div style={{ position: 'relative' }}>
@@ -801,7 +804,7 @@ textTransform: "uppercase",
     <input
       type="text"
       name="showroomName"
-      placeholder="فرع أحمد للسيارات"
+      placeholder="معرض أحمد للسيارات"
       value={formData.showroomName}
       onChange={handleChange}
       style={{
@@ -823,7 +826,7 @@ textTransform: "uppercase",
   </div>
 </div>
 
-{/* موقع الفرع */}
+{/* موقع المعرض */}
 <div style={{ marginBottom: '16px' }}>
   <label
     style={{
@@ -834,7 +837,7 @@ textTransform: "uppercase",
       color: '#1a1a1a',
     }}
   >
-    موقع الفرع *
+    موقع المعرض *
   </label>
 
   <LocationPicker
@@ -1058,7 +1061,7 @@ textTransform: "uppercase",
               {/* Logo Upload */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
-                  📷 شعار الفرع *
+                  📷 شعار المعرض *
                 </label>
                 <div
                   onDragOver={handleDragOver}
