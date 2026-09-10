@@ -6,8 +6,51 @@ api.interceptors.request.use((config) => { const token = localStorage.getItem('t
 api.interceptors.response.use((response) => response, (error) => { if (error.response?.status === 401) { localStorage.removeItem('token'); window.location.href = '/login'; } return Promise.reject(error); });
 
 export const authAPI = {
-  register:(data)=>api.post('/auth/register',data), verifyOTP:(data)=>api.post('/auth/verify-otp',data), login:(data)=>api.post('/auth/login',data), requestPasswordReset:(data)=>api.post('/auth/forgot-password',data), verifyPasswordReset:(data)=>api.post('/auth/forgot-password/verify',data), resetPassword:(data)=>api.post('/auth/forgot-password/reset',data), getMe:()=>api.get('/auth/me'), uploadDocs:(data)=>api.post('/auth/upload-documents',data,{headers:{'Content-Type':'multipart/form-data'}}), resubmitSupplierDocuments:(data)=>api.post('/auth/resubmit-supplier-documents',data,{headers:{'Content-Type':'multipart/form-data'}}), updateProfile:(data)=>api.put('/auth/update-profile',data), requestPasswordChangeOTP:()=>api.post('/auth/change-password/request-otp'), changePassword:(data)=>api.put('/auth/change-password',data), uploadBrandLogo:(data)=>api.post('/auth/upload-brand-logo',data,{headers:{'Content-Type':'multipart/form-data'}})
+  register: (data) => api.post('/auth/register', data),
+
+  verifyOTP: (data) => api.post('/auth/verify-otp', data),
+
+  resendOTP: (data) => api.post('/auth/resend-otp', data),
+
+  login: (data) => api.post('/auth/login', data),
+
+  requestPasswordReset: (data) =>
+    api.post('/auth/forgot-password', data),
+
+  verifyPasswordReset: (data) =>
+    api.post('/auth/forgot-password/verify', data),
+
+  resetPassword: (data) =>
+    api.post('/auth/forgot-password/reset', data),
+
+  getMe: () =>
+    api.get('/auth/me'),
+
+  uploadDocs: (data) =>
+    api.post('/auth/upload-documents', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+
+  resubmitSupplierDocuments: (data) =>
+    api.post('/auth/resubmit-supplier-documents', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+
+  updateProfile: (data) =>
+    api.put('/auth/update-profile', data),
+
+  requestPasswordChangeOTP: () =>
+    api.post('/auth/change-password/request-otp'),
+
+  changePassword: (data) =>
+    api.put('/auth/change-password', data),
+
+  uploadBrandLogo: (data) =>
+    api.post('/auth/upload-brand-logo', data, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
 };
+
 export const carsAPI = { getAll:(params)=>api.get('/cars',{params}), getOne:(id)=>api.get(`/cars/${id}`), create:(data)=>api.post('/cars',data), update:(id,data)=>api.put(`/cars/${id}`,data), delete:(id)=>api.delete(`/cars/${id}`), getMyCars:(params)=>api.get('/cars/my/list',{params}), getCategories:()=>api.get('/cars/categories/list'), getLocations:()=>api.get('/cars/locations/list'), getFavorites:()=>api.get('/cars/my/favorites'), toggleFavorite:(id)=>api.post(`/cars/${id}/favorite`) };
 export const supplierShowroomsAPI = { getAll:()=>api.get('/supplier/showrooms'), getOne:(id)=>api.get(`/supplier/showrooms/${id}`), getCities:()=>api.get('/supplier/showrooms/cities'), getPricing:()=>api.get('/supplier/showrooms/pricing'), create:(data)=>api.post('/supplier/showrooms',data), update:(id,data)=>api.put(`/supplier/showrooms/${id}`,data), disable:(id)=>api.delete(`/supplier/showrooms/${id}`) };
 export const reservationsAPI = { create:(data)=>api.post('/reservations',data), getMy:(params)=>api.get('/reservations/my',{params}), getOne:(id)=>api.get(`/reservations/${id}`), approve:(id)=>api.put(`/reservations/${id}/approve`), reject:(id,data)=>api.put(`/reservations/${id}/reject`,data), cancel:(id,data)=>api.put(`/reservations/${id}/cancel`,data), complete:(id)=>api.put(`/reservations/${id}/complete`) };

@@ -283,6 +283,9 @@ export default function Register() {
   const [step, setStep] = useState("register");
   const [otp, setOtp] = useState("");
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [emailDraft, setEmailDraft] = useState("");
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -321,83 +324,90 @@ export default function Register() {
     }
   };
   // أضف هذه هنا
+
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
-    console.log("OTP Button Clicked", otp, verifyEmail);
-    if (!otp) {
+  
+    const email = verifyEmail.trim().toLowerCase();
+    const code = otp.trim();
+  
+    if (!email) {
+      toast.error("البريد الإلكتروني غير موجود");
+      return;
+    }
+  
+    if (!code) {
       toast.error("أدخل رمز التحقق");
       return;
     }
   
     try {
       const response = await authAPI.verifyOTP({
-        email: verificationEmail,
-        otp: otp.trim()
+        email,
+        otp: code
       });
+  
       const data = response.data;
   
       if (data.success) {
         toast.success(data.message || "تم التحقق من البريد الإلكتروني ✅");
-  
-        if (data.user?.role === "supplier") {
-          navigate("/supplier/login", { state: { message: "تم إرسال طلبك للمراجعة. يمكنك تسجيل الدخول بعد اعتماد الإدارة." } });
-        } else {
-          navigate("/");
-        }
-  
+        navigate("/");
       } else {
-        toast.error(error.response?.data?.message || 'رمز التحقق غير صحيح');
+        toast.error(data.message || "رمز التحقق غير صحيح");
       }
-  
     } catch (error) {
       console.error(error);
-      toast.error("حدث خطأ أثناء التحقق");
+      toast.error(
+        error.response?.data?.message || "حدث خطأ أثناء التحقق"
+      );
     }
   };
-  const handleResendOTP = async () => {
-    setResendLoading(true);
-    try {
-      const response = await api.post('/auth/resend-otp', { email: verificationEmail });
-      if (response.data.success) {
-        setOtp('');
-        toast.success('تم إرسال رمز تحقق جديد');
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر إعادة إرسال الرمز');
-    } finally {
-      setResendLoading(false);
-    }
-  };
-  const handleChangeVerificationEmail = async () => {
+  
+  
+    const handleChangeVerificationEmail = async () => {
     const nextEmail = emailDraft.trim().toLowerCase();
+  
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
-      toast.error('يرجى إدخال بريد إلكتروني صحيح');
+      toast.error("يرجى إدخال بريد إلكتروني صحيح");
       return;
     }
-    if (nextEmail === verificationEmail.toLowerCase()) {
+  
+    if (nextEmail === verifyEmail.trim().toLowerCase()) {
       setIsChangingEmail(false);
       return;
     }
+  
     setResendLoading(true);
+  
     try {
-      const response = await api.post('/auth/resend-otp', {
-        email: verificationEmail,
+      const response = await authAPI.resendOTP({
+        email: verifyEmail,
         newEmail: nextEmail
       });
+  
       if (response.data.success) {
-        setVerificationEmail(nextEmail);
-        setFormData((prev) => ({ ...prev, ownerEmail: nextEmail }));
-        setEmailDraft('');
-        setOtp('');
+        setVerifyEmail(nextEmail);
+        setFormData((prev) => ({
+          ...prev,
+          email: nextEmail
+        }));
+        setEmailDraft("");
+        setOtp("");
         setIsChangingEmail(false);
-        toast.success('تم تغيير البريد وإرسال رمز جديد');
+  
+        toast.success("تم تغيير البريد وإرسال رمز جديد");
+      } else {
+        toast.error(response.data.message || "تعذر تغيير البريد الإلكتروني");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر تغيير البريد الإلكتروني');
+      toast.error(
+        error.response?.data?.message || "تعذر تغيير البريد الإلكتروني"
+      );
     } finally {
       setResendLoading(false);
     }
   };
+  
   return (
     <div style={{
       minHeight: '100vh',
@@ -419,6 +429,7 @@ export default function Register() {
           {step === "register" && (
 
 <>
+
 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Role Selection */}
           <div>
@@ -681,6 +692,42 @@ textTransform: "uppercase",
   >
     تأكيد الحساب
   </button>
+verify{!isChangingEmail ? (
+ <button
+ type="button"
+ onClick={() => {
+   setEmailDraft(verifyEmail);
+   setIsChangingEmail(true);
+ }}
+>
+ تغيير البريد الإلكتروني
+</button>
+
+) : (
+  <div>
+    <input
+      type="email"
+      value={emailDraft}
+      onChange={(e) => setEmailDraft(e.target.value)}
+      placeholder="البريد الإلكتروني الجديد"
+    />
+
+    <button
+      type="button"
+      onClick={handleChangeVerificationEmail}
+      disabled={resendLoading}
+    >
+      {resendLoading ? "جارٍ الحفظ..." : "حفظ البريد الجديد"}
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setIsChangingEmail(false)}
+    >
+      إلغاء
+    </button>
+  </div>
+)}
 
 </div>
 
