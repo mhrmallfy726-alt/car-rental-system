@@ -35,10 +35,7 @@ index 55f9da5..dd1c85b 100644
    } = req.body;
 -  
 -  // Basic Validation
-+
-   if (!name || !email || !password) {
-     return next(new AppError('الرجاء إدخال الاسم، البريد الإلكتروني، وكلمة المرور', 400));
-   }
+
 -  const avatar =
 -  req.files?.avatar?.[0]?.filename || null;
 -

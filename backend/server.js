@@ -18,7 +18,7 @@ const validateSupplierCarLocation=(req,res,next)=>{if(req.method!=='POST')return
 app.use('/api/cars',validateSupplierCarLocation,carRoutes);app.use('/api/supplier/showrooms',supplierShowroomRoutes);app.use('/api/supplier/context',supplierContextRoutes);app.use('/api/payments/showroom-subscription',showroomSubscriptionPaymentRoutes);app.use('/api/employee-self',employeeSelfRoutes);app.use('/api/employee',employeeRoutes);app.use('/api/reservations',reservationRoutes);app.use('/api/payments',paymentRoutes);app.use('/api/reviews',reviewRoutes);app.use('/api/complaints',complaintRoutes);app.use('/api/notifications',notificationRoutes);app.use('/api/whatsapp',whatsappRoutes);app.use('/api/finance',financeRoutes);app.use('/api/supplier-finance',supplierFinanceRoutes);app.use('/api/handover',handoverRoutes);app.use('/api/admin',adminRoutes);app.use('/api/admin/showroom-subscriptions',adminShowroomSubscriptionRoutes);app.use('/api/employees',employeeRoutes);app.use('/api/advertisementController',advertisementRoutes);
 app.get('/api/health',(req,res)=>res.json({success:true,message:'🚗 Car Rental API is running!',timestamp:new Date().toISOString(),environment:process.env.NODE_ENV}));app.use('*',(req,res)=>res.status(404).json({success:false,message:`Route ${req.originalUrl} not found`}));app.use(errorHandler);const PORT=process.env.PORT||5000;server.listen(PORT,()=>{console.log(`Car Rental API Server Port: ${PORT}`);initCronJobs(io)});module.exports={app,server};
 app.use(cors({
-    origin: 'https://car-rental-system-blue-two.vercel.app',
+    origin: 'https://car-rental-system-znbs.vercel.app',
     credentials: true
   } ));
   
