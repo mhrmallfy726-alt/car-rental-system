@@ -80,7 +80,6 @@ const resendOTP = async (req,res)=>{
     `UPDATE email_verifications 
     SET otp=$1,
     attempts=0,
-    last_sent_at=NOW(),
     expires_at=NOW() + INTERVAL '5 minutes',
     email=$2,
     user_data = CASE WHEN $3 <> email THEN jsonb_set(user_data::jsonb, '{email}', to_jsonb($2::text), true) ELSE user_data::jsonb END
