@@ -2,11 +2,18 @@ const { sendEmail, generateOTP } = require("../services/emailService");
 const bcrypt = require("bcryptjs");
 const { query, pool }  = require("../config/database");
 
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+
 
 
 const sendOTP = async (req, res) => {
   try {
-    const { email, userData } = req.body;
+    const { userData } = req.body;
+    const email = normalizeEmail(req.body.email);
+    if (!email) {
+      return res.status(400).json({ success: false, message: "البريد الإلكتروني مطلوب" });
+    }
+    if (userData) userData.email = email;
 
     // إنشاء رمز OTP
     const otp = generateOTP();
@@ -21,7 +28,7 @@ const sendOTP = async (req, res) => {
       (email, otp, expires_at, user_data)
       VALUES ($1, $2, $3, $4)
       `,
-      [email, otp, expiresAt,userData]
+      [email, otp, expiresAt, userData]
     );
 
     // إرسال الرمز للبريد
@@ -41,19 +48,19 @@ const sendOTP = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
+    console.error('OTP email sending failed:', error);
+    if (res.internalCall) throw error;
+    return res.status(502).json({
       success: false,
-      message: "حدث خطأ أثناء إرسال رمز التحقق"
+      message: "تعذر إرسال رمز التحقق عبر البريد الإلكتروني"
     });
   }
 };
 const resendOTP = async (req,res)=>{
     try {
     const { email, newEmail } = req.body;
-    const targetEmail = String(newEmail || email || '').trim().toLowerCase();
-    const sourceEmail = String(email || '').trim().toLowerCase();
+    const targetEmail = normalizeEmail(newEmail || email);
+    const sourceEmail = normalizeEmail(email);
     if (!sourceEmail || !targetEmail) {
       return res.status(400).json({ success: false, message: "البريد الإلكتروني مطلوب" });
     }
@@ -69,11 +76,12 @@ const resendOTP = async (req,res)=>{
    
     const newOTP = generateOTP();
    
-    await query(
+    const updateResult = await query(
     `UPDATE email_verifications 
     SET otp=$1,
     attempts=0,
     last_sent_at=NOW(),
+    expires_at=NOW() + INTERVAL '5 minutes',
     email=$2,
     user_data = CASE WHEN $3 <> email THEN jsonb_set(user_data::jsonb, '{email}', to_jsonb($2::text), true) ELSE user_data::jsonb END
     WHERE email=$4`,
@@ -84,6 +92,10 @@ const resendOTP = async (req,res)=>{
      sourceEmail
     ]
     );
+
+    if (updateResult.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "لا يوجد طلب تحقق لإعادة الإرسال" });
+    }
    
    
     await sendEmail(
@@ -112,13 +124,14 @@ const resendOTP = async (req,res)=>{
    
    };
 const verifyOTP = async (req, res) => {
-    const { email, otp } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { otp } = req.body;
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: "البريد ورمز التحقق مطلوبان" });
     }
     try {
       const pendingVerification = await query(
-        "SELECT attempts FROM email_verifications WHERE email=$1 ORDER BY created_at DESC LIMIT 1",
+        "SELECT attempts FROM email_verifications WHERE LOWER(email)=LOWER($1) ORDER BY created_at DESC LIMIT 1",
         [email]
       );
       if (pendingVerification.rows.length === 0) {
@@ -127,12 +140,12 @@ const verifyOTP = async (req, res) => {
       if (pendingVerification.rows[0].attempts >= 3) {
         return res.status(400).json({ success: false, message: "تم تجاوز عدد المحاولات، أعد إرسال رمز جديد" });
       }
-      await query("UPDATE email_verifications SET attempts = attempts + 1 WHERE email=$1", [email]);
+      await query("UPDATE email_verifications SET attempts = attempts + 1 WHERE LOWER(email)=LOWER($1)", [email]);
 
       const result = await pool.query(
         `
         SELECT * FROM email_verifications
-        WHERE email = $1
+        WHERE LOWER(email) = LOWER($1)
         AND otp = $2
         ORDER BY created_at DESC
         LIMIT 1
