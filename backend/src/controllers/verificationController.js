@@ -74,27 +74,27 @@ const resendOTP = async (req,res)=>{
       }
     }
    
-    const newOTP = generateOTP();
-   
-    const updateResult = await query(
-    `UPDATE email_verifications 
-    SET otp=$1,
-    attempts=0,
-    expires_at=NOW() + INTERVAL '5 minutes',
-    email=$2,
-    user_data = CASE WHEN $3 <> email THEN jsonb_set(user_data::jsonb, '{email}', to_jsonb($2::text), true) ELSE user_data::jsonb END
-    WHERE email=$4`,
-    [
-     newOTP,
-     targetEmail,
-     targetEmail,
-     sourceEmail
-    ]
+    const pendingResult = await query(
+      'SELECT id, user_data FROM email_verifications WHERE LOWER(email)=LOWER($1) ORDER BY created_at DESC LIMIT 1',
+      [sourceEmail]
     );
-
-    if (updateResult.rowCount === 0) {
+    if (pendingResult.rows.length === 0) {
       return res.status(404).json({ success: false, message: "لا يوجد طلب تحقق لإعادة الإرسال" });
     }
+
+    const newOTP = generateOTP();
+    let userData = pendingResult.rows[0].user_data;
+    if (targetEmail !== sourceEmail && userData) {
+      userData = typeof userData === 'string' ? JSON.parse(userData) : userData;
+      userData.email = targetEmail;
+    }
+
+    await query(
+      `UPDATE email_verifications
+       SET otp=$1, attempts=0, expires_at=NOW() + INTERVAL '5 minutes', email=$2, user_data=$3
+       WHERE id=$4`,
+      [newOTP, targetEmail, userData, pendingResult.rows[0].id]
+    );
    
    
     await sendEmail(
