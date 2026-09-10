@@ -6,7 +6,7 @@ const{initCronJobs}=require('./src/utils/cronJobs');const advertisementRoutes=re
 const app=express();app.set('trust proxy',1);const server=http.createServer(app);const testEmailRoutes=require('./src/routes/testEmailRoutes');const io=new Server(server,{cors:{origin:['http://localhost:3000','http://localhost:5173',process.env.FRONTEND_URL].filter(Boolean),methods:['GET','POST']}});app.set('io',io);io.on('connection',s=>{s.on('join_room',id=>s.join(`user_${id}`));s.on('join_complaint_room',id=>s.join(`complaint_${id}`))});
 app.use(helmet({crossOriginResourcePolicy:false}));app.use(cors({
     origin: [
-      'http://localhost:3000',
+      
       'http://localhost:5173',
       process.env.FRONTEND_URL
     ].filter(Boolean ),
