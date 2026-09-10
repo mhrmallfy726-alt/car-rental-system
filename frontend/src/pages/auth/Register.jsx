@@ -323,8 +323,6 @@ export default function Register() {
       toast.error(res.error);
     }
   };
-  // أضف هذه هنا
-
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
   
@@ -346,6 +344,7 @@ export default function Register() {
         email,
         otp: code
       });
+      
   
       const data = response.data;
   
@@ -692,7 +691,7 @@ textTransform: "uppercase",
   >
     تأكيد الحساب
   </button>
-verify{!isChangingEmail ? (
+{!isChangingEmail ? (
  <button
  type="button"
  onClick={() => {

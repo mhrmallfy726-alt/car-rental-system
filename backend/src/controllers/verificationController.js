@@ -1,7 +1,7 @@
 const { sendEmail, generateOTP } = require("../services/emailService");
 const bcrypt = require("bcryptjs");
-const pool = require("../config/database");
-const { query } = require("../config/database");
+const { query, pool }  = require("../config/database");
+
 
 
 const sendOTP = async (req, res) => {

@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
     const normalizedEmployeeStatus = String(employee.status || '').trim().toLowerCase();
     if (normalizedEmployeeStatus !== 'active') return res.status(403).json({ success: false, message: 'حساب الموظف موقوف حالياً' });
 
-    const bcrypt = require('bcryptjs');
+
     const isMatch = await bcrypt.compare(password, employee.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
 

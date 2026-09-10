@@ -1,5 +1,10 @@
 const express = require('express');
 const { register, login, getMe, uploadDocs, resubmitSupplierDocuments, updateProfile, requestPasswordChangeOTP, changePassword, uploadBrandLogo, requestPasswordReset, verifyPasswordReset, resetPassword } = require('../controllers/authController');
+const {
+  resendOTP,
+  verifyOTP
+} = require('../controllers/verificationController');
+
 const { protect } = require('../middleware/auth');
 const { uploadDocuments, uploadAvatar } = require('../middleware/upload');
 
@@ -10,6 +15,9 @@ router.post(
     uploadDocuments,
     register
   );
+  
+router.post('/verify-otp', verifyOTP);
+router.post('/resend-otp', resendOTP);
 router.post('/login', login);
 router.post('/forgot-password', requestPasswordReset);
 router.post('/forgot-password/verify', verifyPasswordReset);
