@@ -74,7 +74,9 @@ export default function AddCar() {
 
   const handleShowroomChange = async (e) => {
     try {
-      await selectShowroom(e.target.value);
+      const locationId = e.target.value || showrooms[0]?.id;
+      if (!locationId) return;
+      await selectShowroom(locationId);
       toast.success('تم اختيار الفرع');
     } catch (error) {
       toast.error(error.response?.data?.message || 'تعذر اختيار الفرع');
@@ -92,8 +94,6 @@ export default function AddCar() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (images.length === 0) return toast.error('يرجى إضافة صورة واحدة على الأقل للسيارة');
-    if (!showroom?.id) return toast.error('يرجى اختيار الفرع الحالي من لوحة التحكم أولاً');
-
     // تحقق إضافي من الأسعار
     if (parseFloat(formData.price_per_day) <= 0) {
       return toast.error('السعر اليومي يجب أن يكون أكبر من صفر');
@@ -102,7 +102,8 @@ export default function AddCar() {
     setLoading(true);
     try {
       // Step 1: Create car
-      const carRes = await carsAPI.create({ ...formData, location_id: showroom.id });
+      // إذا لم يُحدّد فرع يدويًا، يختار الخادم أقدم فرع نشط باعتباره الفرع الرئيسي.
+      const carRes = await carsAPI.create({ ...formData, ...(showroom?.id ? { location_id: showroom.id } : {}) });
       const carId = carRes.data.data.id;
 
       // Step 2: Upload images
@@ -173,7 +174,7 @@ export default function AddCar() {
                   required
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', background: '#fff' }}
                 >
-                  <option value="">{showrooms.length ? 'اختر الفرع' : 'لا توجد فروع نشطة'}</option>
+                  <option value="">{showrooms.length ? 'الفرع الرئيسي (افتراضي) — اضغط لاختيار فرع آخر' : 'لا توجد فروع نشطة'}</option>
                   {showrooms.map((item, index) => (
                     <option key={item.id} value={item.id}>
                       {index === 0 ? 'الفرع الرئيسي — ' : ''}{item.showroom_name || `فرع ${item.city}`} · {item.city}
@@ -181,7 +182,7 @@ export default function AddCar() {
                   ))}
                 </select>
                 {showroom?.address && <small style={{ display: 'block', marginTop: '4px' }}>{showroom.address}</small>}
-                {!showroom?.id && <small style={{ display: 'block', marginTop: '4px', color: '#b45309', fontWeight: 600 }}>اختر فرعًا لإرسال السيارة للمراجعة.</small>}
+                {!showroom?.id && showrooms.length > 0 && <small style={{ display: 'block', marginTop: '4px', color: '#087f68', fontWeight: 600 }}>سيتم استخدام الفرع الرئيسي تلقائيًا، ويمكنك الضغط على القائمة لاختيار فرع آخر.</small>}
               </div>
             </div>
 

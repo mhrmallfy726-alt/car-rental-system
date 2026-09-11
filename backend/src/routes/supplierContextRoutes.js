@@ -14,7 +14,9 @@ router.get('/options', asyncHandler(async (req, res) => {
            COUNT(c.id)::int AS car_count
     FROM locations l
     LEFT JOIN cars c ON c.location_id = l.id AND c.supplier_id = $1
-    WHERE l.supplier_id = $1 AND COALESCE(l.is_active, TRUE) = TRUE
+           WHERE l.supplier_id = $1
+             AND COALESCE(l.is_active, TRUE) = TRUE
+             AND COALESCE(l.subscription_status, 'active') = 'active'
     GROUP BY l.id
     ORDER BY l.created_at ASC, LOWER(COALESCE(l.showroom_name, l.city))
   `, [req.user.id]);

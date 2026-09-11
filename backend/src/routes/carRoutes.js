@@ -218,7 +218,7 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 // @access  Supplier
 // ========================
 router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) => {
-  const {
+  let {
     category_id, make, model, year, color,
     license_plate, seats, doors, transmission, fuel_type,
     price_per_day, description, mileage, features, location_id
@@ -228,7 +228,18 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
   if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
 
   if (!location_id) {
-    throw new AppError('يرجى اختيار المعرض الحالي قبل إضافة السيارة', 400);
+    const defaultLocation = (await query(
+      `SELECT id
+         FROM locations
+        WHERE supplier_id = $1
+          AND COALESCE(is_active, TRUE) = TRUE
+          AND COALESCE(subscription_status, 'active') = 'active'
+        ORDER BY created_at ASC, LOWER(COALESCE(showroom_name, city))
+        LIMIT 1`,
+      [req.user.id]
+    )).rows[0];
+    if (!defaultLocation) throw new AppError('لا يوجد فرع رئيسي نشط لهذا الحساب', 400);
+    location_id = defaultLocation.id;
   }
 
   // The selected showroom is represented by a supplier-owned locations row.
