@@ -4,6 +4,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { query, getClient } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
 const bcrypt = require('bcryptjs');
+const { normalizePhoneNumber } = require('../utils/phone');
 
 const getAuthenticatedSupplierId = (reqUser) => {
   if (reqUser?.role !== 'supplier') return null;
@@ -209,10 +210,17 @@ router.post('/', async (req, res) => {
     const supplier_id = req.user.role === 'supplier'
       ? getAuthenticatedSupplierId(req.user)
       : (req.body.supplier_id ? String(req.body.supplier_id) : null);
-    if (!full_name || !email || !password || !supplier_id) return res.status(400).json({ success: false, message: 'الاسم والبريد وكلمة المرور والمورد مطلوبة' });
+    const cleanName = String(full_name || '').trim();
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const normalizedPhone = normalizePhoneNumber(phone_number);
+    const phoneDigits = normalizedPhone?.replace(/\D/g, '') || '';
+    if (cleanName.length < 2 || !cleanEmail || !password || !supplier_id) return res.status(400).json({ success: false, message: 'الاسم والبريد وكلمة المرور والمورد مطلوبة' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) return res.status(400).json({ success: false, message: 'رقم الهاتف يجب أن يحتوي على 7 إلى 15 رقماً' });
+    if (String(password).length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
-    const exists = await query('SELECT id FROM employees WHERE email = $1', [email]);
+    const exists = await query('SELECT id FROM employees WHERE LOWER(email) = LOWER($1)', [cleanEmail]);
     if (exists.rows.length > 0) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل' });
 
     const normalizedJobRole = Object.prototype.hasOwnProperty.call(JOB_ROLES, job_role) ? job_role : null;
@@ -226,7 +234,7 @@ router.post('/', async (req, res) => {
       `INSERT INTO employees (full_name, phone_number, email, password, role, job_role, supplier_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING id, full_name, email, role, job_role, supplier_id, status, created_at`,
-      [full_name, phone_number || null, email, hashed, technicalRole, normalizedJobRole, supplier_id]
+      [cleanName, normalizedPhone, cleanEmail, hashed, technicalRole, normalizedJobRole, supplier_id]
     );
 
     const requestedPermissionIds = Array.isArray(permission_ids)
@@ -259,6 +267,11 @@ router.put('/:id', async (req, res) => {
   try {
     const id = req.params.id;
     const { full_name, phone_number, job_role, status } = req.body;
+    const cleanName = full_name === undefined ? undefined : String(full_name).trim();
+    const normalizedPhone = phone_number === undefined ? undefined : normalizePhoneNumber(phone_number);
+    const phoneDigits = normalizedPhone?.replace(/\D/g, '') || '';
+    if (cleanName !== undefined && cleanName.length < 2) return res.status(400).json({ success: false, message: 'اكتب اسم الموظف بشكل صحيح' });
+    if (phone_number !== undefined && (phoneDigits.length < 7 || phoneDigits.length > 15)) return res.status(400).json({ success: false, message: 'رقم الهاتف يجب أن يحتوي على 7 إلى 15 رقماً' });
     if (job_role !== undefined && !Object.prototype.hasOwnProperty.call(JOB_ROLES, job_role)) return res.status(400).json({ success: false, message: 'الوظيفة التخصصية غير صالحة' });
 
     const normalizedStatus = status === undefined ? undefined : String(status).trim().toLowerCase();
@@ -272,8 +285,8 @@ router.put('/:id', async (req, res) => {
     const sets = [];
     const vals = [];
     let idx = 1;
-    if (full_name !== undefined) { sets.push(`full_name = $${idx++}`); vals.push(full_name); }
-    if (phone_number !== undefined) { sets.push(`phone_number = $${idx++}`); vals.push(phone_number || null); }
+    if (cleanName !== undefined) { sets.push(`full_name = $${idx++}`); vals.push(cleanName); }
+    if (phone_number !== undefined) { sets.push(`phone_number = $${idx++}`); vals.push(normalizedPhone); }
     if (job_role !== undefined) { sets.push(`job_role = $${idx++}`); vals.push(job_role); }
     if (normalizedStatus !== undefined) { sets.push(`status = $${idx++}`); vals.push(normalizedStatus); }
 

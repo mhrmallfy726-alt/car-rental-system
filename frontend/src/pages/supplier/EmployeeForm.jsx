@@ -58,23 +58,35 @@ export default function EmployeeForm({ editMode = false }) {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+    if (name === 'phone_number') {
+      const normalized = value.replace(/[^0-9+\s()-]/g, '').replace(/(?!^)\+/g, '');
+      setFormData((current) => ({ ...current, [name]: normalized }));
+      return;
+    }
     setFormData((current) => ({ ...current, [name]: value }));
   };
 
   const onSubmit = async (event) => {
     event.preventDefault();
+    const name = formData.full_name.trim();
+    const phoneDigits = formData.phone_number.replace(/\D/g, '');
+    const email = formData.email.trim().toLowerCase();
+    if (name.length < 2) return toast.error('اكتب اسم الموظف بشكل صحيح');
+    if (phoneDigits.length < 7 || phoneDigits.length > 15) return toast.error('رقم الهاتف يجب أن يحتوي على 7 إلى 15 رقماً');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error('أدخل بريداً إلكترونياً صحيحاً');
+    if (!editMode && formData.password.length < 8) return toast.error('كلمة المرور يجب ألا تقل عن 8 أحرف');
     setLoading(true);
     try {
       if (editMode) {
         await updateEmployee(id, {
-          full_name: formData.full_name,
+          full_name: name,
           phone_number: formData.phone_number,
           job_role: formData.job_role,
           status: formData.status,
         });
         toast.success('تم تحديث بيانات الموظف بنجاح');
       } else {
-        await createEmployee(formData);
+        await createEmployee({ ...formData, full_name: name, email });
         toast.success('تم إنشاء الموظف بنجاح');
       }
       navigate('/supplier/employees');
@@ -107,7 +119,7 @@ export default function EmployeeForm({ editMode = false }) {
           <form onSubmit={onSubmit} style={{ display: 'grid', gap: 18 }}>
             <div style={styles.grid}>
               <Field label="الاسم الكامل" name="full_name" value={formData.full_name} onChange={handleChange} required />
-              <Field label="رقم الهاتف" name="phone_number" value={formData.phone_number} onChange={handleChange} dir="ltr" />
+              <Field label="رقم الهاتف" name="phone_number" value={formData.phone_number} onChange={handleChange} dir="ltr" inputMode="tel" pattern="[0-9+ ()-]{7,20}" required />
             </div>
 
             <div style={styles.grid}>
@@ -148,11 +160,11 @@ export default function EmployeeForm({ editMode = false }) {
   );
 }
 
-function Field({ label, name, type = 'text', value, onChange, required, disabled, dir, minLength }) {
+function Field({ label, name, type = 'text', value, onChange, required, disabled, dir, minLength, inputMode, pattern }) {
   return (
     <label style={styles.label}>
       {label}
-      <input type={type} name={name} value={value} onChange={onChange} required={required} disabled={disabled} minLength={minLength} dir={dir} style={{ ...styles.input, opacity: disabled ? 0.65 : 1 }} />
+      <input type={type} name={name} value={value} onChange={onChange} required={required} disabled={disabled} minLength={minLength} inputMode={inputMode} pattern={pattern} dir={dir} style={{ ...styles.input, opacity: disabled ? 0.65 : 1 }} />
     </label>
   );
 }
