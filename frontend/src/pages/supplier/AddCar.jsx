@@ -12,6 +12,7 @@ import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
 export default function AddCar() {
   const navigate = useNavigate();
   const { showroom, options: showrooms, selectShowroom } = useSupplierShowroom();
+  const activeShowroom = showroom?.id ? showroom : showrooms.find((item) => item.is_main) || showrooms[0] || null;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
@@ -103,7 +104,7 @@ export default function AddCar() {
     try {
       // Step 1: Create car
       // إذا لم يُحدّد فرع يدويًا، يختار الخادم أقدم فرع نشط باعتباره الفرع الرئيسي.
-      const carRes = await carsAPI.create({ ...formData, ...(showroom?.id ? { location_id: showroom.id } : {}) });
+      const carRes = await carsAPI.create({ ...formData, ...(activeShowroom?.id ? { location_id: activeShowroom.id } : {}) });
       const carId = carRes.data.data.id;
 
       // Step 2: Upload images
@@ -167,22 +168,18 @@ export default function AddCar() {
               </div>
               <div style={{ color: '#52636d', fontSize: '0.9rem' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#173a52' }}>الفرع الحالي</label>
-                <select
-                  value={showroom?.id || ''}
+                {showrooms.length > 0 ? <select
+                  value={activeShowroom?.id || ''}
                   onChange={handleShowroomChange}
-                  disabled={showrooms.length === 0}
-                  required
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', background: '#fff' }}
                 >
-                  <option value="">{showrooms.length ? 'الفرع الرئيسي (افتراضي) — اضغط لاختيار فرع آخر' : 'لا توجد فروع نشطة'}</option>
-                  {showrooms.map((item, index) => (
+                  {showrooms.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {index === 0 ? 'الفرع الرئيسي — ' : ''}{item.showroom_name || `فرع ${item.city}`} · {item.city}
+                      {item.is_main ? 'المركز الرئيسي — ' : 'فرع إضافي — '}{item.showroom_name || `فرع ${item.city}`}
                     </option>
                   ))}
-                </select>
-                {showroom?.address && <small style={{ display: 'block', marginTop: '4px' }}>{showroom.address}</small>}
-                {!showroom?.id && showrooms.length > 0 && <small style={{ display: 'block', marginTop: '4px', color: '#087f68', fontWeight: 600 }}>سيتم استخدام الفرع الرئيسي تلقائيًا، ويمكنك الضغط على القائمة لاختيار فرع آخر.</small>}
+                </select> : <div style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #e5d4a5', borderRadius: '6px', background: '#fffaf0', color: '#806a28' }}>سيتم استخدام المركز الرئيسي تلقائيًا</div>}
+                {activeShowroom?.address && <small style={{ display: 'block', marginTop: '4px' }}>{activeShowroom.address}</small>}
               </div>
             </div>
 
