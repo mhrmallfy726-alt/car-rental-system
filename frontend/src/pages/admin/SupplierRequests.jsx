@@ -103,6 +103,7 @@ export default function SupplierRequests() {
   });
   return (
     <>
+      <style>{responsiveStyles}</style>
       <div
         style={{
           padding: "30px",
@@ -202,6 +203,7 @@ export default function SupplierRequests() {
           }}
         >
           <table
+            className="supplier-requests-table"
             style={{
               width: "100%",
               borderCollapse: "collapse",
@@ -301,6 +303,43 @@ export default function SupplierRequests() {
               )}
             </tbody>
           </table>
+
+          <div className="supplier-request-cards">
+            {loading ? (
+              <div className="supplier-request-empty">جاري التحميل...</div>
+            ) : filteredRequests.length === 0 ? (
+              <div className="supplier-request-empty">لا توجد طلبات</div>
+            ) : (
+              filteredRequests.map((item) => (
+                <article className="supplier-request-card" key={`card-${item.id}`}>
+                  <div className="supplier-request-card__header">
+                    <div>
+                      <h3>{item.company_name || 'اسم الشركة غير متوفر'}</h3>
+                      <p>{item.name || 'اسم المالك غير متوفر'}</p>
+                    </div>
+                    <span className="supplier-request-card__status">
+                      <Clock size={14} /> قيد المراجعة
+                    </span>
+                  </div>
+                  <div className="supplier-request-card__details">
+                    <div><span>الهاتف</span><strong>{item.phone || 'غير متوفر'}</strong></div>
+                    <div><span>البريد</span><strong>{item.email || 'غير متوفر'}</strong></div>
+                    <div><span>المدينة</span><strong>{item.city || 'غير متوفرة'}</strong></div>
+                  </div>
+                  <button
+                    type="button"
+                    className="supplier-request-card__action"
+                    onClick={() => {
+                      setSelectedRequest(item);
+                      setOpenModal(true);
+                    }}
+                  >
+                    <Eye size={16} /> مراجعة الطلب
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
         </div>
                 {/* نافذة مراجعة الطلب */}
 
@@ -529,6 +568,93 @@ const td = {
   borderBottom: "1px solid #f1f5f9",
   color: "#444",
 };
+
+const responsiveStyles = `
+  .supplier-request-cards { display: none; }
+  @media (max-width: 700px) {
+    .supplier-requests-table { display: none; }
+    .supplier-request-cards {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .supplier-request-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 15px;
+      box-shadow: 0 3px 12px rgba(15, 23, 42, .06);
+    }
+    .supplier-request-card__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .supplier-request-card__header h3 {
+      margin: 0 0 5px;
+      color: #111827;
+      font-size: 16px;
+    }
+    .supplier-request-card__header p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 13px;
+    }
+    .supplier-request-card__status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #c2410c;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .supplier-request-card__details {
+      display: grid;
+      gap: 9px;
+      padding: 13px 0;
+    }
+    .supplier-request-card__details div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+    .supplier-request-card__details span { color: #6b7280; }
+    .supplier-request-card__details strong {
+      color: #1f2937;
+      text-align: left;
+      overflow-wrap: anywhere;
+      font-weight: 600;
+    }
+    .supplier-request-card__action {
+      width: 100%;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 9px;
+      padding: 10px 14px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .supplier-request-empty {
+      padding: 35px 15px;
+      color: #6b7280;
+      text-align: center;
+    }
+  }
+`;
 
 // {previewImage && (
 //   <div
