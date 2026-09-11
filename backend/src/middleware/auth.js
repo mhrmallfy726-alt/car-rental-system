@@ -3,6 +3,8 @@
 
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
+// يجب أن يستخدم تسجيل الدخول والتحقق نفس المفتاح في كل بيئات النشر.
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
 const getBearerToken = (req) => {
   if (req.headers.authorization?.startsWith('Bearer ')) {
@@ -23,10 +25,7 @@ const protect = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     if (decoded.account_type === 'employee') {
       const result = await query(
@@ -113,10 +112,7 @@ const optionalAuth = async (req, res, next) => {
   if (!token) return next();
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     if (decoded.account_type === 'employee') {
       const result = await query(
