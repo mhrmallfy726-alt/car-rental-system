@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { LayoutDashboard, Users, Car, ShieldAlert, Settings as SettingsIcon, Save, AlertTriangle } from 'lucide-react';
+import { Save } from 'lucide-react';
+import AdminSidebar from '../../components/AdminSidebar';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
@@ -51,36 +51,11 @@ export default function AdminSettings() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
-      {/* القائمة الجانبية */}
-      <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'sticky', top: 0, height: '100vh' }}>
-        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <LayoutDashboard size={20} /> الإحصائيات
-          </Link>
-          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Users size={20} /> المستخدمين
-          </Link>
-          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <Car size={20} /> السيارات
-          </Link>
-          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <ShieldAlert size={20} /> الشكاوى
-          </Link>
-          <Link to="/admin/advertisement-center" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            <ShieldAlert size={20} />  احصائيات الإعلانات
-          </Link>
-          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
-            <SettingsIcon size={20} /> الإعدادات
-          </Link>
-          <Link to="/admin/branch-requests" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
-            طلبات الفروع
-          </Link>
-        </div>
-      </div>
+    <div className="admin-settings-page" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+      <AdminSidebar />
 
       {/* المحتوى الرئيسي */}
-      <div style={{ flex: 1, padding: '30px 24px' }}>
+      <div className="admin-settings-content" style={{ flex: 1, padding: '30px 24px' }}>
         <h1 style={{ fontSize: '1.8rem', marginBottom: '32px' }}>إعدادات المنصة</h1>
 
         <div style={{ background: 'white', borderRadius: '12px', padding: '32px', maxWidth: '800px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -165,28 +140,14 @@ export default function AdminSettings() {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
-          .sidebar {
-            width: 100% !important;
-            height: auto !important;
-            position: relative !important;
-            border-left: none !important;
-            border-bottom: 1px solid #e9ecef;
-            padding: 12px 0 !important;
-          }
-          .sidebar > div {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-          }
-          .sidebar a {
-            flex: 1 0 auto;
-            justify-content: center;
-          }
-          [style*="max-width: 800px"] {
-            max-width: 100% !important;
-          }
+        @media (max-width: 900px) {
+          .admin-settings-content { width: 100%; padding: 22px 14px 48px !important; padding-top: 132px !important; }
+          .admin-settings-content > div { max-width: none !important; }
+        }
+        @media (max-width: 520px) {
+          .admin-settings-content h1 { font-size: 1.45rem !important; margin-bottom: 20px !important; }
+          .admin-settings-content > div { padding: 20px !important; }
+          .admin-settings-content h3 { font-size: 1rem; line-height: 1.5; }
         }
       `}</style>
     </div>
