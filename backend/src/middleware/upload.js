@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
-const uploadDir = path.join(__dirname, '../../uploads');
+const uploadDir = path.join(__dirname, '../uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
 // ========================
