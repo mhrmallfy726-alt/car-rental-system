@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, CheckCircle2, Clock3, Eye, FilePlus2, LayoutDashboard, Megaphone, MousePointerClick, Pencil, Plus, RefreshCw, Search, Settings, ShieldAlert, Trash2, Users, XCircle, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { BarChart3, CheckCircle2, Clock3, Eye, FilePlus2, Megaphone, MousePointerClick, Pencil, Plus, RefreshCw, Search, Trash2, XCircle, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../services/api';
 import UnifiedDatePicker from '../../components/UnifiedDatePicker';
+import AdminSidebar from '../../components/AdminSidebar';
 
 const navy = '#173a52';
 const gold = '#d4af37';
@@ -264,13 +264,10 @@ export default function AdvertisementCenter() {
 
   return (
     <main dir="rtl" style={{ minHeight: '100vh', background: '#f7f8fa' }}>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <aside className="sidebar" style={{ width: 248, flexShrink: 0, padding: '26px 15px', background: '#fff', borderLeft: '1px solid #e8edf0', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box' }}>
-          <div style={{ padding: '0 10px 25px', borderBottom: '1px solid #eef1f3', marginBottom: 16 }}><div style={{ display: 'flex', alignItems: 'center', gap: 9, color: navy, fontWeight: 900, fontSize: 18 }}><Megaphone size={21} color={gold} /> مركز الإعلانات</div><p style={{ margin: '7px 0 0', color: muted, fontSize: 12 }}>إدارة الطلبات والظهور والأداء</p></div>
-          {[['/admin/dashboard', LayoutDashboard, 'لوحة الإحصائيات'], ['/admin/advertisement-center', Megaphone, 'الإعلانات'], ['/admin/supplier-requests', Users, 'طلبات الموردين'], ['/admin/cars', ShieldAlert, 'السيارات'], ['/admin/settings', Settings, 'الإعدادات']].map(([to, Icon, label]) => <Link key={to} to={to} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 13px', marginBottom: 4, borderRadius: 11, color: to === '/admin/advertisement-center' ? navy : '#4d5a64', background: to === '/admin/advertisement-center' ? '#eef4f6' : 'transparent', textDecoration: 'none', fontWeight: to === '/admin/advertisement-center' ? 900 : 700, fontSize: 14 }}><Icon size={18} />{label}</Link>)}
-        </aside>
+      <div className="admin-advertisement-layout" style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
 
-        <section style={{ flex: 1, minWidth: 0, padding: '30px clamp(16px, 4vw, 42px) 60px' }}>
+        <section className="admin-advertisement-content" style={{ flex: 1, minWidth: 0, padding: '30px clamp(16px, 4vw, 42px) 60px' }}>
           <header style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap', marginBottom: 24 }}><div><span style={{ color: gold, fontSize: 13, fontWeight: 900 }}>مساحة التحكم</span><h1 style={{ margin: '6px 0 5px', color: navy, fontSize: 32, fontWeight: 900 }}>إدارة الإعلانات والعملات</h1><p style={{ margin: 0, color: muted }}>راقب الطلبات، أنشئ الحملات، وتابع أثر كل إعلان من مكان واحد.</p></div><button type="button" onClick={loadData} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #dfe5e9', borderRadius: 12, padding: '11px 15px', background: '#fff', color: navy, fontWeight: 800, cursor: 'pointer' }}><RefreshCw size={16} /> تحديث البيانات</button></header>
 
           <nav style={{ display: 'flex', gap: 7, flexWrap: 'wrap', padding: 6, marginBottom: 24, background: '#fff', border: '1px solid #e7eaee', borderRadius: 15 }}>
@@ -289,6 +286,19 @@ export default function AdvertisementCenter() {
           {tab === 'create' && <form onSubmit={saveAdvertisement} style={panelStyle}><div style={panelHeader}><div><h2 style={h2Style}>{editingId ? 'تعديل الإعلان' : ''}</h2><p style={subStyle}>حدد المحتوى والموضع والحالة قبل النشر.</p></div><button type="button" onClick={resetForm} style={linkButton}>تفريغ النموذج</button></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 15 }}><Field label="المورد" name="supplier_id" type="select" value={form.supplier_id} onChange={(event) => loadSupplierCars(event.target.value)} options={[['', 'إعلان عام بدون مورد'], ...suppliers.map((supplier) => [supplier.id, `${supplier.name} — ${supplier.cars_count} سيارات`])]} /><Field label="السيارة" name="car_id" type="select" value={form.car_id} onChange={updateField} options={[['', 'بدون سيارة محددة'], ...supplierCars.map((car) => [car.id, `${car.make} ${car.model} — ${car.year}`])]} /><Field label="عنوان الإعلان" name="title" value={form.title} onChange={updateField} required wide /><Field label="الوصف" name="description" value={form.description} onChange={updateField} type="textarea" wide /><Field label="نوع الإعلان" name="ad_type" type="select" value={form.ad_type} onChange={updateField} options={[['featured', 'إعلان مميز'], ['discount', 'خصم'], ['main', 'رئيسي'], ['urgent', 'عاجل']]} /><Field label="مكان الظهور" name="placement" type="select" value={form.placement} onChange={updateField} options={[['home', 'الرئيسية'], ['cars', 'قائمة السيارات'], ['car_detail', 'تفاصيل السيارة'], ['all_public', 'كل الصفحات العامة']]} /><label style={{ gridColumn: '1 / -1', color: navy, fontSize: 13, fontWeight: 800 }}>صورة الإعلان<input name="image" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} style={inputStyle} /><span style={{ display: 'block', marginTop: 7, color: muted, fontSize: 12 }}>اختر صورة بحد أقصى 5 ميجابايت.</span>{imagePreview && <img src={imagePreview} alt="معاينة صورة الإعلان" style={{ display: 'block', width: '100%', maxHeight: 190, objectFit: 'cover', marginTop: 10, borderRadius: 13 }} />}</label><Field label="الرابط عند النقر" name="link_url" value={form.link_url} onChange={updateField} placeholder="/cars أو https://..." /><Field label="السعر الظاهر" name="price" type="number" value={form.price} onChange={updateField} /><Field label="الميزانية" name="budget" type="number" value={form.budget} onChange={updateField} /><Field label="البداية" name="start_date" type="date" value={form.start_date} onChange={updateField} /><Field label="النهاية" name="end_date" type="date" value={form.end_date} onChange={updateField} /><Field label="الحالة" name="status" type="select" value={form.status} onChange={updateField} options={Object.keys(statuses).map((key) => [key, statuses[key][0]])} /></div><div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginTop: 20, color: muted, fontSize: 13 }}><label><input type="checkbox" checked={form.featured} onChange={(event) => setForm((current) => ({ ...current, featured: event.target.checked }))} /> إعلان مميز</label><label><input type="checkbox" checked={form.is_pinned} onChange={(event) => setForm((current) => ({ ...current, is_pinned: event.target.checked }))} /> تثبيت الإعلان</label></div><button type="submit" disabled={saving} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 22, border: 0, borderRadius: 13, padding: '13px 20px', background: navy, color: '#fff', fontWeight: 900, cursor: saving ? 'wait' : 'pointer' }}>{saving ? 'جاري الحفظ...' : editingId ? 'حفظ التعديلات' : 'إنشاء الإعلان'} <FilePlus2 size={17} /></button></form>}
         </section>
       </div>
+      <style>{`
+        .admin-advertisement-content { direction: rtl; }
+        @media (max-width: 900px) {
+          .admin-advertisement-content { width: 100%; padding: 132px 14px 48px !important; }
+          .admin-advertisement-content > header { align-items: stretch !important; }
+          .admin-advertisement-content > header button { justify-content: center; }
+        }
+        @media (max-width: 560px) {
+          .admin-advertisement-content h1 { font-size: 25px !important; line-height: 1.45; }
+          .admin-advertisement-content nav { display: grid !important; grid-template-columns: 1fr 1fr; }
+          .admin-advertisement-content nav button { flex: none !important; min-height: 44px; padding-inline: 7px !important; font-size: 11px; }
+        }
+      `}</style>
     </main>
   );
 }
