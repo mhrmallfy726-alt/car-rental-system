@@ -103,31 +103,19 @@ export default function SearchPage() {
   };
 
   return (
-    <main dir="rtl" style={{ minHeight: '100vh', background: '#f6f9fb', padding: '110px 20px 60px' }}>
-      <div style={{ maxWidth: '1120px', margin: '0 auto' }}>
-        <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: '#173a52', textDecoration: 'none', fontWeight: 800, marginBottom: '28px' }}>
-          <ArrowRight size={18} /> العودة للرئيسية
-        </Link>
-
-        <section style={{ maxWidth: '820px', margin: '0 auto 28px', textAlign: 'center' }}>
-          <span style={{ color: '#178263', fontWeight: 900, fontSize: '13px' }}>خطوة واحدة قبل استكشاف السيارات</span>
-          <h1 style={{ margin: '8px 0', color: '#173a52', fontSize: 'clamp(28px, 5vw, 44px)' }}>أكمل بيانات البحث</h1>
-          <p style={{ margin: 0, color: '#647780', lineHeight: 1.8 }}>
-            أدخل موقع الاستلام وتفاصيل الرحلة أولًا، ثم سنعرض لك السيارات المتاحة المطابقة لبحثك.
-          </p>
+    <main dir="rtl" className="search-page">
+      <div className="search-scene" aria-hidden="true"><span className="search-orb search-orb-one" /><span className="search-orb search-orb-two" /><span className="search-grid-floor" /></div>
+      <div className="search-shell">
+        <Link to="/" className="search-back"><ArrowRight size={18} /> العودة للرئيسية</Link>
+        <section className="search-intro">
+          <span className="search-eyebrow">SMART RENTAL / 01</span>
+          <h1>ابحث عن رحلتك المثالية</h1>
+          <p>حدد تفاصيل رحلتك، وسنرتب لك السيارات المتاحة في تجربة سريعة وواضحة.</p>
         </section>
-
-        <section style={{ background: '#fff', border: '1px solid #e1eaed', borderRadius: '22px', padding: '22px', boxShadow: '0 14px 40px rgba(23,58,82,.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', marginBottom: '8px', color: '#173a52' }}>
-            <SearchIcon size={21} color="#178263" />
-            <h2 style={{ margin: 0, fontSize: '20px' }}>بيانات البحث</h2>
-          </div>
-          <p style={{ margin: '0 0 20px', color: '#74858d', fontSize: '13px' }}>الحقول المعلّمة مطلوبة للانتقال إلى السيارات المتاحة.</p>
-          <SearchFilter
-            searchParams={searchParams}
-            setSearchParams={updateSearchParams}
-            handleSearch={handleSearch}
-          />
+        <section className="search-panel">
+          <div className="search-panel-head"><span className="search-icon-box"><SearchIcon size={21} /></span><div><span className="search-kicker">رحلتك تبدأ هنا</span><h2>بيانات البحث</h2></div><span className="search-step">01 <small>/ 02</small></span></div>
+          <p className="search-helper">الحقول المعلّمة مطلوبة للانتقال إلى السيارات المتاحة.</p>
+          <SearchFilter searchParams={searchParams} setSearchParams={updateSearchParams} handleSearch={handleSearch} />
         </section>
       </div>
     </main>

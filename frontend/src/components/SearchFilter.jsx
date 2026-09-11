@@ -24,7 +24,7 @@ export default function SearchFilter({
 
 return (
   <>
-    <form onSubmit={handleSearch} className="hero-search-container fade-in" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', padding: '20px' }}>
+    <form onSubmit={handleSearch} className="hero-search-container search-form fade-in">
 <div className="search-grid">
   <div className="input-wrapper">
   <LocationPicker
@@ -57,7 +57,7 @@ value={searchParams.location}
 
   <div className="input-wrapper">
     <label>خدمة السائق</label>
-    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', minHeight: '50px', cursor: 'pointer', fontWeight: 800, color: '#173a52' }}>
+    <label className="driver-toggle">
       <input
         type="checkbox"
         checked={(searchParams.withDriver || 'false') === 'true'}
@@ -66,7 +66,7 @@ value={searchParams.location}
       />
       مع سائق
     </label>
-    <small style={{ color: '#74858d', fontSize: '12px' }}>
+    <small className="driver-note">
       {(searchParams.withDriver || 'false') === 'true' ? 'سيارة مع سائق' : 'سيارة بدون سائق'}
     </small>
   </div>
@@ -125,8 +125,8 @@ maxPrice: e.target.value,
 </div>      
 
 
-  <div className="input-wrapper" style={{ justifyContent: 'flex-end' }}>
-    <button type="submit" className="btn btn-primary btn-full" style={{ height: '50px', fontSize: '1.1rem' }}>
+  <div className="input-wrapper search-submit-wrap">
+    <button type="submit" className="btn btn-primary btn-full search-submit">
       <Search size={20} /> ابحث الآن
     </button>
   </div>
