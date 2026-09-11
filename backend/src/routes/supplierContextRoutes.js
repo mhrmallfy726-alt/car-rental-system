@@ -16,7 +16,7 @@ router.get('/options', asyncHandler(async (req, res) => {
     LEFT JOIN cars c ON c.location_id = l.id AND c.supplier_id = $1
     WHERE l.supplier_id = $1 AND COALESCE(l.is_active, TRUE) = TRUE
     GROUP BY l.id
-    ORDER BY LOWER(COALESCE(l.showroom_name, l.city)), l.created_at
+    ORDER BY l.created_at ASC, LOWER(COALESCE(l.showroom_name, l.city))
   `, [req.user.id]);
   res.json({ success: true, data: result.rows });
 }));
