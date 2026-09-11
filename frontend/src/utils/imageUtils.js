@@ -3,7 +3,7 @@
 // يحوّل أي مسار (نسبي أو كامل) إلى URL صحيح
 // =============================================
 
-const BASE_URL = (import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : ''))
+const BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : ''))
   .replace(/\/$/, '')
   .replace(/\/api$/, '');
 
@@ -14,6 +14,10 @@ const BASE_URL = (import.meta.env.VITE_API_URL || (typeof window !== 'undefined'
  */
 export function getImageUrl(imagePath, fallback = 'https://via.placeholder.com/300x200?text=No+Image') {
   if (!imagePath) return fallback;
+  if (typeof imagePath === 'object') {
+    imagePath = imagePath.image_url || imagePath.imageUrl || imagePath.url || imagePath.path;
+  }
+  if (!imagePath || typeof imagePath !== 'string') return fallback;
   if (imagePath.startsWith('http')) return imagePath;
   
   // توحيد المسارات (تحويل \ إلى / لنظام ويندوز وإزالة السلاش المتكرر)

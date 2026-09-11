@@ -143,7 +143,7 @@ export default function CarDetail() {
   }, [searchParams.withDriver]);
 
   const images = car?.images?.length
-    ? car.images.map((img) => getImageUrl(img.image_url))
+    ? car.images.map((img) => getImageUrl(img))
     : [
         'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85',
       ];
@@ -456,6 +456,10 @@ radius: 10,
               src={images[activeImage]}
               alt={`${car.make} ${car.model}`}
               className="detail-gallery-main-image block h-full w-full object-contain transition-transform duration-700"
+              onError={(event) => {
+                event.currentTarget.onerror = null;
+                event.currentTarget.src = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=85';
+              }}
             />
             {images.length > 1 && <>
               <button type="button" className="detail-gallery-arrow detail-gallery-arrow-next" onClick={(e) => { e.stopPropagation(); showPreviousImage(); }} aria-label="الصورة السابقة"><ChevronRight size={22} /></button>
@@ -927,7 +931,7 @@ radius: 10,
       
       <style dangerouslySetInnerHTML={{
         __html: `
-        .car-detail-page { min-height: 100vh; padding: 24px 0 70px; background: var(--bg-base); color: var(--text-main); font-family: 'Cairo', 'Inter', sans-serif; }
+        .car-detail-page { min-height: 100vh; padding: 24px 0 70px; background: var(--bg-base); color: #17212b; font-family: 'Cairo', 'Inter', sans-serif; }
         .car-detail-page *, .car-detail-page *::before, .car-detail-page *::after { box-sizing: border-box; }
         .car-detail-page h1, .car-detail-page h2, .car-detail-page h3, .car-detail-page p { margin: 0; }
         .car-detail-page button, .car-detail-page input { font-family: inherit; }
@@ -952,7 +956,7 @@ radius: 10,
         .car-detail-booking > div:nth-of-type(3) small, .car-detail-booking > div:nth-of-type(3) strong, .car-detail-booking > div:nth-of-type(3) span { display: inline-block; }
         .car-detail-booking > div:nth-of-type(3) strong { color: var(--primary); font-size: 28px; line-height: 1; }
         .car-detail-booking form { display: flex; flex-direction: column; gap: 15px; }
-        .car-detail-booking form label { display: flex; flex-direction: column; gap: 7px; color: var(--text-main); font-size: 13px; font-weight: 700; }
+        .car-detail-booking form label { display: flex; flex-direction: column; gap: 7px; color: #263642; font-size: 13px; font-weight: 700; }
         .car-detail-booking form label span { display: flex; align-items: center; gap: 6px; }
         .car-detail-booking form input { width: 100%; height: 46px; padding: 0 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text-main); font-size: 13px; outline: none; transition: var(--transition); }
         .car-detail-booking form input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(0,108,228,.1); }
@@ -972,8 +976,8 @@ radius: 10,
         .car-detail-specs > div:nth-child(2) > div { min-height: 76px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-inline-start: 1px solid var(--border); }
         .car-detail-specs > div:nth-child(2) > div:first-child { border-inline-start: 0; }
         .car-detail-specs > div:nth-child(2) svg { width: 19px; height: 19px; padding: 4px; box-sizing: content-box; border-radius: 9px; color: #b65042; background: #fff1ed; }
-        .car-detail-specs > div:nth-child(2) span { display: flex; flex-direction: column; gap: 3px; color: var(--text-muted); font-size: 10px; }
-        .car-detail-specs > div:nth-child(2) strong { display: block; color: var(--text-main); font-size: 12px; }
+        .car-detail-specs > div:nth-child(2) span { display: flex; flex-direction: column; gap: 3px; color: #53636e; font-size: 10px; }
+        .car-detail-specs > div:nth-child(2) strong { display: block; color: #17212b; font-size: 12px; }
         .car-detail-specs > div:nth-child(3) { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 10px; }
         .car-detail-specs > div:nth-child(3) > div { display: flex; align-items: flex-start; gap: 8px; min-height: 64px; padding: 11px 12px; border: 1px solid #e7ecef; border-radius: 13px; background: linear-gradient(145deg, #fbfcfd, #f5f8fa); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
         .car-detail-specs > div:nth-child(3) > div:hover { transform: translateY(-2px); border-color: #cfe3db; box-shadow: 0 8px 18px rgba(23,58,82,.08); }
