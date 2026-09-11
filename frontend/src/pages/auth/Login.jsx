@@ -278,6 +278,8 @@ export default function Login() {
     }
     const formData = new FormData();
     selectedFiles.forEach(([field, file]) => formData.append(field, file));
+    formData.append('email', email);
+    formData.append('password', password);
     setResubmittingDocuments(true);
     try {
       const response = await authAPI.resubmitSupplierDocuments(formData);

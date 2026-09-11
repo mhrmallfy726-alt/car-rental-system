@@ -9,6 +9,7 @@ import {
   Clock
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
+import AdminSidebar from "../../components/AdminSidebar";
 // const res = await adminAPI.getSupplierRequests();
 
 export default function SupplierRequests() {
@@ -23,7 +24,7 @@ export default function SupplierRequests() {
 
   const [openModal, setOpenModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
+  const API_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
   const assetUrl = (fileName) => fileName ? `${API_URL}/uploads/${fileName}` : '';
 
   const loadRequests = async () => {
@@ -112,13 +113,15 @@ export default function SupplierRequests() {
   return (
     <>
       <style>{responsiveStyles}</style>
-      <div
+      <div className="admin-supplier-requests-page"
         style={{
-          padding: "30px",
+          display: 'flex',
+          minHeight: '100vh',
           background: "#f7f8fc",
-          minHeight: "100vh",
         }}
       >
+        <AdminSidebar />
+        <section className="admin-supplier-requests-content" style={{ flex: 1, minWidth: 0, padding: '30px' }}>
         {/* Header */}
 
         <div
@@ -558,6 +561,7 @@ export default function SupplierRequests() {
     </div>
   </div>
 )}
+        </section>
       </div>
     </>
   );
@@ -582,7 +586,12 @@ const td = {
 };
 
 const responsiveStyles = `
+  .admin-supplier-requests-content { direction: rtl; }
   .supplier-request-cards { display: none; }
+  @media (max-width: 900px) {
+    .admin-supplier-requests-content { width: 100%; padding: 132px 14px 48px !important; }
+    .admin-supplier-requests-content > div:first-child { align-items: stretch !important; flex-direction: column; }
+  }
   @media (max-width: 700px) {
     .supplier-requests-table { display: none; }
     .supplier-request-cards {

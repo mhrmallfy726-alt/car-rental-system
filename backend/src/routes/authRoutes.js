@@ -24,7 +24,8 @@ router.post('/forgot-password/verify', verifyPasswordReset);
 router.post('/forgot-password/reset', resetPassword);
 router.get('/me', protect, getMe);
 router.post('/upload-documents', protect, uploadDocuments, uploadDocs);
-router.post('/resubmit-supplier-documents', protect, uploadDocuments, resubmitSupplierDocuments);
+// يتحقق الكنترولر من البريد وكلمة المرور عند عدم وجود جلسة، لأن المورد المرفوض لا يحصل على جلسة دخول.
+router.post('/resubmit-supplier-documents', uploadDocuments, resubmitSupplierDocuments);
 router.put('/update-profile', protect, updateProfile);
 router.post('/change-password/request-otp', protect, requestPasswordChangeOTP);
 router.put('/change-password', protect, changePassword);

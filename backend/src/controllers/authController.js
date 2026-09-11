@@ -652,7 +652,26 @@ const uploadDocs = asyncHandler(async (req, res, next) => {
 });
 
 const resubmitSupplierDocuments = asyncHandler(async (req, res, next) => {
-  if (req.user.role !== 'supplier') return next(new AppError('هذا الإجراء متاح للموردين فقط', 403));
+  let supplierId = req.user?.id;
+  if (!supplierId) {
+    const email = normalizeEmail(req.body.email);
+    const password = String(req.body.password || '');
+    if (!email || !password) return next(new AppError('البريد الإلكتروني وكلمة المرور مطلوبان', 400));
+    const supplierResult = await query(
+      'SELECT id, password, role, verification_status FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
+      [email]
+    );
+    const supplier = supplierResult.rows[0];
+    if (!supplier || supplier.role !== 'supplier' || !(await bcrypt.compare(password, supplier.password))) {
+      return next(new AppError('بيانات المورد غير صحيحة', 401));
+    }
+    supplierId = supplier.id;
+    if (supplier.verification_status !== 'rejected') {
+      return next(new AppError('إعادة الإرسال متاحة فقط للطلبات المرفوضة', 409));
+    }
+  } else if (req.user.role !== 'supplier') {
+    return next(new AppError('هذا الإجراء متاح للموردين فقط', 403));
+  }
   if (!req.files || !Object.values(req.files).some((files) => files?.length)) {
     return next(new AppError('اختر ملفًا واحدًا على الأقل لإعادة الإرسال', 400));
   }
@@ -666,12 +685,24 @@ const resubmitSupplierDocuments = asyncHandler(async (req, res, next) => {
       verification_status = 'pending',
       is_verified = FALSE,
       rejection_reason = NULL
-     WHERE id = $4 AND role = 'supplier'
+     WHERE id = $4 AND role = 'supplier' AND verification_status = 'rejected'
      RETURNING id, verification_status, rejection_reason`,
-    [files.avatar?.[0]?.filename || null, files.commercial_register?.[0]?.filename || null, files.owner_id?.[0]?.filename || null, req.user.id]
+    [files.avatar?.[0]?.filename || null, files.commercial_register?.[0]?.filename || null, files.owner_id?.[0]?.filename || null, supplierId]
   );
 
   if (!result.rows.length) return next(new AppError('حساب المورد غير موجود', 404));
+  try {
+    const admins = await query("SELECT id FROM users WHERE role = 'admin' AND is_active = TRUE");
+    for (const admin of admins.rows) {
+      await query(
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+         VALUES ($1, $2, $3, 'system', $4, 'user', '/admin/supplier-requests')`,
+        [admin.id, 'إعادة إرسال مستندات مورد', 'أعاد مورد مرفوض إرسال مستندات للتدقيق.', supplierId]
+      );
+    }
+  } catch (notificationError) {
+    console.error('Failed to notify admins about supplier resubmission:', notificationError);
+  }
   res.json({ success: true, message: 'تمت إعادة إرسال المستندات للمراجعة', data: result.rows[0] });
 });
 

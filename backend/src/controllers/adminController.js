@@ -46,7 +46,7 @@ const approveSupplier = async (req, res) => {
       SET verification_status='approved',
           is_verified=TRUE,
           rejection_reason=NULL
-      WHERE id=$1 AND role='supplier'
+      WHERE id=$1 AND role='supplier' AND verification_status='pending'
       RETURNING id, name, email, verification_status
     `, [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ success: false, message: 'طلب المورد غير موجود' });
@@ -82,7 +82,7 @@ const rejectSupplier = async (req,res)=>{
       UPDATE users
       SET verification_status='rejected',
           rejection_reason=$1
-      WHERE id=$2 AND role='supplier'
+      WHERE id=$2 AND role='supplier' AND verification_status='pending'
       RETURNING id, name, email, verification_status, rejection_reason
     `, [reason, req.params.id]);
     if (!result.rows.length) return res.status(404).json({ success: false, message: 'طلب المورد غير موجود' });
