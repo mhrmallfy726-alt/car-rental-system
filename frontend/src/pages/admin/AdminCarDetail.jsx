@@ -14,14 +14,23 @@ export default function AdminCarDetail() {
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     adminAPI.getCar(id).then((response) => {
       if (!cancelled) setCar(response.data?.data || null);
-    }).catch((error) => {
-      toast.error(error.response?.data?.message || 'تعذر تحميل تفاصيل السيارة');
-      navigate('/admin/cars', { replace: true });
+    }).catch(async (error) => {
+      try {
+        const listResponse = await adminAPI.getCars();
+        const fallback = (listResponse.data?.data || []).find((item) => String(item.id) === String(id));
+        if (!cancelled && fallback) {
+          setCar({ ...fallback, images: fallback.primary_image ? [{ id: 'primary', image_url: fallback.primary_image, is_primary: true }] : [] });
+          setLoadError('تم عرض البيانات الأساسية لأن بعض التفاصيل الإضافية غير متاحة.');
+          return;
+        }
+      } catch { /* ستظهر الرسالة العامة */ }
+      if (!cancelled) setLoadError(error.response?.data?.message || 'تعذر تحميل تفاصيل السيارة');
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [id, navigate]);
@@ -39,19 +48,19 @@ export default function AdminCarDetail() {
   };
 
   if (loading) return <main className="admin-car-detail" dir="rtl"><div className="admin-car-loading">جاري تحميل تفاصيل السيارة...</div></main>;
-  if (!car) return null;
+  if (!car) return <main className="admin-car-detail" dir="rtl"><div className="admin-car-empty"><Car size={38} /><h2>تعذر عرض تفاصيل السيارة</h2><p>{loadError || 'لم يتم العثور على السيارة.'}</p><button type="button" onClick={() => navigate('/admin/cars')}>العودة إلى إدارة السيارات</button></div><style>{styles}</style></main>;
   const images = Array.isArray(car.images) ? car.images : [];
 
   return <main className="admin-car-detail" dir="rtl">
     <div className="admin-detail-shell"><AdminSidebar /><div className="admin-detail-content"><div className="admin-car-detail-wrap">
       <Link to="/admin/cars" className="admin-car-back"><ArrowRight size={18} /> العودة إلى إدارة السيارات</Link>
-      <header className="admin-car-hero"><div><span className="admin-car-kicker">مراجعة سيارة جديدة</span><h1>{car.make} {car.model}</h1><p>راجع بيانات السيارة والمورد قبل اعتمادها في المنصة.</p></div><span className={car.is_approved ? 'admin-car-status approved' : 'admin-car-status pending'}>{car.is_approved ? <><CheckCircle size={16} /> مفعّلة</> : <><Clock size={16} /> بانتظار الموافقة</>}</span></header>
+      <header className="admin-car-hero"><div><span className="admin-car-kicker">مراجعة سيارة جديدة</span><h1>{car.make} {car.model}</h1><p>راجع بيانات السيارة والمورد قبل اعتمادها في المنصة.</p>{loadError && <small className="admin-car-warning">{loadError}</small>}</div><span className={car.is_approved ? 'admin-car-status approved' : 'admin-car-status pending'}>{car.is_approved ? <><CheckCircle size={16} /> مفعّلة</> : <><Clock size={16} /> بانتظار الموافقة</>}</span></header>
       <section className="admin-car-layout">
         <div className="admin-car-main-card"><div className="admin-car-gallery">{images.length ? images.map((image) => <img key={image.id} src={image.image_url?.startsWith('http') ? image.image_url : getImageUrl(image.image_url)} alt={`${car.make} ${car.model}`} />) : <div className="admin-car-no-image"><ImageIcon size={38} /> لا توجد صور للسيارة</div>}</div><div className="admin-car-info"><h2><Car size={20} /> بيانات السيارة</h2><div className="admin-car-facts"><Fact label="الشركة والموديل" value={`${car.make} ${car.model}`} /><Fact label="سنة الصنع" value={car.year} /><Fact label="الفئة" value={car.category_name || 'غير محددة'} /><Fact label="رقم اللوحة" value={car.license_plate || 'غير مضاف'} /><Fact label="السعر اليومي" value={`$${car.price_per_day}`} /><Fact label="الحالة الحالية" value={statusText[car.status] || car.status || 'غير محددة'} /></div></div></div>
         <aside className="admin-car-side"><div className="admin-car-side-card"><h2><UserRound size={19} /> بيانات المورد</h2><div className="admin-car-contact"><strong>{car.supplier_name || 'غير معروف'}</strong><span><Mail size={15} /> {car.supplier_email || 'غير مضاف'}</span><span><Phone size={15} /> {car.supplier_phone || 'غير مضاف'}</span></div></div><div className="admin-car-side-card"><h2><MapPin size={19} /> موقع السيارة</h2><p>{car.showroom_name || 'المركز الرئيسي'}</p><span>{[car.showroom_city, car.showroom_address].filter(Boolean).join(' — ') || 'لم يتم تحديد العنوان'}</span></div><div className="admin-car-approval"><ShieldCheck size={24} /><div><strong>{car.is_approved ? 'السيارة معتمدة' : 'قرار المراجعة'}</strong><p>{car.is_approved ? 'تم اعتماد هذه السيارة وإتاحتها حسب حالتها.' : 'تأكد من صحة البيانات والصور قبل الموافقة.'}</p></div>{!car.is_approved && <button type="button" onClick={approve} disabled={approving}>{approving ? 'جاري الاعتماد...' : <><CheckCircle size={17} /> الموافقة على السيارة</>}</button>}</div></aside>
       </section>
     </div></div></div>
-    <style>{styles}</style><style>{`@media(max-width:900px){.admin-car-detail{padding-top:132px!important}.admin-detail-shell{display:block}.admin-detail-content{width:100%}}@media(min-width:901px){.admin-detail-content{padding-right:22px}}`}</style>
+    <style>{styles}</style><style>{`@media(max-width:900px){.admin-car-detail{padding-top:132px!important}.admin-detail-shell{display:block}.admin-detail-content{width:100%}}@media(min-width:901px){.admin-detail-content{padding-right:22px}}.admin-car-warning{display:block;margin-top:9px;color:#ffe2a0;font-size:11px}.admin-car-empty{display:grid;place-items:center;gap:9px;min-height:60vh;text-align:center;color:#78909b}.admin-car-empty h2{margin:0;color:#173a52}.admin-car-empty p{margin:0}.admin-car-empty button{border:0;border-radius:10px;padding:11px 18px;background:#173a52;color:#fff;font:inherit;font-weight:900;cursor:pointer}`}</style>
   </main>;
 }
 
