@@ -11,7 +11,7 @@ import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
 
 export default function AddCar() {
   const navigate = useNavigate();
-  const { showroom } = useSupplierShowroom();
+  const { showroom, options: showrooms, selectShowroom } = useSupplierShowroom();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
@@ -70,6 +70,15 @@ export default function AddCar() {
     setImages(prev => [...prev, ...files]);
     const previews = files.map(f => URL.createObjectURL(f));
     setImagePreviews(prev => [...prev, ...previews]);
+  };
+
+  const handleShowroomChange = async (e) => {
+    try {
+      await selectShowroom(e.target.value);
+      toast.success('تم اختيار الفرع');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر اختيار الفرع');
+    }
   };
 
   const removeImage = (index) => {
@@ -155,11 +164,24 @@ export default function AddCar() {
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name_ar || c.name}</option>)}
                 </select>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', color: '#52636d', fontSize: '0.9rem', gap: '4px' }}>
-                <strong style={{ color: '#173a52' }}>الفرع الحالي</strong>
-                <span>{showroom ? `${showroom.showroom_name || `فرع ${showroom.city}`} · ${showroom.city}` : 'اختر فرعاً من القائمة الجانبية'}</span>
-                {showroom?.address && <small>{showroom.address}</small>}
-                {!showroom?.id && <small style={{ color: '#b45309', fontWeight: 600 }}>لا يمكن إرسال السيارة للمراجعة قبل اختيار فرع نشط من القائمة الجانبية.</small>}
+              <div style={{ color: '#52636d', fontSize: '0.9rem' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#173a52' }}>الفرع الحالي</label>
+                <select
+                  value={showroom?.id || ''}
+                  onChange={handleShowroomChange}
+                  disabled={showrooms.length === 0}
+                  required
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', background: '#fff' }}
+                >
+                  <option value="">{showrooms.length ? 'اختر الفرع' : 'لا توجد فروع نشطة'}</option>
+                  {showrooms.map((item, index) => (
+                    <option key={item.id} value={item.id}>
+                      {index === 0 ? 'الفرع الرئيسي — ' : ''}{item.showroom_name || `فرع ${item.city}`} · {item.city}
+                    </option>
+                  ))}
+                </select>
+                {showroom?.address && <small style={{ display: 'block', marginTop: '4px' }}>{showroom.address}</small>}
+                {!showroom?.id && <small style={{ display: 'block', marginTop: '4px', color: '#b45309', fontWeight: 600 }}>اختر فرعًا لإرسال السيارة للمراجعة.</small>}
               </div>
             </div>
 

@@ -10,7 +10,7 @@ export function useSupplierShowroom() {
     setOptions(list);
     const current = getSelectedShowroom();
     if (current && list.some((item) => item.id === current.id)) return current;
-    if (list.length === 1) {
+    if (list.length > 0) {
       setSelectedShowroom(list[0]);
       setShowroom(list[0]);
       return list[0];
@@ -27,5 +27,12 @@ export function useSupplierShowroom() {
     return () => window.removeEventListener('supplierShowroomChanged', onChanged);
   }, []);
 
-  return { showroom, options, reload: load };
+  const selectShowroom = async (locationId) => {
+    const result = await supplierContextAPI.select(locationId);
+    setSelectedShowroom(result.showroom);
+    setShowroom(result.showroom);
+    return result.showroom;
+  };
+
+  return { showroom, options, reload: load, selectShowroom };
 }
