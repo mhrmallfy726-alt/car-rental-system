@@ -167,21 +167,22 @@ export default function Checkout() {
   }
 
   return (
-    <div style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="checkout-page" dir="rtl">
+      <div className="checkout-scene" aria-hidden="true"><span className="checkout-orb checkout-orb-one" /><span className="checkout-orb checkout-orb-two" /><span className="checkout-grid-floor" /></div>
+      <div className="checkout-shell">
         {/* زر الرجوع */}
         <Link to="/my-reservations" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px', color: '#0a58ca', textDecoration: 'none' }}>
           <ArrowRight size={18} /> العودة إلى حجوزاتي
         </Link>
 
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="checkout-intro">
           <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>إتمام الدفع</h1>
           <p style={{ color: '#6c757d' }}>بوابة الدفع الآمنة الخاصة بمنصتنا</p>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-start' }}>
+        <div className="checkout-layout">
           {/* قسم نموذج الدفع */}
-          <div style={{ flex: '2', minWidth: '280px', background: 'white', borderRadius: '12px', padding: '32px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div className="checkout-payment-card">
             <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
               <CreditCard size={20} style={{ color: '#0a58ca' }} /> تفاصيل الدفع
             </h2>
@@ -295,11 +296,11 @@ export default function Checkout() {
           </div>
 
           {/* ملخص الطلب */}
-          <div style={{ flex: '1', minWidth: '280px', background: 'white', borderRadius: '12px', padding: '32px', position: 'sticky', top: '90px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div className="checkout-summary-card">
             <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '16px', marginBottom: '24px' }}>ملخص الطلب</h3>
 
-            <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <img src={getCarImage(reservation)} alt="Car" style={{ width: '60px', height: '45px', objectFit: 'cover', borderRadius: '6px' }} />
+            <div className="checkout-car-preview">
+              <img src={getCarImage(reservation)} alt="Car" />
               <div>
                 <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{reservation.make} {reservation.model}</p>
                 <p style={{ fontSize: '0.7rem', color: '#6c757d' }}>المدة: {reservation.total_days} أيام</p>
@@ -322,12 +323,11 @@ export default function Checkout() {
               <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#0a58ca' }}>{formatCurrency(selectedTotal, currency)}</span>
             </div>
 
-            <button
+            <button className="checkout-submit"
               type="submit"
               form={showNewCard ? "payment-form" : undefined}
               onClick={!showNewCard ? handlePayment : undefined}
               disabled={processing}
-              style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', width: '100%', fontWeight: 'bold', cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
               {processing ? 'جاري الدفع...' : <><CheckCircle size={18} /> تأكيد الدفع</>}
             </button>

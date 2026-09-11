@@ -5,6 +5,7 @@ import { AuthProvider }from './store/auth'
 import App from './App.jsx'
 import './index.css'
 import './styles/search.css'
+import './styles/checkout.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
