@@ -54,7 +54,9 @@ router.get('/', asyncHandler(async (req, res) => {
     SELECT l.id, l.showroom_name AS name, l.city, l.country, l.address, l.latitude, l.longitude,
            l.is_active, l.subscription_status, l.subscription_plan, l.subscription_started_at, l.subscription_expires_at,
            COUNT(c.id)::int AS car_count,
-           (SELECT json_build_object('id',ss.id,'plan',ss.plan,'amount',ss.amount,'currency',ss.currency,'status',ss.status,'starts_at',ss.starts_at,'expires_at',ss.expires_at)
+           (SELECT json_build_object('id',ss.id,'plan',ss.plan,'amount',ss.amount,'currency',ss.currency,'status',ss.status,
+                                     'approval_status',ss.approval_status,'rejection_reason',ss.rejection_reason,
+                                     'reviewed_at',ss.reviewed_at,'starts_at',ss.starts_at,'expires_at',ss.expires_at)
             FROM showroom_subscriptions ss WHERE ss.showroom_id=l.id ORDER BY ss.created_at DESC LIMIT 1) AS subscription
     FROM locations l LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1
     WHERE l.supplier_id=$1 GROUP BY l.id ORDER BY LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
@@ -96,6 +98,17 @@ router.post('/', asyncHandler(async (req, res, next) => {
       RETURNING id,plan,amount,currency,status`,
       [location.rows[0].id,req.user.id,plan,amount,pricing.currency,JSON.stringify({monthly_price:pricing.monthly_price,annual_price:pricing.annual_price,captured_at:new Date().toISOString()})]);
     await client.query('COMMIT');
+    const admins = await query("SELECT id FROM users WHERE role = 'admin' AND COALESCE(is_active, TRUE) = TRUE");
+    const io = req.app.get('io');
+    for (const admin of admins.rows) {
+      const notification = await query(
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+         VALUES ($1, $2, $3, 'system', $4, 'showroom_subscription', $5)
+         RETURNING *`,
+        [admin.id, 'طلب معرض جديد بانتظار المراجعة', `أرسل المورد ${req.user.name || req.user.email || ''} طلب إضافة معرض «${cleanName}» في ${cleanCity}.`, subscription.rows[0].id, '/admin/branch-requests']
+      );
+      if (io && notification.rows[0]) io.to(`user_${admin.id}`).emit('new_notification', notification.rows[0]);
+    }
     res.status(201).json({success:true,data:{showroom:location.rows[0],subscription:subscription.rows[0]},message:'تم إنشاء طلب المعرض، أكمل رسوم الاشتراك لتفعيله'});
   } catch(error) { await client.query('ROLLBACK'); if(error.code==='23505') return next(new AppError('اسم المعرض مستخدم بالفعل',409)); throw error; }
   finally { client.release(); }
