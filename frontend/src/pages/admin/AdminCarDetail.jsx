@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle, Clock, Image as ImageIcon, MapPin, Phone, UserRound, Mail, Car, ShieldCheck } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../services/api';
 import { getImageUrl } from '../../utils/imageUtils';
@@ -10,9 +10,10 @@ const statusText = { available: 'متاحة', reserved: 'محجوزة', maintena
 
 export default function AdminCarDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
-  const [car, setCar] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [car, setCar] = useState(location.state?.car || null);
+  const [loading, setLoading] = useState(!location.state?.car);
   const [approving, setApproving] = useState(false);
   const [loadError, setLoadError] = useState('');
 
@@ -21,6 +22,10 @@ export default function AdminCarDetail() {
     adminAPI.getCar(id).then((response) => {
       if (!cancelled) setCar(response.data?.data || null);
     }).catch(async (error) => {
+      if (location.state?.car) {
+        if (!cancelled) setLoadError('تعذر تحميل التفاصيل الإضافية، وتم عرض بيانات السيارة الأساسية.');
+        return;
+      }
       try {
         const listResponse = await adminAPI.getCars();
         const fallback = (listResponse.data?.data || []).find((item) => String(item.id) === String(id));
@@ -33,7 +38,7 @@ export default function AdminCarDetail() {
       if (!cancelled) setLoadError(error.response?.data?.message || 'تعذر تحميل تفاصيل السيارة');
     }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [id, navigate]);
+  }, [id, navigate, location.state]);
 
   const approve = async () => {
     if (!window.confirm('هل أنت متأكد من الموافقة على هذه السيارة؟')) return;
