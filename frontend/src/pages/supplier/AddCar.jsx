@@ -7,6 +7,7 @@ import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Palette, DoorOpen, Gauge, User } from 'lucide-react';
 import { sanitizeFieldValue } from '../../utils/inputValidation';
+import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
 
 export default function AddCar() {
   const navigate = useNavigate();
@@ -47,7 +48,11 @@ export default function AddCar() {
       const currentYear = new Date().getFullYear();
       if (sanitizedValue < 1980 || sanitizedValue > currentYear + 1) return; // +1 للسماح بموديلات العام القادم
     }
-    setFormData({ ...formData, [name]: sanitizedValue });
+    setFormData({
+      ...formData,
+      [name]: sanitizedValue,
+      ...(name === 'make' ? { model: '' } : {})
+    });
   };
 
   const handleImageChange = (e) => {
@@ -120,10 +125,16 @@ export default function AddCar() {
             {/* صف 1: الصانع والموديل */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الشركة المصنعة</label>
-                <input type="text" name="make" maxLength="80" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange} placeholder="مثال: Toyota" />
+                <select name="make" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange}>
+                  <option value="">اختر الشركة المصنعة</option>
+                  {VEHICLE_MAKES.map(make => <option key={make} value={make}>{make}</option>)}
+                </select>
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الموديل</label>
-                <input type="text" name="model" maxLength="80" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} placeholder="مثال: Camry" />
+                <select name="model" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} disabled={!formData.make}>
+                  <option value="">{formData.make ? 'اختر الموديل' : 'اختر الشركة أولاً'}</option>
+                  {(VEHICLE_CATALOG[formData.make] || []).map(model => <option key={model} value={model}>{model}</option>)}
+                </select>
               </div>
             </div>
 

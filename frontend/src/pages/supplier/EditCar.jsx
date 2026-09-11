@@ -8,6 +8,7 @@ import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Pal
 import { useRef } from 'react';
 
 import { getImageUrl } from '../../utils/imageUtils';
+import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
 export default function EditCar() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -87,7 +88,11 @@ export default function EditCar() {
     const { name, value } = e.target;
     if (name === 'price_per_day' && parseFloat(value) < 0) return;
     if (name === 'discount_percentage' && (parseFloat(value) < 0 || parseFloat(value) > 100)) return;
-    setFormData({ ...formData, [name]: value });
+    setFormData({
+      ...formData,
+      [name]: value,
+      ...(name === 'make' ? { model: '' } : {})
+    });
   };
 
   const handleImageChange = (e) => {
@@ -158,10 +163,16 @@ export default function EditCar() {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الشركة المصنعة</label>
-                <input type="text" name="make" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange} />
+                <select name="make" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.make} onChange={handleChange}>
+                  {!VEHICLE_MAKES.includes(formData.make) && formData.make && <option value={formData.make}>{formData.make}</option>}
+                  {VEHICLE_MAKES.map(make => <option key={make} value={make}>{make}</option>)}
+                </select>
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>الموديل</label>
-                <input type="text" name="model" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} />
+                <select name="model" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.model} onChange={handleChange} disabled={!formData.make}>
+                  {!VEHICLE_CATALOG[formData.make]?.includes(formData.model) && formData.model && <option value={formData.model}>{formData.model}</option>}
+                  {(VEHICLE_CATALOG[formData.make] || []).map(model => <option key={model} value={model}>{model}</option>)}
+                </select>
               </div>
             </div>
 
