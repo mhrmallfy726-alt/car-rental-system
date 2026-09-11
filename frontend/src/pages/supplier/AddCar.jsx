@@ -159,6 +159,7 @@ export default function AddCar() {
                 <strong style={{ color: '#173a52' }}>الفرع الحالي</strong>
                 <span>{showroom ? `${showroom.showroom_name || `فرع ${showroom.city}`} · ${showroom.city}` : 'اختر فرعاً من القائمة الجانبية'}</span>
                 {showroom?.address && <small>{showroom.address}</small>}
+                {!showroom?.id && <small style={{ color: '#b45309', fontWeight: 600 }}>لا يمكن إرسال السيارة للمراجعة قبل اختيار فرع نشط من القائمة الجانبية.</small>}
               </div>
             </div>
 
@@ -227,7 +228,7 @@ export default function AddCar() {
               )}
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }} disabled={loading || !showroom?.id}>
+            <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }} disabled={loading}>
               {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ وإرسال للمراجعة</>}
             </button>
           </form>
