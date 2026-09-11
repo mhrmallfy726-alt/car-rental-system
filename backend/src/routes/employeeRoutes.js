@@ -181,7 +181,9 @@ router.get('/permissions/list', async (req, res) => {
       SELECT id, name, description,
              CASE WHEN name LIKE 'manage_%' THEN 'manage' ELSE 'view' END AS access_level,
              CASE WHEN name LIKE 'manage_%' THEN 'إدارة وتنفيذ' ELSE 'عرض واطلاع' END AS access_label
-      FROM permissions ORDER BY id
+      FROM permissions
+      WHERE name NOT IN ('create_cars', 'edit_cars', 'delete_cars', 'edit_reservations', 'approve_reservations', 'reject_reservations', 'complete_reservations', 'approve_advertisements', 'reject_advertisements')
+      ORDER BY id
     `);
     res.json({ success: true, data: result.rows });
   } catch (err) {

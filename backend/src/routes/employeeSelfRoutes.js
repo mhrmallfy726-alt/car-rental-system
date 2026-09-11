@@ -129,7 +129,7 @@ router.get('/me/overview', async (req, res, next) => {
       }
     }
 
-    if (permissions.has('view_finance')) {
+    if (permissions.has('view_finance') || permissions.has('manage_finance')) {
       const finance = await query(
         `SELECT COUNT(*)::int AS reservations_count,
                 COALESCE(SUM(total_price) FILTER (WHERE status IN ('completed','active')),0)::numeric AS reservation_revenue
@@ -636,7 +636,7 @@ router.get('/me/advertisements/performance', requirePermission('view_ad_performa
   }
 });
 
-router.get('/me/finance', requirePermission('view_finance'), async (req, res, next) => {
+router.get('/me/finance', requirePermission('view_finance', 'manage_finance'), async (req, res, next) => {
   try {
     const result = await query(
       `SELECT COUNT(*)::int AS reservations_count,
