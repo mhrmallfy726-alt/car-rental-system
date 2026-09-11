@@ -22,6 +22,7 @@ export default function SupplierRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
   const assetUrl = (fileName) => fileName ? `${API_URL}/uploads/${fileName}` : '';
 
@@ -50,6 +51,13 @@ export default function SupplierRequests() {
 
     loadRequests();
 
+  }, []);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobile(window.innerWidth <= 700);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
   }, []);
 
   const handleApprove = async (id) => {
@@ -207,6 +215,7 @@ export default function SupplierRequests() {
             style={{
               width: "100%",
               borderCollapse: "collapse",
+              display: isMobile ? "none" : "table",
             }}
           >
             <thead
@@ -304,7 +313,10 @@ export default function SupplierRequests() {
             </tbody>
           </table>
 
-          <div className="supplier-request-cards">
+          <div
+            className="supplier-request-cards"
+            style={{ display: isMobile ? "grid" : "none" }}
+          >
             {loading ? (
               <div className="supplier-request-empty">جاري التحميل...</div>
             ) : filteredRequests.length === 0 ? (
