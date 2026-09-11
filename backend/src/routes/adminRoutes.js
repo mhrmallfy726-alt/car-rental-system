@@ -110,6 +110,24 @@ router.get('/cars', asyncHandler(async (req, res) => {
   res.json({ success: true, data: result.rows });
 }));
 
+// Get one car with its supplier, showroom, category, and images for approval review.
+router.get('/cars/:id', asyncHandler(async (req, res, next) => {
+  const result = await query(`
+    SELECT c.*, u.name AS supplier_name, u.email AS supplier_email, u.phone AS supplier_phone,
+           cat.name AS category_name, l.showroom_name, l.city AS showroom_city, l.address AS showroom_address,
+           COALESCE((SELECT json_agg(ci ORDER BY ci.is_primary DESC, ci.created_at ASC)
+                     FROM car_images ci WHERE ci.car_id = c.id), '[]'::json) AS images
+    FROM cars c
+    LEFT JOIN users u ON c.supplier_id = u.id
+    LEFT JOIN categories cat ON c.category_id = cat.id
+    LEFT JOIN locations l ON c.location_id = l.id
+    WHERE c.id = $1
+    LIMIT 1
+  `, [req.params.id]);
+  if (!result.rows.length) return next(new AppError('السيارة غير موجودة', 404));
+  res.json({ success: true, data: result.rows[0] });
+}));
+
 // Approve car
 router.put('/cars/:id/approve', asyncHandler(async (req, res, next) => {
   const result = await query('UPDATE cars SET is_approved = true, approved_by = $1, approved_at = NOW() WHERE id = $2 RETURNING *', [req.user.id, req.params.id]);

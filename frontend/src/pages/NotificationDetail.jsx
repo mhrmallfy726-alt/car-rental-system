@@ -20,6 +20,12 @@ const getReferencePath = (notification, user) => {
     ? notification.action_url.trim()
     : '';
 
+  // إشعار السيارة يجب أن يفتح دائمًا مراجعة السيارة للأدمن، حتى لو كان
+  // الإشعار القديم يحتوي رابطًا محفوظًا لمسار الحجوزات بالخطأ.
+  if ((notification?.reference_type || notification?.type) === 'car' && user?.role === 'admin' && notification?.reference_id) {
+    return `/admin/cars/${notification.reference_id}`;
+  }
+
   // لا نسمح إلا بروابط داخلية، ونمنع فتح مسارات الإدارة لغير المدير.
   if (actionUrl.startsWith('/') && (!actionUrl.startsWith('/admin/') || user?.role === 'admin')) {
     return actionUrl;
@@ -34,7 +40,9 @@ const getReferencePath = (notification, user) => {
       if (user?.role === 'admin') return '/admin/dashboard';
       return '/';
     case 'car':
-      return `/cars/${notification.reference_id}`;
+      return user?.role === 'admin'
+        ? `/admin/cars/${notification.reference_id}`
+        : `/cars/${notification.reference_id}`;
     case 'advertisement':
     case 'advertisement_request':
       return user?.role === 'supplier' ? '/supplier/advertisement-request' : '/admin/advertisement-center';

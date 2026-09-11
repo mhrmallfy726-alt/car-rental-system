@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Car, CheckCircle, LayoutDashboard, Users, ShieldAlert, Settings, RefreshCw, Image, Clock } from 'lucide-react';
+import { Car, CheckCircle, LayoutDashboard, Users, ShieldAlert, Settings, RefreshCw, Image, Clock, Eye } from 'lucide-react';
 
 import { getImageUrl } from '../../utils/imageUtils';
 export default function AdminCars() {
@@ -141,7 +141,7 @@ export default function AdminCars() {
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>المورد</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السعر/يوم</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الحالة</th>
-                {/* <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>إجراءات</th> */}
+                <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>التفاصيل والإجراء</th>
               </tr>
             </thead>
             <tbody>
@@ -167,6 +167,7 @@ export default function AdminCars() {
                     <td style={{ padding: '12px 16px', fontWeight: 'bold', color: '#0a58ca' }}>${car.price_per_day}</td>
                     <td style={{ padding: '12px 16px' }}>{getStatusBadge(car.is_approved)}</td>
                     <td style={{ padding: '12px 16px' }}>
+                      <Link to={`/admin/cars/${car.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', marginLeft: '7px', color: '#0a58ca', background: '#eef5ff', padding: '6px 9px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 'bold' }}><Eye size={14} /> التفاصيل</Link>
                       {!car.is_approved && (
                         <button
                           onClick={() => handleApprove(car.id)}

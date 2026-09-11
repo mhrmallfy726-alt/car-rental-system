@@ -281,9 +281,9 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     const io = req.app.get('io');
     for (const admin of admins.rows) {
       const notif = await query(
-        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type) 
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-        [admin.id, 'سيارة جديدة بانتظار الموافقة', `تمت إضافة سيارة جديدة (${make} ${model}) بانتظار مراجعتك.`, 'car', car.id, 'car']
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+        [admin.id, 'سيارة جديدة بانتظار الموافقة', `تمت إضافة سيارة جديدة (${make} ${model}) بانتظار مراجعتك.`, 'car', car.id, 'car', `/admin/cars/${car.id}`]
       );
       if (io) io.to(`user_${admin.id}`).emit('new_notification', notif.rows[0]);
     }
