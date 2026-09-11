@@ -428,7 +428,7 @@ const advertisementService  = {
     return result.rows;
   },
 
-  approveAdvertisementRequest: async (requestId, reviewerId, note = '') => {
+  approveAdvertisementRequest: async (requestId, reviewerId, note = '', reviewerEmployeeId = null) => {
     const client = await getClient();
     try {
       await client.query('BEGIN');
@@ -455,7 +455,7 @@ const advertisementService  = {
           totalPrice, duration, pricePerDay, totalPrice, request.start_date || null,
           request.end_date || null, request.start_time, request.end_time,
         ]);
-      await client.query(`UPDATE advertisement_requests SET status='approved', reviewer_id=$1, reviewer_note=$2, reviewed_at=NOW() WHERE id=$3`, [reviewerId, note || null, requestId]);
+      await client.query(`UPDATE advertisement_requests SET status='approved', reviewer_id=$1, reviewer_employee_id=$2, reviewer_note=$3, reviewed_at=NOW() WHERE id=$4`, [reviewerId, reviewerEmployeeId, note || null, requestId]);
       await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [request.supplier_id, 'تم اعتماد طلب الإعلان', `تم اعتماد طلب «${request.title}». أكمل الدفع ليبدأ النشر.`, adResult.rows[0].id]);
       await client.query('COMMIT');
       return adResult.rows[0];
@@ -465,13 +465,13 @@ const advertisementService  = {
     } finally { client.release(); }
   },
 
-  rejectAdvertisementRequest: async (requestId, reviewerId, note = '') => {
+  rejectAdvertisementRequest: async (requestId, reviewerId, note = '', reviewerEmployeeId = null) => {
     const result = await query(
       `UPDATE advertisement_requests
-       SET status = 'rejected', reviewer_id = $1, reviewer_note = $2, reviewed_at = NOW()
-       WHERE id = $3 AND status = 'pending'
+       SET status = 'rejected', reviewer_id = $1, reviewer_employee_id = $2, reviewer_note = $3, reviewed_at = NOW()
+       WHERE id = $4 AND status = 'pending'
        RETURNING *`,
-      [reviewerId, note || null, requestId],
+      [reviewerId, reviewerEmployeeId, note || null, requestId],
     );
 
     if (!result.rows.length) {

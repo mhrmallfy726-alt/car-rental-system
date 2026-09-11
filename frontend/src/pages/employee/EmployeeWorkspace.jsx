@@ -105,6 +105,10 @@ export default function EmployeeWorkspace() {
         const price_per_day = window.prompt('السعر اليومي الجديد', row.price_per_day || '');
         const status = window.prompt('الحالة: available أو maintenance', row.status || 'available');
         await api.put(`/employee-self/me/cars/${row.id}`, { price_per_day, status });
+      } else if (section === 'advertisements' && ['approve', 'reject'].includes(action)) {
+        const note = window.prompt(action === 'approve' ? 'ملاحظة الاعتماد (اختيارية)' : 'سبب الرفض (مطلوب)') || '';
+        if (action === 'reject' && !note.trim()) throw new Error('سبب الرفض مطلوب');
+        await api.put(`/employee-self/me/advertisements/${row.id}/${action}`, { note: note.trim() });
       } else if (section === 'delivery') {
         const formData = new FormData();
         formData.append('fuel_level', window.prompt('نسبة الوقود من 0 إلى 100', '100') || '0');
@@ -207,6 +211,9 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
       {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> قبول</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
       {row.status === 'active' && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'complete')}><Check size={14} /> إكمال</button>}
     </div>;
+    if (section === 'advertisements') return <div style={styles.rowActions}>
+      {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> اعتماد</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
+    </div>;
     if (section === 'fleet') return <div style={styles.rowActions}><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => window.confirm('هل تريد حذف هذه السيارة؟') && onAction(section, row, 'delete')}><Trash2 size={14} /> حذف</button></div>;
     if (section === 'delivery') return <div style={styles.rowActions}>
       {!row.before_report_id && ['approved', 'awaiting_pickup'].includes(row.status) && <label style={styles.approveButton}><Check size={14} /> تقرير قبل<input type="file" multiple accept="image/*" hidden onChange={(event) => onAction(section, row, 'before', event.target.files)} /></label>}
@@ -214,7 +221,7 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
     </div>;
     return null;
   };
-  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canManage && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
+  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canManage && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : section === 'advertisements' ? `${row.status || ''} · الظهور: ${row.impressions ?? 0} · النقرات: ${row.clicks ?? 0} · CTR: ${row.ctr ?? 0}%` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
 }
 
 function Nav({ active, value, label, icon: Icon, onClick }) { return <button type="button" onClick={() => onClick(value)} style={{ ...styles.nav, ...(active === value ? styles.navActive : {}) }}><Icon size={18} />{label}</button>; }

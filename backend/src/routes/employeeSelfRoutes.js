@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { query } = require('../config/database');
+const advertisementService = require('../services/advertisementService');
 
 router.use(protect);
 const requireEmployee = (req, res, next) => {
@@ -469,6 +470,31 @@ router.put(
         });
       }
 
+      const currentResult = await query(
+        `SELECT id, customer_id, status, handover_state
+           FROM reservations WHERE id = $1 AND supplier_id = $2`,
+        [id, req.user.supplier_id]
+      );
+      if (!currentResult.rows.length) {
+        return res.status(404).json({ success: false, message: 'الحجز غير موجود أو لا يتبع لمؤسستك' });
+      }
+      const current = currentResult.rows[0];
+      if (status) {
+        const allowedTransitions = {
+          pending: ['approved', 'rejected', 'cancelled'],
+          approved: ['cancelled'],
+          awaiting_pickup: ['cancelled'],
+          active: ['completed'],
+          returned: ['completed'],
+        };
+        if (status !== current.status && !(allowedTransitions[current.status] || []).includes(status)) {
+          return res.status(409).json({ success: false, message: `لا يمكن نقل الحجز من ${current.status} إلى ${status}` });
+        }
+        if (status === 'completed' && current.handover_state !== 'returned') {
+          return res.status(409).json({ success: false, message: 'يجب توثيق استرجاع السيارة قبل إكمال الحجز' });
+        }
+      }
+
       const result = await query(
         `UPDATE reservations
          SET
@@ -492,11 +518,13 @@ router.put(
         ]
       );
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'الحجز غير موجود أو لا يتبع لمؤسستك'
-        });
+      if (status && status !== current.status && current.customer_id) {
+        const labels = { approved: 'تمت الموافقة على الحجز', rejected: 'تم رفض الحجز', cancelled: 'تم إلغاء الحجز', completed: 'تم إكمال الحجز' };
+        await query(
+          `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+           VALUES ($1, $2, $3, 'reservation', $4, 'reservation')`,
+          [current.customer_id, labels[status] || 'تم تحديث حالة الحجز', `تم تحديث حالة حجزك إلى: ${status}`, id]
+        );
       }
 
       res.json({
@@ -546,14 +574,44 @@ router.get('/me/customers', requirePermission('view_customers'), async (req, res
 router.get('/me/advertisements', requirePermission('view_advertisements', 'manage_advertisements', 'view_ad_performance'), async (req, res, next) => {
   try {
     const result = await query(
-      `SELECT id, title, ad_type, placement, requested_budget, duration_days,
-              start_date, end_date, status, reviewer_note, created_at
-         FROM advertisement_requests WHERE supplier_id = $1 ORDER BY created_at DESC LIMIT 100`,
+      `SELECT r.id, r.title, r.ad_type, r.placement, r.requested_budget, r.duration_days,
+              r.start_date, r.end_date, r.status, r.reviewer_note, r.created_at,
+              a.id AS advertisement_id, a.impressions, a.clicks,
+              CASE WHEN COALESCE(a.impressions, 0) > 0
+                   THEN ROUND((a.clicks::numeric / a.impressions::numeric) * 100, 2)
+                   ELSE 0 END AS ctr
+         FROM advertisement_requests r
+         LEFT JOIN advertisements a ON a.request_id = r.id
+        WHERE r.supplier_id = $1 ORDER BY r.created_at DESC LIMIT 100`,
       [req.user.supplier_id]
     );
     res.json({ success: true, data: result.rows });
   } catch (error) {
     next(error);
+  }
+});
+
+router.put('/me/advertisements/:id/approve', requirePermission('manage_advertisements'), async (req, res) => {
+  try {
+    const ownership = await query('SELECT supplier_id FROM advertisement_requests WHERE id = $1', [req.params.id]);
+    if (!ownership.rows.length) return res.status(404).json({ success: false, message: 'طلب الإعلان غير موجود' });
+    if (String(ownership.rows[0].supplier_id) !== String(req.user.supplier_id)) return res.status(403).json({ success: false, message: 'غير مصرح بهذا الطلب' });
+    const ad = await advertisementService.approveAdvertisementRequest(req.params.id, null, req.body?.note || '', req.employeeId);
+    res.json({ success: true, data: ad, message: 'تم اعتماد طلب الإعلان، وينتظر الدفع قبل النشر' });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message || 'تعذر اعتماد طلب الإعلان' });
+  }
+});
+
+router.put('/me/advertisements/:id/reject', requirePermission('manage_advertisements'), async (req, res) => {
+  try {
+    const ownership = await query('SELECT supplier_id FROM advertisement_requests WHERE id = $1', [req.params.id]);
+    if (!ownership.rows.length) return res.status(404).json({ success: false, message: 'طلب الإعلان غير موجود' });
+    if (String(ownership.rows[0].supplier_id) !== String(req.user.supplier_id)) return res.status(403).json({ success: false, message: 'غير مصرح بهذا الطلب' });
+    const request = await advertisementService.rejectAdvertisementRequest(req.params.id, null, req.body?.note || '', req.employeeId);
+    res.json({ success: true, data: request, message: 'تم رفض طلب الإعلان' });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message || 'تعذر رفض طلب الإعلان' });
   }
 });
 

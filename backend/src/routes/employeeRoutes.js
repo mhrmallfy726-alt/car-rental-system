@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { query, getClient } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
+const bcrypt = require('bcryptjs');
 
 const getAuthenticatedSupplierId = (reqUser) => {
   if (reqUser?.role !== 'supplier') return null;
