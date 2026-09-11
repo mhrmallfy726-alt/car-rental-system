@@ -52,14 +52,14 @@ router.get('/pricing', asyncHandler(async (req, res) => {
 router.get('/', asyncHandler(async (req, res) => {
   const result = await query(`
     SELECT l.id, l.showroom_name AS name, l.city, l.country, l.address, l.latitude, l.longitude,
-           l.is_active, l.subscription_status, l.subscription_plan, l.subscription_started_at, l.subscription_expires_at,
+           l.is_active, l.is_main, l.subscription_status, l.subscription_plan, l.subscription_started_at, l.subscription_expires_at,
            COUNT(c.id)::int AS car_count,
            (SELECT json_build_object('id',ss.id,'plan',ss.plan,'amount',ss.amount,'currency',ss.currency,'status',ss.status,
                                      'approval_status',ss.approval_status,'rejection_reason',ss.rejection_reason,
                                      'reviewed_at',ss.reviewed_at,'starts_at',ss.starts_at,'expires_at',ss.expires_at)
             FROM showroom_subscriptions ss WHERE ss.showroom_id=l.id ORDER BY ss.created_at DESC LIMIT 1) AS subscription
     FROM locations l LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1
-    WHERE l.supplier_id=$1 GROUP BY l.id ORDER BY LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
+    WHERE l.supplier_id=$1 GROUP BY l.id ORDER BY l.is_main DESC, LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
   `, [req.user.id]);
   res.json({ success: true, data: result.rows });
 }));
@@ -89,9 +89,9 @@ router.post('/', asyncHandler(async (req, res, next) => {
   try {
     await client.query('BEGIN');
     const location=await client.query(`INSERT INTO locations
-      (supplier_id,showroom_name,city,country,address,latitude,longitude,is_active,subscription_status,subscription_plan)
-      VALUES($1,$2,$3,'Yemen',$4,$5,$6,FALSE,'pending_payment',$7)
-      RETURNING id,showroom_name AS name,city,country,address,latitude,longitude,is_active,subscription_status,subscription_plan`,
+      (supplier_id,showroom_name,city,country,address,latitude,longitude,is_active,subscription_status,subscription_plan,is_main)
+      VALUES($1,$2,$3,'Yemen',$4,$5,$6,FALSE,'pending_payment',$7,FALSE)
+      RETURNING id,showroom_name AS name,city,country,address,latitude,longitude,is_active,is_main,subscription_status,subscription_plan`,
       [req.user.id,cleanName,cleanCity,address||null,latitude,longitude,plan]);
     const subscription=await client.query(`INSERT INTO showroom_subscriptions
       (showroom_id,supplier_id,plan,amount,currency,price_snapshot) VALUES($1,$2,$3,$4,$5,$6::jsonb)

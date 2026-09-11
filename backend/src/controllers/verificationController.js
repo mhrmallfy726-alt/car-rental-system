@@ -222,6 +222,29 @@ RETURNING *
 // لا يحصل المورد على صلاحية الدخول قبل مراجعة الأدمن، ويُنشأ طلب ظاهر في لوحة الإدارة.
 if (userRole === 'supplier') {
   try {
+    const baseName = String(userData.company_name || userData.name || 'المورد').trim();
+    const mainName = `${baseName} - المركز الرئيسي`.slice(0, 150);
+    const mainLocation = await query(
+      `INSERT INTO locations
+        (supplier_id, showroom_name, city, country, address, latitude, longitude, is_active, subscription_status, is_main)
+       VALUES ($1, $2, $3, 'Yemen', $4, $5, $6, TRUE, 'active', TRUE)
+       ON CONFLICT DO NOTHING
+       RETURNING id`,
+      [newUser.rows[0].id, mainName, String(userData.city || 'صنعاء').trim(), userData.address || null, userData.latitude || null, userData.longitude || null]
+    );
+    if (!mainLocation.rows.length) {
+      await query(
+        `INSERT INTO locations
+          (supplier_id, showroom_name, city, country, address, latitude, longitude, is_active, subscription_status, is_main)
+         VALUES ($1, $2, $3, 'Yemen', $4, $5, $6, TRUE, 'active', TRUE)
+         ON CONFLICT DO NOTHING`,
+        [newUser.rows[0].id, `${mainName} - ${String(newUser.rows[0].id).slice(0, 8)}`.slice(0, 150), String(userData.city || 'صنعاء').trim(), userData.address || null, userData.latitude || null, userData.longitude || null]
+      );
+    }
+  } catch (locationError) {
+    console.error('Failed to create supplier main showroom:', locationError);
+  }
+  try {
     const admins = await query("SELECT id FROM users WHERE role = 'admin' AND is_active = TRUE");
     const io = req.app.get('io');
     for (const admin of admins.rows) {

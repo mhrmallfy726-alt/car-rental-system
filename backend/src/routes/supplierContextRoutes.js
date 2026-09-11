@@ -8,7 +8,7 @@ router.use(protect, authorize('supplier'));
 
 router.get('/options', asyncHandler(async (req, res) => {
   const result = await query(`
-    SELECT l.id, l.showroom_name, l.city, l.country, l.address,
+    SELECT l.id, l.showroom_name, l.city, l.country, l.address, l.is_main,
            l.latitude, l.longitude, l.is_active, l.subscription_status,
            l.subscription_plan, l.subscription_expires_at,
            COUNT(c.id)::int AS car_count
@@ -18,7 +18,7 @@ router.get('/options', asyncHandler(async (req, res) => {
              AND COALESCE(l.is_active, TRUE) = TRUE
              AND COALESCE(l.subscription_status, 'active') = 'active'
     GROUP BY l.id
-    ORDER BY l.created_at ASC, LOWER(COALESCE(l.showroom_name, l.city))
+    ORDER BY l.is_main DESC, l.created_at ASC, LOWER(COALESCE(l.showroom_name, l.city))
   `, [req.user.id]);
   res.json({ success: true, data: result.rows });
 }));
