@@ -439,6 +439,14 @@ const register = asyncHandler(async (req, res, next) => {
 
   const normalizedEmail = normalizeEmail(email);
   const normalizedPhone = normalizePhoneNumber(phone);
+  const isSupplier = role === 'supplier';
+  if (isSupplier && (
+    !req.files?.avatar?.[0] ||
+    !req.files?.commercial_register?.[0] ||
+    !req.files?.owner_id?.[0]
+  )) {
+    return next(new AppError('شعار الشركة والسجل التجاري وهوية المالك مطلوبة', 400));
+  }
   if (!normalizedPhone) {
     return next(new AppError('الرجاء إدخال رقم هاتف صحيح', 400));
   }

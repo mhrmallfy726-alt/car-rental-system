@@ -359,7 +359,9 @@ export default function Join() {
       if (files.commercial) formDataToSend.append('commercial_register', files.commercial);
       if (files.ownerId) formDataToSend.append('owner_id', files.ownerId);
 
-      const response = await api.post('/auth/register', formDataToSend);
+      const response = await api.post('/auth/register', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (response.data.success) {
         setVerificationEmail(formData.ownerEmail);
