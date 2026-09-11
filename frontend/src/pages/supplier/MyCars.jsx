@@ -99,7 +99,18 @@ export default function MyCars() {
             <Link to="/supplier/cars/add" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none' }}>إضافة أول سيارة</Link>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }} className="table-container">
+          <>
+          <div className="mobile-cars-grid">
+            {cars.map((car) => <article className="mobile-car-card" key={car.id}>
+              <div className="mobile-car-image-wrap"><img src={getCarImage(car, 'https://via.placeholder.com/640x360?text=Car')} alt={`${car.make} ${car.model}`} className="mobile-car-image" />{!car.is_approved && <span className="mobile-car-review">قيد المراجعة</span>}</div>
+              <div className="mobile-car-body"><div className="mobile-car-title-row"><div><h2>{car.make} {car.model}</h2><small>{car.license_plate || 'بدون رقم لوحة'}</small></div>{getStatusBadge(car.status, car.is_approved)}</div>
+                <div className="mobile-car-details"><span><b>سنة الصنع</b>{car.year || '—'}</span><span><b>الفئة</b>{car.category_name || 'غير محددة'}</span><span><b>السعر اليومي</b>${car.price_per_day || 0}</span></div>
+                <div className="mobile-car-offer">{car.discount_percentage > 0 ? <><Percent size={14} /> {car.discount_percentage}% خصم</> : 'لا يوجد عرض'}</div>
+                <div className="mobile-car-actions"><button type="button" onClick={() => { setEditingDiscount(car); setNewDiscount(car.discount_percentage || 0); }}><Percent size={15} /> العروض</button><button type="button" onClick={() => handleEditCar(car.id)}><Edit size={15} /> تعديل</button><button type="button" className="danger" onClick={() => handleDelete(car.id)}><Trash2 size={15} /> حذف</button></div>
+              </div>
+            </article>)}
+          </div>
+          <div style={{ overflowX: 'auto' }} className="table-container desktop-cars-table">
             <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <thead style={{ background: '#f8f9fa' }}>
                 <tr>
@@ -153,6 +164,7 @@ export default function MyCars() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -181,6 +193,23 @@ export default function MyCars() {
       )}
 
       <style>{`
+        .mobile-cars-grid { display: none; }
+        .mobile-car-card { overflow: hidden; background: #fff; border: 1px solid #e3eaee; border-radius: 18px; box-shadow: 0 8px 22px rgba(23,58,82,.07); }
+        .mobile-car-image-wrap { position: relative; height: 174px; background: #edf3f5; }
+        .mobile-car-image { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .mobile-car-review { position: absolute; top: 12px; right: 12px; padding: 6px 10px; border-radius: 999px; background: #fff4d6; color: #8b651a; font-size: 11px; font-weight: 900; }
+        .mobile-car-body { padding: 15px; }
+        .mobile-car-title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .mobile-car-title-row h2 { margin: 0 0 5px; color: #173a52; font-size: 18px; }
+        .mobile-car-title-row small { color: #81929b; font-size: 12px; }
+        .mobile-car-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0 11px; padding: 12px 0; border-top: 1px solid #edf2f4; border-bottom: 1px solid #edf2f4; }
+        .mobile-car-details span { display: grid; gap: 4px; color: #526873; font-size: 12px; }
+        .mobile-car-details b { color: #94a2a8; font-size: 10px; font-weight: 700; }
+        .mobile-car-offer { min-height: 18px; display: inline-flex; align-items: center; gap: 5px; color: #71828a; font-size: 12px; font-weight: 800; }
+        .mobile-car-actions { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 7px; margin-top: 14px; }
+        .mobile-car-actions button { display: inline-flex; justify-content: center; align-items: center; gap: 5px; padding: 10px 6px; border: 1px solid #d9e5e8; border-radius: 10px; background: #fff; color: #173a52; font: inherit; font-size: 11px; font-weight: 900; cursor: pointer; }
+        .mobile-car-actions button:first-child { background: #fff7df; border-color: #f1d589; color: #80601a; }
+        .mobile-car-actions .danger { background: #fff5f5; border-color: #f1d5d5; color: #b64040; }
         @media (max-width: 768px) {
           .dashboard {
             flex-direction: column;
@@ -206,9 +235,8 @@ export default function MyCars() {
           .dashboard-content {
             padding: 20px 16px !important;
           }
-          table {
-            min-width: 600px;
-          }
+          .desktop-cars-table { display: none; }
+          .mobile-cars-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
         }
         .spinner {
           width: 40px;

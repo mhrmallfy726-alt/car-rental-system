@@ -47,13 +47,13 @@ export default function AddCar() {
     if (name === 'price_per_day' && parseFloat(sanitizedValue) < 0) return;
     if (name === 'year') {
       const currentYear = new Date().getFullYear();
-      if (sanitizedValue < 1980 || sanitizedValue > currentYear + 1) return; // +1 للسماح بموديلات العام القادم
+      if (sanitizedValue && (Number(sanitizedValue) < 1980 || Number(sanitizedValue) > currentYear + 1)) return; // +1 للسماح بموديلات العام القادم
     }
-    setFormData({
-      ...formData,
+    setFormData((current) => ({
+      ...current,
       [name]: sanitizedValue,
       ...(name === 'make' ? { model: '' } : {})
-    });
+    }));
   };
 
   const handleImageChange = (e) => {
@@ -152,7 +152,7 @@ export default function AddCar() {
             {/* صف 2: السنة واللوحة */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>سنة الصنع</label>
-                <input type="number" name="year" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.year} onChange={handleChange} min="1980" max={new Date().getFullYear() + 1} />
+                  <input type="number" name="year" className="form-input" inputMode="numeric" step="1" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.year} onChange={handleChange} min="1980" max={new Date().getFullYear() + 1} />
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رقم اللوحة</label>
                 <input type="text" name="license_plate" maxLength="20" pattern="[A-Za-z0-9\u0621-\u064A\u0660-\u0669\s-]+" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.license_plate} onChange={handleChange} dir="ltr" />
