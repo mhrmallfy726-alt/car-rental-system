@@ -3,7 +3,7 @@
 // يحوّل أي مسار (نسبي أو كامل) إلى URL صحيح
 // =============================================
 
-const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000')
+const BASE_URL = (import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : ''))
   .replace(/\/$/, '')
   .replace(/\/api$/, '');
 
@@ -18,7 +18,9 @@ export function getImageUrl(imagePath, fallback = 'https://via.placeholder.com/3
   
   // توحيد المسارات (تحويل \ إلى / لنظام ويندوز وإزالة السلاش المتكرر)
   const clean = imagePath.replace(/\\/g, '/').replace(/^\/+/, '');
-  return `${BASE_URL}/${clean}`;
+  const uploadsIndex = clean.indexOf('uploads/');
+  const publicPath = uploadsIndex >= 0 ? clean.slice(uploadsIndex) : clean;
+  return `${BASE_URL}/${publicPath}`;
 }
 
 /**

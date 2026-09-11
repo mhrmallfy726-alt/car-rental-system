@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { uploadCarImages } = require('../middleware/upload');
@@ -314,7 +315,7 @@ router.post('/:id/images', protect, authorize('supplier'), uploadCarImages, asyn
     const isPrimary = i === 0;
     const result = await query(
       'INSERT INTO car_images (car_id, image_url, is_primary) VALUES ($1, $2, $3) RETURNING *',
-      [id, req.files[i].path, isPrimary]
+      [id, `/uploads/${path.basename(req.files[i].path)}`, isPrimary]
     );
     images.push(result.rows[0]);
   }
