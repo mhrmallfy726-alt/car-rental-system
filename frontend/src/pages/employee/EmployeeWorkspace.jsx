@@ -24,9 +24,9 @@ const SECTIONS = {
 };
 
 const PERMISSION_SECTION = {
-  view_cars: 'fleet', manage_cars: 'fleet', view_fleet_performance: 'fleet',
-  view_reservations: 'reservations', manage_reservations: 'reservations', view_customers: 'customers',
-  view_advertisements: 'advertisements', manage_advertisements: 'advertisements', view_ad_performance: 'advertisements',
+  view_cars: 'fleet', manage_cars: 'fleet', create_cars: 'fleet', edit_cars: 'fleet', delete_cars: 'fleet', view_fleet_performance: 'fleet',
+  view_reservations: 'reservations', manage_reservations: 'reservations', edit_reservations: 'reservations', approve_reservations: 'reservations', reject_reservations: 'reservations', complete_reservations: 'reservations', view_customers: 'customers',
+  view_advertisements: 'advertisements', manage_advertisements: 'advertisements', approve_advertisements: 'advertisements', reject_advertisements: 'advertisements', view_ad_performance: 'advertisements',
   view_finance: 'finance', manage_finance: 'finance', manage_team: 'team', view_team_performance: 'team',
   view_handover: 'delivery', manage_handover: 'delivery',
 };
@@ -204,24 +204,27 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
   if (!meta) return null;
   const Icon = meta.icon;
   const canManage = permissions.has(meta.manage);
+  const can = (...names) => names.some((name) => permissions.has(name));
   const actionsFor = (row) => {
-    if (!canManage) return null;
     if (section === 'reservations') return <div style={styles.rowActions}>
-      <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button>
-      {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> قبول</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
-      {row.status === 'active' && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'complete')}><Check size={14} /> إكمال</button>}
+      {can('edit_reservations', 'manage_reservations') && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button>}
+      {row.status === 'pending' && can('approve_reservations', 'manage_reservations') && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> قبول</button>}
+      {row.status === 'pending' && can('reject_reservations', 'manage_reservations') && <button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button>}
+      {row.status === 'active' && can('complete_reservations', 'manage_reservations') && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'complete')}><Check size={14} /> إكمال</button>}
     </div>;
     if (section === 'advertisements') return <div style={styles.rowActions}>
-      {row.status === 'pending' && <><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> اعتماد</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button></>}
+      {row.status === 'pending' && can('approve_advertisements', 'manage_advertisements') && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'approve')}><Check size={14} /> اعتماد</button>}
+      {row.status === 'pending' && can('reject_advertisements', 'manage_advertisements') && <button style={styles.rejectButton} disabled={actionLoading} onClick={() => onAction(section, row, 'reject')}><X size={14} /> رفض</button>}
     </div>;
-    if (section === 'fleet') return <div style={styles.rowActions}><button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button><button style={styles.rejectButton} disabled={actionLoading} onClick={() => window.confirm('هل تريد حذف هذه السيارة؟') && onAction(section, row, 'delete')}><Trash2 size={14} /> حذف</button></div>;
-    if (section === 'delivery') return <div style={styles.rowActions}>
+    if (section === 'fleet') return <div style={styles.rowActions}>{can('edit_cars', 'manage_cars') && <button style={styles.approveButton} disabled={actionLoading} onClick={() => onAction(section, row, 'edit')}>تعديل</button>}{can('delete_cars', 'manage_cars') && <button style={styles.rejectButton} disabled={actionLoading} onClick={() => window.confirm('هل تريد حذف هذه السيارة؟') && onAction(section, row, 'delete')}><Trash2 size={14} /> حذف</button>}</div>;
+    if (section === 'delivery' && can('manage_handover')) return <div style={styles.rowActions}>
       {!row.before_report_id && ['approved', 'awaiting_pickup'].includes(row.status) && <label style={styles.approveButton}><Check size={14} /> تقرير قبل<input type="file" multiple accept="image/*" hidden onChange={(event) => onAction(section, row, 'before', event.target.files)} /></label>}
       {!row.after_report_id && row.status === 'active' && <label style={styles.approveButton}><Check size={14} /> تقرير بعد<input type="file" multiple accept="image/*" hidden onChange={(event) => onAction(section, row, 'after', event.target.files)} /></label>}
     </div>;
     return null;
   };
-  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canManage && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : section === 'advertisements' ? `${row.status || ''} · الظهور: ${row.impressions ?? 0} · النقرات: ${row.clicks ?? 0} · CTR: ${row.ctr ?? 0}%` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
+  const canCreateCar = can('create_cars', 'manage_cars');
+  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canCreateCar && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : section === 'advertisements' ? `${row.status || ''} · الظهور: ${row.impressions ?? 0} · النقرات: ${row.clicks ?? 0} · CTR: ${row.ctr ?? 0}%` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
 }
 
 function Nav({ active, value, label, icon: Icon, onClick }) { return <button type="button" onClick={() => onClick(value)} style={{ ...styles.nav, ...(active === value ? styles.navActive : {}) }}><Icon size={18} />{label}</button>; }

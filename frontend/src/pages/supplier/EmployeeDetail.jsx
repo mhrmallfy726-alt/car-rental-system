@@ -13,10 +13,10 @@ const JOB_ROLE_LABELS = {
 };
 
 const PERMISSION_LABELS = {
-  view_cars: 'عرض السيارات', manage_cars: 'إدارة السيارات',
-  view_reservations: 'عرض الحجوزات', manage_reservations: 'إدارة الحجوزات',
+  view_cars: 'عرض السيارات', manage_cars: 'إدارة السيارات', create_cars: 'إنشاء السيارات', edit_cars: 'تعديل السيارات', delete_cars: 'حذف السيارات',
+  view_reservations: 'عرض الحجوزات', manage_reservations: 'إدارة الحجوزات', edit_reservations: 'تعديل الحجوزات', approve_reservations: 'الموافقة على الحجوزات', reject_reservations: 'رفض الحجوزات', complete_reservations: 'إكمال الحجوزات',
   view_customers: 'عرض العملاء',
-  view_advertisements: 'عرض الإعلانات', manage_advertisements: 'إدارة الإعلانات',
+  view_advertisements: 'عرض الإعلانات', manage_advertisements: 'إدارة الإعلانات', approve_advertisements: 'الموافقة على الإعلانات', reject_advertisements: 'رفض الإعلانات',
   view_ad_performance: 'عرض أداء الإعلانات', view_finance: 'عرض المالية',
   manage_finance: 'إدارة المالية', manage_team: 'إدارة الفريق',
   view_fleet_performance: 'عرض أداء الأسطول', view_team_performance: 'عرض أداء الفريق',

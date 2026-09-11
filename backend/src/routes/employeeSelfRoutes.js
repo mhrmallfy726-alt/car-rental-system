@@ -174,7 +174,7 @@ router.get('/me/overview', async (req, res, next) => {
   }
 });
 
-router.get('/me/cars', requirePermission('view_cars', 'manage_cars'), async (req, res, next) => {
+router.get('/me/cars', requirePermission('view_cars', 'manage_cars', 'create_cars', 'edit_cars', 'delete_cars'), async (req, res, next) => {
   try {
     const result = await query(
       `SELECT c.id, c.make, c.model, c.year, c.status, c.price_per_day,
@@ -192,7 +192,7 @@ router.get('/me/cars', requirePermission('view_cars', 'manage_cars'), async (req
 // CREATE CAR - إضافة سيارة
 // يحتاج صلاحية manage_cars
 // =====================================================
-router.post('/me/cars', requirePermission('manage_cars'), async (req, res, next) => {
+router.post('/me/cars', requirePermission('create_cars', 'manage_cars'), async (req, res, next) => {
   try {
     const {
       make,
@@ -278,7 +278,7 @@ router.post('/me/cars', requirePermission('manage_cars'), async (req, res, next)
 // UPDATE CAR - تعديل سيارة
 // يحتاج صلاحية manage_cars
 // =====================================================
-router.put('/me/cars/:id', requirePermission('manage_cars'), async (req, res, next) => {
+router.put('/me/cars/:id', requirePermission('edit_cars', 'manage_cars'), async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -365,7 +365,7 @@ router.put('/me/cars/:id', requirePermission('manage_cars'), async (req, res, ne
 // DELETE CAR - حذف سيارة
 // يحتاج صلاحية manage_cars
 // =====================================================
-router.delete('/me/cars/:id', requirePermission('manage_cars'), async (req, res, next) => {
+router.delete('/me/cars/:id', requirePermission('delete_cars', 'manage_cars'), async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -400,7 +400,7 @@ router.delete('/me/cars/:id', requirePermission('manage_cars'), async (req, res,
     next(error);
   }
 });
-router.get('/me/reservations', requirePermission('view_reservations', 'manage_reservations'), async (req, res, next) => {
+router.get('/me/reservations', requirePermission('view_reservations', 'manage_reservations', 'edit_reservations', 'approve_reservations', 'reject_reservations', 'complete_reservations'), async (req, res, next) => {
   try {
     const result = await query(
       `SELECT r.*, c.make, c.model, u.name AS customer_name, u.phone AS customer_phone
@@ -479,6 +479,12 @@ router.put(
         return res.status(404).json({ success: false, message: 'الحجز غير موجود أو لا يتبع لمؤسستك' });
       }
       const current = currentResult.rows[0];
+      const requiredPermission = status === 'approved' ? 'approve_reservations'
+        : status === 'rejected' ? 'reject_reservations'
+          : status === 'completed' ? 'complete_reservations' : 'edit_reservations';
+      if (!(await hasPermission(req.employeeId, [requiredPermission, 'manage_reservations']))) {
+        return res.status(403).json({ success: false, message: 'لا تملك صلاحية تنفيذ هذا الإجراء' });
+      }
       if (status) {
         const allowedTransitions = {
           pending: ['approved', 'rejected', 'cancelled'],
@@ -571,7 +577,7 @@ router.get('/me/customers', requirePermission('view_customers'), async (req, res
   }
 });
 
-router.get('/me/advertisements', requirePermission('view_advertisements', 'manage_advertisements', 'view_ad_performance'), async (req, res, next) => {
+router.get('/me/advertisements', requirePermission('view_advertisements', 'manage_advertisements', 'view_ad_performance', 'approve_advertisements', 'reject_advertisements'), async (req, res, next) => {
   try {
     const result = await query(
       `SELECT r.id, r.title, r.ad_type, r.placement, r.requested_budget, r.duration_days,
@@ -591,7 +597,7 @@ router.get('/me/advertisements', requirePermission('view_advertisements', 'manag
   }
 });
 
-router.put('/me/advertisements/:id/approve', requirePermission('manage_advertisements'), async (req, res) => {
+router.put('/me/advertisements/:id/approve', requirePermission('approve_advertisements', 'manage_advertisements'), async (req, res) => {
   try {
     const ownership = await query('SELECT supplier_id FROM advertisement_requests WHERE id = $1', [req.params.id]);
     if (!ownership.rows.length) return res.status(404).json({ success: false, message: 'طلب الإعلان غير موجود' });
@@ -603,7 +609,7 @@ router.put('/me/advertisements/:id/approve', requirePermission('manage_advertise
   }
 });
 
-router.put('/me/advertisements/:id/reject', requirePermission('manage_advertisements'), async (req, res) => {
+router.put('/me/advertisements/:id/reject', requirePermission('reject_advertisements', 'manage_advertisements'), async (req, res) => {
   try {
     const ownership = await query('SELECT supplier_id FROM advertisement_requests WHERE id = $1', [req.params.id]);
     if (!ownership.rows.length) return res.status(404).json({ success: false, message: 'طلب الإعلان غير موجود' });
