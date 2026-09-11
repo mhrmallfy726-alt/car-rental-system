@@ -66,6 +66,22 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   const duplicate = await query('SELECT id FROM handover_logs WHERE reservation_id = $1 AND type = $2', [reservationId, type]);
   if (duplicate.rows.length) return next(new AppError('تم توثيق هذه المرحلة مسبقاً', 409));
 
+  if (type === 'after') {
+    const beforeLog = await query(
+      `SELECT mileage
+       FROM handover_logs
+       WHERE reservation_id = $1 AND type = 'before'
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [reservationId]
+    );
+    if (!beforeLog.rows.length) return next(new AppError('يجب تسجيل قراءة عداد الاستلام أولاً', 400));
+    const beforeMileage = Number(beforeLog.rows[0].mileage);
+    if (mil <= beforeMileage) {
+      return next(new AppError(`قراءة عداد الإرجاع يجب أن تكون أكبر من قراءة الاستلام (${beforeMileage} كم)`, 400));
+    }
+  }
+
   const log = await query(
     `INSERT INTO handover_logs (reservation_id, type, recorded_by, recorded_by_employee_id, fuel_level, mileage, condition_notes, exterior_condition, interior_condition, gps_lat, gps_lng)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
