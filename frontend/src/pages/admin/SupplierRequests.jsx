@@ -22,7 +22,8 @@ export default function SupplierRequests() {
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [openModal, setOpenModal] = useState(false);
-  const API_URL = "http://localhost:5000";
+  const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
+  const assetUrl = (fileName) => fileName ? `${API_URL}/uploads/${fileName}` : '';
 
   const loadRequests = async () => {
 
@@ -393,11 +394,11 @@ export default function SupplierRequests() {
 
       <h3>الشعار</h3>
 
-      <img
-  src={`${API_URL}/uploads/${selectedRequest.avatar}`}
+      {selectedRequest.avatar ? <img
+  src={assetUrl(selectedRequest.avatar)}
   alt="شعار الشركة"
   onClick={() =>
-    setPreviewImage(`${API_URL}/uploads/${selectedRequest.avatar}`)
+    setPreviewImage(assetUrl(selectedRequest.avatar))
   }
   style={{
     width: "120px",
@@ -407,16 +408,16 @@ export default function SupplierRequests() {
     cursor: "pointer",
     border: "1px solid #ddd",
   }}
-/>
+/> : <p style={{ color: "#777" }}>لم يتم رفع شعار الشركة.</p>}
 
       <hr style={{ margin: "25px 0" }} />
 
       <h3>السجل التجاري</h3>
 
 
-      {selectedCommercialRegisterUrl ? (
+      {selectedRequest.commercial_register ? (
         <a
-          href={selectedCommercialRegisterUrl}
+          href={assetUrl(selectedRequest.commercial_register)}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -427,22 +428,15 @@ export default function SupplierRequests() {
       )}
 
      
-      <a
-  href={`${API_URL}/uploads/${selectedRequest.commercial_register}`}
-  target="_blank"
-  rel="noopener noreferrer"
->
-  📄 عرض السجل التجاري
-</a>
  <hr style={{ margin: "25px 0" }} />
 
       <h3>هوية المالك</h3>
 
-      <img
-  src={`${API_URL}/uploads/${selectedRequest.avatar}`}
-  alt="شعار الشركة"
+      {selectedRequest.owner_id ? <img
+  src={assetUrl(selectedRequest.owner_id)}
+  alt="هوية المالك"
   onClick={() =>
-    setPreviewImage(`${API_URL}/uploads/${selectedRequest.avatar}`)
+    setPreviewImage(assetUrl(selectedRequest.owner_id))
   }
   style={{
     width: "120px",
@@ -452,7 +446,7 @@ export default function SupplierRequests() {
     cursor: "pointer",
     border: "1px solid #ddd",
   }}
-/>
+/> : <p style={{ color: "#777" }}>لم يتم رفع هوية المالك.</p>}
       <hr style={{ margin: "30px 0" }} />
 
       <textarea
