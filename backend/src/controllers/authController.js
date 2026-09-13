@@ -841,8 +841,8 @@ const verifyPasswordReset = asyncHandler(async (req, res, next) => {
       AND t.used_at IS NULL
       AND t.expires_at > NOW()
       AND (
-        EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(u.email) = $1)
-        OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(e.email) = $1)
+        EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(TRIM(u.email)) = $1)
+        OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(TRIM(e.email)) = $1)
       )
     LIMIT 1
   `, [email, tokenHash]);
@@ -866,8 +866,8 @@ const resetPassword = asyncHandler(async (req, res, next) => {
         AND t.used_at IS NULL
         AND t.expires_at > NOW()
         AND (
-          EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(u.email) = $1)
-          OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(e.email) = $1)
+          EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(TRIM(u.email)) = $1)
+          OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(TRIM(e.email)) = $1)
         )
       LIMIT 1
       FOR UPDATE
