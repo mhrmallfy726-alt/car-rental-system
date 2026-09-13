@@ -816,12 +816,14 @@ const uploadBrandLogo = asyncHandler(async (req, res, next) => {
 const requestPasswordReset = asyncHandler(async (req, res, next) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   if (!email) return next(new AppError('البريد الإلكتروني مطلوب', 400));
-  const user = await query('SELECT id, name FROM users WHERE LOWER(email) = $1 LIMIT 1', [email]);
-  if (user.rows.length) {
+  const owner = await findEmailOwner(email, query);
+  if (owner) {
     const otp = generateOTP();
     const tokenHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
-    await query('UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL', [user.rows[0].id]);
-    await query(`INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`, [user.rows[0].id, tokenHash]);
+    // The column name comes only from the controlled owner type returned above.
+    const ownerColumn = owner.type === 'employee' ? 'employee_id' : 'user_id';
+    await query(`UPDATE password_reset_tokens SET used_at = NOW() WHERE ${ownerColumn} = $1 AND used_at IS NULL`, [owner.id]);
+    await query(`INSERT INTO password_reset_tokens (${ownerColumn}, token_hash, expires_at) VALUES ($1, $2, NOW() + INTERVAL '10 minutes')`, [owner.id, tokenHash]);
     await sendEmail(email, 'رمز إعادة تعيين كلمة المرور', `<h2>رمز إعادة تعيين كلمة المرور</h2><h1>${otp}</h1><p>الرمز صالح لمدة 10 دقائق.</p>`);
   }
   res.json({ success: true, message: 'إذا كان البريد مسجلاً، فسيصلك رمز الاستعادة.' });
@@ -832,7 +834,18 @@ const verifyPasswordReset = asyncHandler(async (req, res, next) => {
   const otp = String(req.body.otp || '').trim();
   if (!email || !/^\d{6}$/.test(otp)) return next(new AppError('البريد والرمز المكون من 6 أرقام مطلوبان', 400));
   const tokenHash = crypto.createHash('sha256').update(`${email}:${otp}`).digest('hex');
-  const result = await query(`SELECT t.id FROM password_reset_tokens t JOIN users u ON u.id = t.user_id WHERE LOWER(u.email) = $1 AND t.token_hash = $2 AND t.used_at IS NULL AND t.expires_at > NOW() LIMIT 1`, [email, tokenHash]);
+  const result = await query(`
+    SELECT t.id
+    FROM password_reset_tokens t
+    WHERE t.token_hash = $2
+      AND t.used_at IS NULL
+      AND t.expires_at > NOW()
+      AND (
+        EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(u.email) = $1)
+        OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(e.email) = $1)
+      )
+    LIMIT 1
+  `, [email, tokenHash]);
   if (!result.rows.length) return next(new AppError('الرمز غير صحيح أو منتهي الصلاحية', 400));
   res.json({ success: true, message: 'الرمز صحيح' });
 });
@@ -846,10 +859,26 @@ const resetPassword = asyncHandler(async (req, res, next) => {
   const client = await require('../config/database').getClient();
   try {
     await client.query('BEGIN');
-    const token = await client.query(`SELECT t.id, t.user_id FROM password_reset_tokens t JOIN users u ON u.id = t.user_id WHERE LOWER(u.email) = $1 AND t.token_hash = $2 AND t.used_at IS NULL AND t.expires_at > NOW() FOR UPDATE`, [email, tokenHash]);
+    const token = await client.query(`
+      SELECT t.id, t.user_id, t.employee_id
+      FROM password_reset_tokens t
+      WHERE t.token_hash = $2
+        AND t.used_at IS NULL
+        AND t.expires_at > NOW()
+        AND (
+          EXISTS (SELECT 1 FROM users u WHERE u.id = t.user_id AND LOWER(u.email) = $1)
+          OR EXISTS (SELECT 1 FROM employees e WHERE e.id = t.employee_id AND LOWER(e.email) = $1)
+        )
+      LIMIT 1
+      FOR UPDATE
+    `, [email, tokenHash]);
     if (!token.rows.length) { await client.query('ROLLBACK'); return next(new AppError('الرمز غير صحيح أو منتهي الصلاحية', 400)); }
     const hashed = await bcrypt.hash(password, 12);
-    await client.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, token.rows[0].user_id]);
+    if (token.rows[0].user_id) {
+      await client.query('UPDATE users SET password = $1, updated_at = NOW() WHERE id = $2', [hashed, token.rows[0].user_id]);
+    } else {
+      await client.query('UPDATE employees SET password = $1, updated_at = NOW() WHERE id = $2', [hashed, token.rows[0].employee_id]);
+    }
     await client.query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1', [token.rows[0].id]);
     await client.query('COMMIT');
     res.json({ success: true, message: 'تم تغيير كلمة المرور بنجاح' });
