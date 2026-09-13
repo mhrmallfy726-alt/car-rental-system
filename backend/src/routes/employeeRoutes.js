@@ -5,6 +5,7 @@ const { query, getClient } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
 const bcrypt = require('bcryptjs');
 const { normalizePhoneNumber } = require('../utils/phone');
+const { findEmailOwner } = require('../utils/accountEmail');
 
 const getAuthenticatedSupplierId = (reqUser) => {
   if (reqUser?.role !== 'supplier') return null;
@@ -222,8 +223,8 @@ router.post('/', async (req, res) => {
     if (String(password).length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
-    const exists = await query('SELECT id FROM employees WHERE LOWER(email) = LOWER($1)', [cleanEmail]);
-    if (exists.rows.length > 0) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل' });
+    const existingAccount = await findEmailOwner(cleanEmail, query);
+    if (existingAccount) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل في حساب آخر' });
 
     const normalizedJobRole = Object.prototype.hasOwnProperty.call(JOB_ROLES, job_role) ? job_role : null;
     if (!normalizedJobRole) return res.status(400).json({ success: false, message: 'يجب اختيار الوظيفة التخصصية للموظف' });

@@ -1,6 +1,7 @@
 const { sendEmail, generateOTP } = require("../services/emailService");
 const bcrypt = require("bcryptjs");
 const { query, pool }  = require("../config/database");
+const { findEmailOwner } = require('../utils/accountEmail');
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
@@ -65,11 +66,8 @@ const resendOTP = async (req,res)=>{
       return res.status(400).json({ success: false, message: "البريد الإلكتروني مطلوب" });
     }
     if (newEmail && sourceEmail !== targetEmail) {
-      const duplicate = await query(
-        'SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1',
-        [targetEmail]
-      );
-      if (duplicate.rows.length > 0) {
+      const duplicate = await findEmailOwner(targetEmail, query);
+      if (duplicate) {
         return res.status(409).json({ success: false, message: "البريد الإلكتروني مستخدم مسبقاً" });
       }
     }
@@ -163,6 +161,10 @@ const verifyOTP = async (req, res) => {
       const userData = typeof verification.user_data === 'string'
         ? JSON.parse(verification.user_data)
         : verification.user_data;
+      const existingAccount = await findEmailOwner(email, query);
+      if (existingAccount) {
+        return res.status(409).json({ success: false, message: "البريد الإلكتروني مستخدم بالفعل في حساب آخر" });
+      }
       if (new Date() > new Date(verification.expires_at)) {
         return res.status(400).json({
           success: false,

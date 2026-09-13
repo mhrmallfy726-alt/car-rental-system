@@ -416,6 +416,7 @@ const { sendOTP } = require("./verificationController");
 const crypto = require('crypto');
 const { sendEmail, generateOTP } = require('../services/emailService');
 const { normalizePhoneNumber } = require('../utils/phone');
+const { findEmailOwner } = require('../utils/accountEmail');
 const isStrongPassword = (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s])[\x21-\x7E]{10,72}$/.test(String(value || ''));
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 //ايميل
@@ -452,8 +453,8 @@ const register = asyncHandler(async (req, res, next) => {
   }
 
 
-  const existingUser = await query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [normalizedEmail]);
-  if (existingUser.rows.length > 0) {
+  const existingAccount = await findEmailOwner(normalizedEmail, query);
+  if (existingAccount) {
     return next(new AppError('البريد الإلكتروني مسجل مسبقاً', 400));
   }
 
