@@ -142,20 +142,20 @@ export default function EmployeeWorkspace() {
     ['team', 'أعضاء الفريق', Users, overview.team?.total],
   ].filter(([key]) => sections.includes(key));
 
-  return <main dir="rtl" style={styles.page}><div style={styles.wrap}>
-    <header style={styles.header}>
+  return <main className="employee-workspace-page" dir="rtl" style={styles.page}><div style={styles.wrap}>
+    <header className="employee-workspace-header" style={styles.header}>
       <div style={styles.identity}><div style={styles.avatar}><RoleIcon size={27} /></div><div><span style={styles.kicker}>مساحة عمل الموظف</span><h1 style={styles.title}>{employee?.full_name || 'عضو الفريق'}</h1><p style={styles.muted}>{roleLabel(role)} · {employee?.supplier_name || 'المورد'}</p></div></div>
-      <div style={styles.actions}><button style={styles.secondary} onClick={loadWorkspace}><RefreshCw size={16} /> تحديث</button><button style={styles.danger} onClick={logout}><LogOut size={16} /> خروج</button></div>
+      <div className="employee-workspace-actions" style={styles.actions}><button style={styles.secondary} onClick={loadWorkspace}><RefreshCw size={16} /> تحديث</button><button style={styles.danger} onClick={logout}><LogOut size={16} /> خروج</button></div>
     </header>
 
-    <div style={styles.layout}>
-      <aside style={styles.sidebar}>
+    <div className="employee-workspace-layout" style={styles.layout}>
+      <aside className="employee-workspace-sidebar" style={styles.sidebar}>
         <Nav active={active} value="overview" label="لوحة القسم" icon={BarChart3} onClick={setActive} />
         {sections.map((key) => { const item = SECTIONS[key]; return <Nav key={key} active={active} value={key} label={item.label} icon={item.icon} onClick={setActive} />; })}
         <div style={styles.permissionBox}><strong>صلاحيات الحساب</strong><span>{permissions.length} صلاحية مفعلة</span></div>
       </aside>
 
-      <section style={styles.content}>
+      <section className="employee-workspace-content" style={styles.content}>
           {active === 'overview' ? <Overview role={role} RoleIcon={RoleIcon} cards={cards} overview={overview} setActive={setActive} sections={sections} /> : <Department section={active} rows={rows} loading={sectionLoading} permissions={permissionNames} actionLoading={actionLoading} onAction={runManagementAction} />}
       </section>
     </div>
@@ -224,7 +224,7 @@ function Department({ section, rows, loading, permissions, actionLoading, onActi
     return null;
   };
   const canCreateCar = can('create_cars', 'manage_cars');
-  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canCreateCar && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : section === 'advertisements' ? `${row.status || ''} · الظهور: ${row.impressions ?? 0} · النقرات: ${row.clicks ?? 0} · CTR: ${row.ctr ?? 0}%` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span>{actionsFor(row)}</div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
+  return <><section style={styles.sectionHead}><span style={styles.kicker}>القسم</span><h2 style={styles.sectionTitle}><Icon size={24} /> {meta.label}</h2><p>{canManage ? 'لديك صلاحية الإدارة في هذا القسم.' : 'لديك صلاحية العرض في هذا القسم.'}</p>{section === 'fleet' && canCreateCar && <button style={styles.primaryButton} onClick={() => onAction(section, {}, 'create')}>إضافة سيارة</button>}</section><section style={styles.panel}>{loading ? <div style={styles.empty}>جارٍ تحميل البيانات...</div> : rows.length ? <div style={styles.rows}>{rows.map((row, index) => <div className="employee-workspace-row" key={row.id || index} style={styles.row}><div><strong>{row.title || (row.make && `${row.make} ${row.model}`) || row.full_name || row.name || `سجل ${index + 1}`}</strong><small>{section === 'customers' ? `${row.phone || 'هاتف غير مسجل'} · ${row.reservations_count || 0} حجوزات` : section === 'advertisements' ? `${row.status || ''} · الظهور: ${row.impressions ?? 0} · النقرات: ${row.clicks ?? 0} · CTR: ${row.ctr ?? 0}%` : `${row.status || row.customer_name || row.placement || ''}${row.with_driver ? ' · مع سائق' : ''}`}</small>{section === 'customers' && <CustomerProfile row={row} />}</div><span>{row.price_per_day ?? row.total_price ?? row.requested_budget ?? row.completed_revenue ?? ''}</span><div className="employee-workspace-row-actions">{actionsFor(row)}</div></div>)}</div> : <div style={styles.empty}>لا توجد بيانات متاحة حالياً.</div>}{canManage && <div style={styles.manageHint}>صلاحية الإدارة مفعلة: يمكنك تنفيذ الإجراءات المتاحة بجانب كل سجل.</div>}</section></>;
 }
 
 function Nav({ active, value, label, icon: Icon, onClick }) { return <button type="button" onClick={() => onClick(value)} style={{ ...styles.nav, ...(active === value ? styles.navActive : {}) }}><Icon size={18} />{label}</button>; }
