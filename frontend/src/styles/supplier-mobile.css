@@ -1,0 +1,23 @@
+body.supplier-mobile-layout{overflow-x:hidden}body.supplier-mobile-layout main,body.supplier-mobile-layout .showrooms-main,body.supplier-mobile-layout .employees-page,body.supplier-mobile-layout .employee-detail-page{box-sizing:border-box;max-width:100%;min-width:0}
+@media(max-width:900px){
+ body.supplier-mobile-layout main{width:100%;padding-top:92px!important;padding-inline:12px!important;padding-bottom:35px!important}
+ body.supplier-mobile-layout .showrooms-main{width:100%;padding:92px 12px 35px!important}
+ body.supplier-mobile-layout .supplier-dashboard-content{padding-top:92px!important}
+ body.supplier-mobile-layout .showroom-grid,body.supplier-mobile-layout .employees-table,body.supplier-mobile-layout .employee-detail-grid{grid-template-columns:1fr!important}
+ body.supplier-mobile-layout [style*="grid-template-columns"]{grid-template-columns:1fr!important}
+ body.supplier-mobile-layout .card,body.supplier-mobile-layout section,body.supplier-mobile-layout form{max-width:100%;min-width:0}
+ body.supplier-mobile-layout table{display:block;max-width:100%;overflow-x:auto;white-space:nowrap}
+ body.supplier-mobile-layout .employee-detail-hero{margin-top:14px;padding:18px;align-items:flex-start;flex-wrap:wrap}
+ body.supplier-mobile-layout .employee-detail-status{margin-right:0}
+ body.supplier-mobile-layout .employee-permission-grid{grid-template-columns:1fr!important}
+ body.supplier-mobile-layout .employee-detail-card{padding:16px}
+ body.supplier-mobile-layout .employee-detail-actions{flex-wrap:wrap}
+ body.supplier-mobile-layout .employee-save{width:100%;justify-content:center}
+ body.supplier-mobile-layout .employee-form-grid{grid-template-columns:1fr!important}
+ body.supplier-mobile-layout .card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ body.supplier-mobile-layout .showrooms-hero{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+ body.supplier-mobile-layout .showrooms-hero h1{font-size:28px}
+ body.supplier-mobile-layout .payment-banner{flex-direction:column;align-items:stretch;gap:12px}
+ body.supplier-mobile-layout .payment-banner button{width:100%}
+}
+@media(max-width:540px){body.supplier-mobile-layout main,body.supplier-mobile-layout .showrooms-main{padding-inline:10px!important}.supplier-mobile-header{padding-inline:10px!important}.supplier-mobile-title small{max-width:130px}.employee-detail-hero h1{font-size:21px}.employees-row{grid-template-columns:1fr!important}.employees-head{display:none!important}.employee-modal{width:calc(100vw - 20px)!important;max-height:90vh;overflow-y:auto}.card-actions{grid-template-columns:1fr!important}}
