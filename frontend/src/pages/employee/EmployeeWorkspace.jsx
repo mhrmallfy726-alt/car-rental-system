@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, BarChart3, CalendarDays, Car, Check, LogOut, Megaphone, RefreshCw, ShieldCheck, Trash2, Users, WalletCards, X } from 'lucide-react';
+import { Activity, BarChart3, CalendarDays, Car, Check, LogOut, Megaphone, Menu, RefreshCw, ShieldCheck, Trash2, Users, WalletCards, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 import useAuthStore from '../../store/authStore';
@@ -43,6 +43,7 @@ export default function EmployeeWorkspace() {
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const permissionNames = useMemo(() => new Set(permissions.map((p) => p.name)), [permissions]);
   const sections = useMemo(() => [...new Set(permissions.map((p) => PERMISSION_SECTION[p.name]).filter(Boolean))], [permissions]);
@@ -77,6 +78,16 @@ export default function EmployeeWorkspace() {
       .catch((error) => { setRows([]); toast.error(error.response?.data?.message || 'تعذر تحميل القسم'); })
       .finally(() => setSectionLoading(false));
   }, [active]);
+
+  useEffect(() => {
+    document.body.classList.toggle('employee-menu-open', mobileMenuOpen);
+    return () => document.body.classList.remove('employee-menu-open');
+  }, [mobileMenuOpen]);
+
+  const selectSection = (section) => {
+    setActive(section);
+    setMobileMenuOpen(false);
+  };
 
   const runManagementAction = async (section, row, action, files = []) => {
     setActionLoading(`${section}-${row.id}-${action}`);
@@ -142,17 +153,29 @@ export default function EmployeeWorkspace() {
     ['team', 'أعضاء الفريق', Users, overview.team?.total],
   ].filter(([key]) => sections.includes(key));
 
-  return <main className="employee-workspace-page" dir="rtl" style={styles.page}><div style={styles.wrap}>
+  return <main className="employee-workspace-page" dir="rtl" style={styles.page}>
+    <header className="employee-mobile-header">
+      <div className="employee-mobile-title">
+        <span className="employee-mobile-mark">RC</span>
+        <span><strong>مساحة الموظف</strong><small>{employee?.supplier_name || roleLabel(role)}</small></span>
+      </div>
+      <button type="button" className="employee-mobile-menu-button" aria-label="فتح قائمة الموظف" aria-expanded={mobileMenuOpen} onClick={() => setMobileMenuOpen(true)}>
+        <Menu size={19} /> القائمة
+      </button>
+    </header>
+    {mobileMenuOpen && <button type="button" className="employee-sidebar-overlay" aria-label="إغلاق القائمة" onClick={() => setMobileMenuOpen(false)} />}
+    <div style={styles.wrap}>
     <header className="employee-workspace-header" style={styles.header}>
       <div style={styles.identity}><div style={styles.avatar}><RoleIcon size={27} /></div><div><span style={styles.kicker}>مساحة عمل الموظف</span><h1 style={styles.title}>{employee?.full_name || 'عضو الفريق'}</h1><p style={styles.muted}>{roleLabel(role)} · {employee?.supplier_name || 'المورد'}</p></div></div>
       <div className="employee-workspace-actions" style={styles.actions}><button style={styles.secondary} onClick={loadWorkspace}><RefreshCw size={16} /> تحديث</button><button style={styles.danger} onClick={logout}><LogOut size={16} /> خروج</button></div>
     </header>
 
     <div className="employee-workspace-layout" style={styles.layout}>
-      <aside className="employee-workspace-sidebar" style={styles.sidebar}>
-        <Nav active={active} value="overview" label="لوحة القسم" icon={BarChart3} onClick={setActive} />
-        {sections.map((key) => { const item = SECTIONS[key]; return <Nav key={key} active={active} value={key} label={item.label} icon={item.icon} onClick={setActive} />; })}
-        <div style={styles.permissionBox}><strong>صلاحيات الحساب</strong><span>{permissions.length} صلاحية مفعلة</span></div>
+      <aside className={`employee-workspace-sidebar${mobileMenuOpen ? ' is-mobile-open' : ''}`} style={styles.sidebar}>
+        <button type="button" className="employee-mobile-close" aria-label="إغلاق القائمة" onClick={() => setMobileMenuOpen(false)}><X size={19} /></button>
+        <Nav active={active} value="overview" label="لوحة القسم" icon={BarChart3} onClick={selectSection} />
+        {sections.map((key) => { const item = SECTIONS[key]; return <Nav key={key} active={active} value={key} label={item.label} icon={item.icon} onClick={selectSection} />; })}
+        <div className="employee-permission-box" style={styles.permissionBox}><strong>صلاحيات الحساب</strong><span>{permissions.length} صلاحية مفعلة</span></div>
       </aside>
 
       <section className="employee-workspace-content" style={styles.content}>

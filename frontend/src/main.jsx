@@ -8,6 +8,7 @@ import './styles/search.css'
 import './styles/checkout.css'
 import './styles/mobile-fixes.css'
 import './styles/supplier-mobile.css'
+import './styles/employee-mobile.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
