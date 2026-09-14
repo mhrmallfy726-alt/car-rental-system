@@ -189,10 +189,10 @@ export default function AdvertisementRequest() {
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 14, background: '#fff', border: '1px solid #e7eaee', color: navy, fontWeight: 800 }}><Megaphone size={20} color={gold} /> مساحة ظهور تساعد العميل على اكتشاف عرضك</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(280px, 0.8fr)', gap: 22, alignItems: 'start' }}>
+        <div className="supplier-ad-request-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(280px, 0.8fr)', gap: 22, alignItems: 'start' }}>
           <form onSubmit={submitRequest} style={{ background: '#fff', borderRadius: 20, border: '1px solid #e7eaee', boxShadow: '0 14px 36px rgba(23,58,82,0.07)', padding: 26 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}><div style={{ width: 42, height: 42, display: 'grid', placeItems: 'center', borderRadius: 13, color: '#fff', background: navy }}><FileText size={21} /></div><div><h2 style={{ margin: 0, color: navy, fontSize: 21 }}>تفاصيل الطلب</h2><span style={{ color: muted, fontSize: 13 }}>أكمل الحقول الأساسية ليصل الطلب بوضوح.</span></div></div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
+            <div className="supplier-ad-request-fields" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
               <label style={{ gridColumn: '1 / -1', color: navy, fontWeight: 800, fontSize: 14 }}>السيارة المعنية
                 <select name="car_id" value={form.car_id} onChange={updateField} style={fieldStyle} required><option value="">اختر سيارة من أسطولك</option>{cars.map((car) => <option value={car.id} key={car.id}>{car.make} {car.model} — {car.year}</option>)}</select>
               </label>
@@ -241,6 +241,24 @@ export default function AdvertisementRequest() {
           </section>
         </div>
       </div>
+      <style>{`
+        .supplier-ad-request-layout,
+        .supplier-ad-request-fields { min-width: 0; }
+        .supplier-ad-request-fields > label { min-width: 0; }
+        .supplier-ad-request-fields select,
+        .supplier-ad-request-fields input,
+        .supplier-ad-request-fields textarea,
+        .supplier-ad-request-fields .date-picker-full-width { max-width: 100%; }
+        @media (max-width: 760px) {
+          main[dir="rtl"] { padding: 24px 14px 48px !important; }
+          .supplier-ad-request-layout { grid-template-columns: minmax(0, 1fr) !important; gap: 16px !important; }
+          .supplier-ad-request-fields { grid-template-columns: minmax(0, 1fr) !important; gap: 14px !important; }
+        }
+        @media (max-width: 420px) {
+          .supplier-ad-request-layout form,
+          .supplier-ad-request-layout section { padding: 16px !important; border-radius: 16px !important; }
+        }
+      `}</style>
     </main>
   );
 }
