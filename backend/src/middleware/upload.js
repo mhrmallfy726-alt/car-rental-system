@@ -3,7 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const { v2: cloudinary } = require('cloudinary');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+// multer-storage-cloudinary@2.x exports the storage constructor directly.
+const CloudinaryStorage = require('multer-storage-cloudinary');
 
 const uploadDir = path.join(__dirname, '../uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
