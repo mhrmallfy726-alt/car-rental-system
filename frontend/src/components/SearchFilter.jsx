@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import LocationPicker from './LocationPicker';
 import UnifiedDatePicker, { parseDateValue } from './UnifiedDatePicker';
 import { MapPin, Search } from "lucide-react";
 import { SEARCH_RADIUS_KM, YEMEN_GOVERNORATES } from '../data/yemenGovernorates';
@@ -8,12 +10,32 @@ export default function SearchFilter({
   setSearchParams,
   handleSearch,
 }) {
+  const selectedGovernorate = YEMEN_GOVERNORATES.find(({ value }) => value === searchParams.location);
+  const [mapPosition, setMapPosition] = useState(() => ({
+    name: selectedGovernorate?.label || 'حدد موقع الاستلام',
+    latitude: Number(searchParams.latitude) || selectedGovernorate?.latitude || 15.3694,
+    longitude: Number(searchParams.longitude) || selectedGovernorate?.longitude || 44.1910,
+  }));
 
   const applyLocationChange = (event) => {
     const location = YEMEN_GOVERNORATES.find(({ value }) => value === event.target.value);
+    setMapPosition(location ? { name: location.label, latitude: location.latitude, longitude: location.longitude } : null);
     setSearchParams((prev) => ({
       ...prev,
       location: location?.value || '',
+      // The governorate only chooses the map area. Exact coordinates are set
+      // after the user clicks the map or uses the current GPS location.
+      latitude: '',
+      longitude: '',
+      radius: SEARCH_RADIUS_KM,
+    }));
+  };
+
+  const applyExactLocation = (location) => {
+    setMapPosition(location);
+    setSearchParams((prev) => ({
+      ...prev,
+      location: prev.location || location?.city || '',
       latitude: location?.latitude ?? '',
       longitude: location?.longitude ?? '',
       radius: SEARCH_RADIUS_KM,
@@ -40,6 +62,16 @@ return (
         {YEMEN_GOVERNORATES.map(({ value, label }) => <option value={value} key={value}>{label}</option>)}
       </select>
     </div>
+    <LocationPicker
+      position={mapPosition}
+      mode="pickup"
+      onLocationChange={applyExactLocation}
+    />
+    <small style={{ display: 'block', marginTop: 7, color: searchParams.latitude && searchParams.longitude ? '#18704b' : '#a66a00', lineHeight: 1.6 }}>
+      {searchParams.latitude && searchParams.longitude
+        ? 'تم تحديد الموقع بدقة، وسيتم البحث ضمن 25 كم منه.'
+        : 'حدد موقعك بدقة من الخريطة أو اضغط «موقعي الحالي» للبحث ضمن 25 كم.'}
+    </small>
 
   </div>
 

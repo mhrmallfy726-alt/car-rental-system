@@ -55,6 +55,10 @@ export default function SearchPage() {
       toast.error('يرجى تحديد موقع الاستلام');
       return;
     }
+    if (!searchParams.latitude || !searchParams.longitude) {
+      toast.error('حدد موقع الاستلام من الخريطة أو اختر «موقعي الحالي»');
+      return;
+    }
     if (!searchParams.startDate || !searchParams.endDate) {
       toast.error('يرجى إدخال تاريخ الاستلام وتاريخ الإرجاع');
       return;
