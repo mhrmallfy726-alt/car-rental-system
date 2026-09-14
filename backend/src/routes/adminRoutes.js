@@ -134,6 +134,15 @@ router.get('/cars/:id', asyncHandler(async (req, res, next) => {
 router.put('/cars/:id/approve', asyncHandler(async (req, res, next) => {
   const result = await query('UPDATE cars SET is_approved = true, status = \'available\', approved_by = $1, approved_at = NOW(), rejection_reason = NULL, rejected_by = NULL, rejected_at = NULL WHERE id = $2 RETURNING *', [req.user.id, req.params.id]);
   if (result.rows.length === 0) return next(new AppError('السيارة غير موجودة', 404));
+  const car = result.rows[0];
+  const notification = await query(
+    `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+     VALUES ($1, $2, $3, 'system', $4, 'car', $5)
+     RETURNING *`,
+    [car.supplier_id, 'تم اعتماد السيارة', `تم اعتماد السيارة ${car.make} ${car.model} وإتاحتها على المنصة.`, car.id, `/supplier/cars/edit/${car.id}`]
+  );
+  const io = req.app.get('io');
+  if (io && notification.rows[0]) io.to(`user_${car.supplier_id}`).emit('new_notification', notification.rows[0]);
   res.json({ success: true, data: result.rows[0] });
 }));
 

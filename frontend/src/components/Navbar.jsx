@@ -82,13 +82,13 @@ export default function Navbar() {
     if (!isAuthenticated() || !user) return undefined;
 
     notificationsAPI.getAll().then((response) => {
-      setNotifications(response.data.data || []);
-      setUnreadCount(response.data.unread || 0);
+      setNotifications(response.data?.data || []);
+      setUnreadCount(Number(response.data?.unread || 0));
     }).catch((error) => console.error(error));
     const socket = io(SOCKET_URL);
     socket.emit('join_room', user.id);
     socket.on('new_notification', (data) => {
-      setNotifications((prev) => [data, ...prev]);
+      setNotifications((prev) => [data, ...prev.filter((item) => item.id !== data.id)].slice(0, 50));
       setUnreadCount((prev) => prev + 1);
       toast.success(data.title, { icon: '🔔' });
     });

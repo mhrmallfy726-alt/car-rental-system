@@ -3,9 +3,12 @@
 // يحوّل أي مسار (نسبي أو كامل) إلى URL صحيح
 // =============================================
 
-const BASE_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : ''))
+const configuredBaseUrl = import.meta.env.VITE_API_URL
+  || import.meta.env.VITE_BACKEND_URL
+  || (typeof window !== 'undefined' ? window.location.origin : '');
+const BASE_URL = configuredBaseUrl
   .replace(/\/$/, '')
-  .replace(/\/api$/, '');
+  .replace(/\/api\/?$/, '');
 
 /**
  * تحويل مسار الصورة إلى URL كامل
@@ -18,7 +21,10 @@ export function getImageUrl(imagePath, fallback = 'https://via.placeholder.com/3
     imagePath = imagePath.image_url || imagePath.imageUrl || imagePath.url || imagePath.path;
   }
   if (!imagePath || typeof imagePath !== 'string') return fallback;
-  if (imagePath.startsWith('http')) return imagePath;
+  if (/^(https?:|data:|blob:)/i.test(imagePath)) return imagePath;
+  if (imagePath.startsWith('//')) {
+    return `${typeof window !== 'undefined' ? window.location.protocol : 'https:'}${imagePath}`;
+  }
   
   // توحيد المسارات (تحويل \ إلى / لنظام ويندوز وإزالة السلاش المتكرر)
   const clean = imagePath.replace(/\\/g, '/').replace(/^\/+/, '');
