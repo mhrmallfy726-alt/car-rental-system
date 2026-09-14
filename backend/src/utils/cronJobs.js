@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { query } = require('../config/database');
 const { sendTemplateMessage } = require('../services/whatsappService');
 const { refundReservationPayment } = require('../services/financeService');
+const { purgeExpiredHandoverEvidence } = require('../services/evidenceRetentionService');
 
 async function createInAppNotification({ userId, title, message, type = 'reservation', referenceId, io }) {
   const result = await query(
@@ -171,6 +172,9 @@ const initCronJobs = (io) => {
         });
         await completeReminder(reminderId, 'sent');
       }
+
+      const purgedEvidence = await purgeExpiredHandoverEvidence();
+      if (purgedEvidence) console.log(`Purged handover evidence for ${purgedEvidence} completed reservation(s) after 10-day retention.`);
     } catch (error) {
       console.error('Error running reservation reminder job:', error);
     }

@@ -5,9 +5,10 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 
 router.get('/current', asyncHandler(async (req, res) => {
-  const result = await query(`SELECT id, version, title, language, body, status, effective_at FROM policy_versions WHERE status = 'effective' ORDER BY effective_at DESC LIMIT 1`);
+  const result = await query(`SELECT pv.id, pv.version, pv.title, pv.language, pv.body, pv.status, pv.effective_at, ps.response_hours, ps.appeal_hours, ps.return_damage_report_hours, ps.evidence_retention_days, ps.grace_period_minutes FROM policy_versions pv LEFT JOIN policy_settings ps ON ps.policy_version = pv.version WHERE pv.status = 'effective' ORDER BY pv.effective_at DESC LIMIT 1`);
   if (!result.rows.length) return res.status(404).json({ success: false, message: 'لا توجد سياسة فعالة' });
-  res.json({ success: true, data: result.rows[0], deadlines: { response_hours: 48, appeal_hours: 72, return_damage_hours: 24 } });
+  const policy = result.rows[0];
+  res.json({ success: true, data: policy, deadlines: { response_hours: policy.response_hours, appeal_hours: policy.appeal_hours, return_damage_hours: policy.return_damage_report_hours, evidence_retention_days: policy.evidence_retention_days, grace_period_minutes: policy.grace_period_minutes } });
 }));
 
 router.post('/accept', protect, asyncHandler(async (req, res, next) => {

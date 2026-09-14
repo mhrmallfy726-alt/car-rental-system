@@ -43,7 +43,7 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
         `UPDATE complaints SET is_chat = false, type = $1, title = $2, description = $3, status = 'open' WHERE id = $4 RETURNING *`,
         [type, title, description, comp.id]
       );
-      await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1`, [reservation_id]);
+      await query(`UPDATE reservations SET status = 'disputed', disputed_at = COALESCE(disputed_at, NOW()) WHERE id = $1`, [reservation_id]);
       
       const io = req.app.get('io');
       if (io) {
@@ -67,7 +67,7 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
 
   // If created directly as a dispute
   if (is_chat === false) {
-    await query(`UPDATE reservations SET status = 'disputed' WHERE id = $1`, [reservation_id]);
+    await query(`UPDATE reservations SET status = 'disputed', disputed_at = COALESCE(disputed_at, NOW()) WHERE id = $1`, [reservation_id]);
 
     const io = req.app.get('io');
     if (io) {
