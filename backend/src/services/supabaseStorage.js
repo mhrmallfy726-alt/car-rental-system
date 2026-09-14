@@ -3,7 +3,12 @@ const { v4: uuidv4 } = require('uuid');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.SUPABASE_URL?.trim();
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+// Supabase now also labels the server-side key as a secret key. Prefer the
+// explicit service-role variable for backwards compatibility, then accept the
+// newer secret-key variable used by the current dashboard.
+const serviceRoleKey = (
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
+)?.trim();
 const bucket = (process.env.SUPABASE_STORAGE_BUCKET || 'uploads').trim();
 
 if (!supabaseUrl || !serviceRoleKey) {
