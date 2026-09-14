@@ -5,6 +5,7 @@ import{Car,Mail,Lock} from 'lucide-react';
 import{Link} from 'react-router-dom';
 export default function () {
   const { loginWithToken } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -20,8 +21,8 @@ export default function () {
 
   const onSubmit = async (e) => {
     e.preventDefault();
-  
-   
+    setIsLoading(true);
+
     try {
       const res = await api.post('/auth/login', formData);
 
@@ -34,7 +35,9 @@ export default function () {
       window.location.href = '/';
     } catch (err) {
       alert(err?.response?.data?.message || 'فشل تسجيل الدخول');
-    };
+    } finally {
+      setIsLoading(false);
+    }
   }
   return (
     <div style={{

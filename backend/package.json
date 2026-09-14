@@ -9,7 +9,8 @@
     "start": "node server.js",
     "predev": "npm run migrate",
     "dev": "nodemon server.js",
-    "migrate": "node src/config/migrate.js"
+    "migrate": "node src/config/migrate.js",
+    "check:reports": "node --check src/routes/reportRoutes.js && node --check server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

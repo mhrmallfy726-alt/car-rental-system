@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart3, Car, FileText, Megaphone, MessageSquare, Settings, Users, WalletCards, Menu, X } from 'lucide-react';
+import { BarChart3, Car, FileBarChart2, FileText, Megaphone, MessageSquare, Settings, Users, WalletCards, Menu, X } from 'lucide-react';
 
 const adminLinks = [
   { to: '/admin/dashboard', label: 'لوحة الإحصائيات', icon: BarChart3 },
+  { to: '/admin/reports', label: 'التقارير', icon: FileBarChart2 },
   { to: '/admin/users', label: 'المستخدمون', icon: Users },
   { to: '/admin/cars', label: 'السيارات', icon: Car },
   { to: '/admin/supplier-requests', label: 'اعتماد الموردين', icon: FileText },

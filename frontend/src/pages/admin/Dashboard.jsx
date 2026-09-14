@@ -64,7 +64,7 @@ export default function AdminDashboard() {
           : 'تم رفض الطلب'
       );
   
-      await loadData();
+      await fetchData();
     } catch (error) {
       console.error('Review request error:', {
         status: error.response?.status,
