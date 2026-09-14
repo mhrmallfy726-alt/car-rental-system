@@ -47,8 +47,9 @@ export default function MyCars() {
     navigate(`/supplier/advertisement-request?car_id=${encodeURIComponent(carId)}`);
   };
 
-  const getStatusBadge = (status, is_approved) => {
+  const getStatusBadge = (status, is_approved, rejection_reason) => {
     if (!is_approved) {
+      if (rejection_reason) return <span style={{ background: '#ffe0e0', color: '#a23a3a', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>مرفوض</span>;
       return <span style={{ background: '#ffc107', color: '#1a1a1a', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>قيد المراجعة</span>;
     }
     switch (status) {
@@ -84,8 +85,8 @@ export default function MyCars() {
           <div className="mobile-cars-grid">
             {cars.map((car) => <article className="mobile-car-card" key={car.id}>
               <div className="mobile-car-image-wrap"><img src={getCarImage(car, 'https://via.placeholder.com/640x360?text=Car')} alt={`${car.make} ${car.model}`} className="mobile-car-image" />{!car.is_approved && <span className="mobile-car-review">قيد المراجعة</span>}</div>
-              <div className="mobile-car-body"><div className="mobile-car-title-row"><div><h2>{car.make} {car.model}</h2><small>{car.license_plate || 'بدون رقم لوحة'}</small></div>{getStatusBadge(car.status, car.is_approved)}</div>
-                <div className="mobile-car-details"><span><b>سنة الصنع</b>{car.year || '—'}</span><span><b>الفئة</b>{car.category_name || 'غير محددة'}</span><span><b>السعر اليومي</b>${car.price_per_day || 0}</span></div>
+              <div className="mobile-car-body"><div className="mobile-car-title-row"><div><h2>{car.make} {car.model}</h2><small>{car.license_plate || 'بدون رقم لوحة'}</small></div>{getStatusBadge(car.status, car.is_approved, car.rejection_reason)}</div>
+                <div className="mobile-car-details"><span><b>سنة الصنع</b>{car.year || '—'}</span><span><b>الفئة</b>{car.category_name || 'غير محددة'}</span><span><b>السعر اليومي</b>${car.price_per_day || 0}</span></div>{car.rejection_reason && <p style={{ margin: '8px 0', color: '#a23a3a', fontSize: 12 }}><b>سبب الرفض:</b> {car.rejection_reason}</p>}
                 <div className="mobile-car-actions"><button type="button" onClick={() => handleCreateAdvertisement(car.id)}><Megaphone size={15} /> عرض</button><button type="button" onClick={() => handleEditCar(car.id)}><Edit size={15} /> تعديل</button><button type="button" className="danger" onClick={() => handleDelete(car.id)}><Trash2 size={15} /> حذف</button></div>
               </div>
             </article>)}
@@ -115,7 +116,7 @@ export default function MyCars() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>{car.category_name}</td>
                     <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>${car.price_per_day}</td>
-                    <td style={{ padding: '12px 16px' }}>{getStatusBadge(car.status, car.is_approved)}</td>
+                    <td style={{ padding: '12px 16px' }}>{getStatusBadge(car.status, car.is_approved, car.rejection_reason)}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button onClick={() => handleCreateAdvertisement(car.id)} className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>

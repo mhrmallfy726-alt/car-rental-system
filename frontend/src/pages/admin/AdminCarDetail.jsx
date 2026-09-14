@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle, Clock, Image as ImageIcon, MapPin, Phone, UserRound, Mail, Car, ShieldCheck } from 'lucide-react';
+import { ArrowRight, CheckCircle, Clock, Image as ImageIcon, MapPin, Phone, UserRound, Mail, Car, ShieldCheck, XCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { adminAPI } from '../../services/api';
@@ -22,6 +22,8 @@ export default function AdminCarDetail() {
   const [car, setCar] = useState(location.state?.car || null);
   const [loading, setLoading] = useState(!location.state?.car);
   const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
@@ -52,11 +54,26 @@ export default function AdminCarDetail() {
     setApproving(true);
     try {
       const response = await adminAPI.approveCar(id);
-      setCar((current) => ({ ...current, ...(response.data?.data || {}), is_approved: true, status: 'available' }));
+      setCar((current) => ({ ...current, ...(response.data?.data || {}), is_approved: true, status: 'available', rejection_reason: null }));
       toast.success('تمت الموافقة على السيارة بنجاح');
     } catch (error) {
       toast.error(error.response?.data?.message || 'تعذر الموافقة على السيارة');
     } finally { setApproving(false); }
+  };
+
+  const reject = async () => {
+    const reason = rejectionReason.trim();
+    if (reason.length < 3) return toast.error('اكتب سبب رفض واضحاً للسيارة');
+    if (!window.confirm('هل أنت متأكد من رفض هذه السيارة؟')) return;
+    setRejecting(true);
+    try {
+      const response = await adminAPI.rejectCar(id, { reason });
+      setCar((current) => ({ ...current, ...(response.data?.data || {}), is_approved: false, status: 'inactive' }));
+      setRejectionReason('');
+      toast.success('تم رفض السيارة وحفظ السبب');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر رفض السيارة');
+    } finally { setRejecting(false); }
   };
 
   if (loading) return <main className="admin-car-detail" dir="rtl"><div className="admin-car-loading">جاري تحميل تفاصيل السيارة...</div></main>;
@@ -69,7 +86,7 @@ export default function AdminCarDetail() {
       <header className="admin-car-hero"><div><span className="admin-car-kicker">مراجعة سيارة جديدة</span><h1>{car.make} {car.model}</h1><p>راجع بيانات السيارة والمورد قبل اعتمادها في المنصة.</p>{loadError && <small className="admin-car-warning">{loadError}</small>}</div><span className={car.is_approved ? 'admin-car-status approved' : 'admin-car-status pending'}>{car.is_approved ? <><CheckCircle size={16} /> مفعّلة</> : <><Clock size={16} /> بانتظار الموافقة</>}</span></header>
       <section className="admin-car-layout">
         <div className="admin-car-main-card"><div className="admin-car-gallery">{images.length ? images.map((image) => <img key={image.id} src={image.image_url?.startsWith('http') ? image.image_url : getImageUrl(image.image_url)} alt={`${car.make} ${car.model}`} />) : <div className="admin-car-no-image"><ImageIcon size={38} /> لا توجد صور للسيارة</div>}</div><div className="admin-car-info"><h2><Car size={20} /> بيانات السيارة</h2><div className="admin-car-facts"><Fact label="الشركة والموديل" value={`${car.make} ${car.model}`} /><Fact label="سنة الصنع" value={car.year} /><Fact label="الفئة" value={car.category_name || 'غير محددة'} /><Fact label="رقم اللوحة" value={car.license_plate || 'غير مضاف'} /><Fact label="السعر اليومي" value={`$${car.price_per_day}`} /><Fact label="الحالة الحالية" value={statusText[car.status] || car.status || 'غير محددة'} /></div></div></div>
-        <aside className="admin-car-side"><div className="admin-car-side-card"><h2><UserRound size={19} /> بيانات المورد</h2><div className="admin-car-contact"><strong>{car.supplier_name || 'غير معروف'}</strong><span><Mail size={15} /> <b>البريد:</b> {maskEmail(car.supplier_email)}</span><span><Phone size={15} /> <b>الهاتف:</b> {car.supplier_phone || 'غير مضاف'}</span></div></div><div className="admin-car-side-card"><h2><MapPin size={19} /> موقع السيارة</h2><p>{car.showroom_name || 'المركز الرئيسي'}</p><span><b>المدينة:</b> {car.showroom_city || 'غير محددة'}</span><span><b>العنوان:</b> {car.showroom_address || car.supplier_address || 'لم يتم تحديد العنوان'}</span><span>{car.showroom_country || 'اليمن'}</span></div><div className="admin-car-approval"><ShieldCheck size={24} /><div><strong>{car.is_approved ? 'السيارة معتمدة' : 'قرار المراجعة'}</strong><p>{car.is_approved ? 'تم اعتماد هذه السيارة وإتاحتها حسب حالتها.' : 'تأكد من صحة البيانات والصور قبل الموافقة.'}</p></div>{!car.is_approved && <button type="button" onClick={approve} disabled={approving}>{approving ? 'جاري الاعتماد...' : <><CheckCircle size={17} /> الموافقة على السيارة</>}</button>}</div></aside>
+        <aside className="admin-car-side"><div className="admin-car-side-card"><h2><UserRound size={19} /> بيانات المورد</h2><div className="admin-car-contact"><strong>{car.supplier_name || 'غير معروف'}</strong><span><Mail size={15} /> <b>البريد:</b> {maskEmail(car.supplier_email)}</span><span><Phone size={15} /> <b>الهاتف:</b> {car.supplier_phone || 'غير مضاف'}</span></div></div><div className="admin-car-side-card"><h2><MapPin size={19} /> موقع السيارة</h2><p>{car.showroom_name || 'المركز الرئيسي'}</p><span><b>المدينة:</b> {car.showroom_city || 'غير محددة'}</span><span><b>العنوان:</b> {car.showroom_address || car.supplier_address || 'لم يتم تحديد العنوان'}</span><span>{car.showroom_country || 'اليمن'}</span></div><div className="admin-car-approval"><ShieldCheck size={24} /><div><strong>{car.is_approved ? 'السيارة معتمدة' : car.rejection_reason ? 'السيارة مرفوضة' : 'قرار المراجعة'}</strong><p>{car.is_approved ? 'تم اعتماد هذه السيارة وإتاحتها حسب حالتها.' : car.rejection_reason ? `سبب الرفض: ${car.rejection_reason}` : 'تأكد من صحة البيانات والصور قبل الموافقة.'}</p></div>{!car.is_approved && !car.rejection_reason && <><button type="button" onClick={approve} disabled={approving || rejecting}>{approving ? 'جاري الاعتماد...' : <><CheckCircle size={17} /> الموافقة على السيارة</>}</button><textarea value={rejectionReason} onChange={(event) => setRejectionReason(event.target.value)} placeholder="اكتب سبب الرفض للمورد..." rows={3} disabled={approving || rejecting} /><button type="button" className="admin-reject-button" onClick={reject} disabled={approving || rejecting}>{rejecting ? 'جاري الرفض...' : <><XCircle size={17} /> رفض السيارة</>}</button></>}</div></aside>
       </section>
     </div></div></div>
     <style>{styles}</style><style>{`@media(max-width:900px){.admin-car-detail{padding-top:132px!important}.admin-detail-shell{display:block}.admin-detail-content{width:100%}}@media(min-width:901px){.admin-detail-content{padding-right:22px}}.admin-car-warning{display:block;margin-top:9px;color:#ffe2a0;font-size:11px}.admin-car-empty{display:grid;place-items:center;gap:9px;min-height:60vh;text-align:center;color:#78909b}.admin-car-empty h2{margin:0;color:#173a52}.admin-car-empty p{margin:0}.admin-car-empty button{border:0;border-radius:10px;padding:11px 18px;background:#173a52;color:#fff;font:inherit;font-weight:900;cursor:pointer}`}</style>
