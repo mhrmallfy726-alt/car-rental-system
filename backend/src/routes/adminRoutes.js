@@ -114,7 +114,9 @@ router.get('/cars', asyncHandler(async (req, res) => {
 router.get('/cars/:id', asyncHandler(async (req, res, next) => {
   const result = await query(`
     SELECT c.*, u.name AS supplier_name, u.email AS supplier_email, u.phone AS supplier_phone,
-           cat.name AS category_name, l.showroom_name, l.city AS showroom_city, l.address AS showroom_address,
+           u.address AS supplier_address,
+           cat.name AS category_name, l.showroom_name, l.city AS showroom_city,
+           l.country AS showroom_country, l.address AS showroom_address,
            COALESCE((SELECT json_agg(ci ORDER BY ci.is_primary DESC, ci.created_at ASC)
                      FROM car_images ci WHERE ci.car_id = c.id), '[]'::json) AS images
     FROM cars c
