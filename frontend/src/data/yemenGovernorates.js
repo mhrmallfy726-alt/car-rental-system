@@ -1,6 +1,7 @@
 // Values are normalized to the city names used by the locations table.
 export const YEMEN_GOVERNORATES = [
   { value: 'صنعاء', label: 'صنعاء (أمانة العاصمة)', latitude: 15.3694, longitude: 44.1910 },
+  { value: 'صنعاء', label: 'محافظة صنعاء', latitude: 15.3694, longitude: 44.1910 },
   { value: 'أبين', label: 'أبين', latitude: 13.1287, longitude: 45.3807 },
   { value: 'البيضاء', label: 'البيضاء', latitude: 13.9850, longitude: 45.5720 },
   { value: 'الجوف', label: 'الجوف', latitude: 16.1640, longitude: 44.7760 },
