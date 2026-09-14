@@ -11,6 +11,8 @@ import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
 
 export default function AddCar() {
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+  const vehicleYears = Array.from({ length: currentYear + 1 - 1980 }, (_, index) => currentYear + 1 - index);
   const { showroom, options: showrooms, selectShowroom } = useSupplierShowroom();
   const activeShowroom = showroom?.id ? showroom : showrooms.find((item) => item.is_main) || showrooms[0] || null;
   const [categories, setCategories] = useState([]);
@@ -53,7 +55,6 @@ export default function AddCar() {
   };
 
   const validateYear = () => {
-    const currentYear = new Date().getFullYear();
     const year = Number(formData.year);
     if (!Number.isInteger(year) || year < 1980 || year > currentYear + 1) {
       toast.error(`سنة الصنع يجب أن تكون بين 1980 و${currentYear + 1}`);
@@ -159,7 +160,9 @@ export default function AddCar() {
             {/* صف 2: السنة واللوحة */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>سنة الصنع</label>
-                  <input type="number" name="year" className="form-input" inputMode="numeric" step="1" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.year} onChange={handleChange} min="1980" max={new Date().getFullYear() + 1} />
+                  <select name="year" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', background: '#fff' }} required value={formData.year} onChange={handleChange}>
+                    {vehicleYears.map((year) => <option key={year} value={year}>{year}</option>)}
+                  </select>
               </div>
               <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رقم اللوحة</label>
                 <input type="text" name="license_plate" maxLength="20" pattern="[A-Za-z0-9\u0621-\u064A\u0660-\u0669\s-]+" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.license_plate} onChange={handleChange} dir="ltr" />
