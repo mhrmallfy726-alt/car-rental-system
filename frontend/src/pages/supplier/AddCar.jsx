@@ -45,15 +45,21 @@ export default function AddCar() {
     const sanitizedValue = sanitizeFieldValue(e.target, value);
     // تحقق بسيط للحقول الرقمية لتجنب القيم السالبة
     if (name === 'price_per_day' && parseFloat(sanitizedValue) < 0) return;
-    if (name === 'year') {
-      const currentYear = new Date().getFullYear();
-      if (sanitizedValue && (Number(sanitizedValue) < 1980 || Number(sanitizedValue) > currentYear + 1)) return; // +1 للسماح بموديلات العام القادم
-    }
     setFormData((current) => ({
       ...current,
       [name]: sanitizedValue,
       ...(name === 'make' ? { model: '' } : {})
     }));
+  };
+
+  const validateYear = () => {
+    const currentYear = new Date().getFullYear();
+    const year = Number(formData.year);
+    if (!Number.isInteger(year) || year < 1980 || year > currentYear + 1) {
+      toast.error(`سنة الصنع يجب أن تكون بين 1980 و${currentYear + 1}`);
+      return false;
+    }
+    return true;
   };
 
   const handleImageChange = (e) => {
@@ -95,6 +101,7 @@ export default function AddCar() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (images.length === 0) return toast.error('يرجى إضافة صورة واحدة على الأقل للسيارة');
+    if (!validateYear()) return;
     // تحقق إضافي من الأسعار
     if (parseFloat(formData.price_per_day) <= 0) {
       return toast.error('السعر اليومي يجب أن يكون أكبر من صفر');
