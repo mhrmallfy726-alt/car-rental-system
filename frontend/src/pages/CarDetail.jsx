@@ -17,7 +17,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
-import { carsAPI, reservationsAPI } from '../services/api';
+import { carsAPI, reservationsAPI, policyAPI } from '../services/api';
 import AdvertisementBanner from '../components/AdvertisementBanner';
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
@@ -46,6 +46,8 @@ export default function CarDetail() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [favorite, setFavorite] = useState(false);
+  const [currentPolicy, setCurrentPolicy] = useState(null);
+  const [policyAccepted, setPolicyAccepted] = useState(false);
 
 
 
@@ -139,6 +141,10 @@ export default function CarDetail() {
   }, [id, navigate]);
 
   useEffect(() => {
+    policyAPI.getCurrent().then((res) => setCurrentPolicy(res.data?.data || null)).catch(() => toast.error('تعذر تحميل سياسة الحجز'));
+  }, []);
+
+  useEffect(() => {
     setBooking((current) => ({ ...current, with_driver: searchParams.withDriver === 'true' }));
   }, [searchParams.withDriver]);
 
@@ -211,10 +217,17 @@ export default function CarDetail() {
       return;
     }
 
+    if (!currentPolicy || !policyAccepted) {
+      toast.error('يجب قراءة السياسة والموافقة عليها قبل إنشاء الحجز');
+      return;
+    }
+
     try {
       const reservationResponse = await reservationsAPI.create({
         car_id: id,
         ...booking,
+        policy_version: currentPolicy.version,
+        policy_accepted: true,
       });
       const createdReservation = reservationResponse.data?.data;
       if (!createdReservation?.id) {
@@ -721,6 +734,14 @@ radius: 10,
                 </strong>
               </div>
             )}
+
+            <label className="flex items-start gap-2 rounded-xl border border-stone-200 bg-stone-50 p-3 text-[11px] leading-5 text-stone-600">
+              <input type="checkbox" checked={policyAccepted} onChange={(e) => setPolicyAccepted(e.target.checked)} className="mt-1 accent-[#c65345]" />
+              <span>
+                أقر بأنني قرأت <a href="#rental-policy" className="font-bold text-[#b24e40] underline">سياسة الحجوزات والتسليم والاستلام والشكاوى والنزاعات</a> وأوافق على توثيق حالة السيارة بالصور والعداد والوقود والالتزام بمهل الإبلاغ والاعتراض.
+                {currentPolicy?.version && <small className="block text-stone-400">الإصدار المعتمد: {currentPolicy.version}</small>}
+              </span>
+            </label>
 
             {/* CTA */}
 

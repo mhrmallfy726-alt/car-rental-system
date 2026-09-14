@@ -10,12 +10,18 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
   const { reservation_id, against_id: provided_against_id, type, title, description, is_chat } = req.body;
   if (!reservation_id || !title || !description || !type) return next(new AppError('جميع الحقول مطلوبة', 400));
 
+  const reservationResult = await query('SELECT id, customer_id, supplier_id, after_handover_at, return_at FROM reservations WHERE id = $1', [reservation_id]);
+  if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود', 404));
+  const reservationForDeadline = reservationResult.rows[0];
+  if (['damage', 'poor_condition', 'late_return'].includes(type) && reservationForDeadline.after_handover_at) {
+    const hoursSinceReturn = (Date.now() - new Date(reservationForDeadline.after_handover_at).getTime()) / 3600000;
+    if (hoursSinceReturn > 24 && is_chat === false) return next(new AppError('انتهت مهلة الإبلاغ عن ضرر أو اختلاف الإعادة (24 ساعة)، ما لم يوجد سبب موثق', 400));
+  }
+
   // Auto-determine against_id from reservation if not provided
   let against_id = provided_against_id;
   if (!against_id) {
-    const reservation = await query('SELECT * FROM reservations WHERE id = $1', [reservation_id]);
-    if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
-    const res_data = reservation.rows[0];
+    const res_data = reservationForDeadline;
     if (req.user.role === 'customer') {
       against_id = res_data.supplier_id;
     } else if (req.user.role === 'supplier') {
@@ -55,7 +61,7 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
 
   // Insert new thread
   const result = await query(
-    `INSERT INTO complaints (reservation_id, complainant_id, against_id, type, title, description, is_chat) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    `INSERT INTO complaints (reservation_id, complainant_id, against_id, type, title, description, is_chat, response_due_at) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW() + INTERVAL '48 hours') RETURNING *`,
     [reservation_id, req.user.id, against_id, type, title, description, is_chat !== undefined ? is_chat : true]
   );
 
@@ -192,8 +198,9 @@ router.get('/:id/messages', protect, asyncHandler(async (req, res) => {
 
 // Resolve / update complaint status (Admin only)
 router.put('/:id/resolve', protect, authorize('admin'), asyncHandler(async (req, res, next) => {
-  const { resolution, status } = req.body;
+  const { resolution, status, decision_type, decision_reason, decision_evidence, financial_effect = null } = req.body;
   const newStatus = status || 'resolved';
+  if (!String(resolution || decision_reason || '').trim()) return next(new AppError('يجب تسجيل سبب واضح للقرار', 400));
 
   const existing = await query('SELECT * FROM complaints WHERE id = $1', [req.params.id]);
   if (existing.rows.length === 0) return next(new AppError('الشكوى غير موجودة', 404));
@@ -201,9 +208,11 @@ router.put('/:id/resolve', protect, authorize('admin'), asyncHandler(async (req,
 
   // Update complaint status
   const result = await query(
-    `UPDATE complaints SET status = $1, resolution = $2, resolved_by = $3, resolved_at = NOW() WHERE id = $4 RETURNING *`,
-    [newStatus, resolution, req.user.id, req.params.id]
+    `UPDATE complaints SET status = $1, resolution = $2, decision_type = $3, decision_reason = $4, decision_evidence = $5, financial_effect = $6, resolved_by = $7, resolved_at = NOW(), appeal_due_at = NOW() + INTERVAL '72 hours' WHERE id = $8 RETURNING *`,
+    [newStatus, resolution || decision_reason, decision_type || (newStatus === 'rejected' ? 'rejected' : 'accepted'), decision_reason || resolution, decision_evidence || '', financial_effect, req.user.id, req.params.id]
   );
+
+  await query(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, new_data) VALUES ($1,'complaint_decision_recorded','complaint',$2,$3)`, [req.user.id, req.params.id, JSON.stringify({ decision_type, decision_reason, decision_evidence, financial_effect })]);
 
   // If resolved/closed and reservation was disputed, restore it to appropriate status
   if ((newStatus === 'resolved' || newStatus === 'closed') && complaint.reservation_id) {

@@ -65,7 +65,9 @@ function getCancellationPolicy(reservation) {
 // @access  Customer
 // ========================
 router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, next) => {
-  const { car_id, start_date, end_date, pickup_time = '09:00', return_time = '18:00', pickup_location, dropoff_location, customer_notes, with_driver = false } = req.body;
+  const { car_id, start_date, end_date, pickup_time = '09:00', return_time = '18:00', pickup_location, dropoff_location, customer_notes, with_driver = false, policy_version, policy_accepted } = req.body;
+
+  if (!policy_accepted || !policy_version) return next(new AppError('يجب قراءة سياسة الحجوزات والتسليم والاستلام والموافقة عليها قبل إنشاء الحجز', 400));
 
   if (!car_id || !start_date || !end_date || !pickup_time || !return_time) {
     return next(new AppError('الرجاء تحديد السيارة وتواريخ وأوقات الحجز', 400));
@@ -106,10 +108,14 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
 
   const total_price = total_days * car.price_per_day;
 
+  const policy = await query(`SELECT id, version FROM policy_versions WHERE version = $1 AND status = 'effective'`, [policy_version]);
+  if (!policy.rows.length) return next(new AppError('نسخة السياسة غير متاحة أو غير فعالة', 400));
   const result = await query(`
-    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, with_driver, handover_state, status)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *
-  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, Boolean(with_driver), 'not_started', 'pending']);
+    INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, pickup_location, dropoff_location, customer_notes, with_driver, handover_state, status, policy_version, policy_accepted_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,NOW()) RETURNING *
+  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, car.price_per_day, total_price, pickup_location, dropoff_location, customer_notes, Boolean(with_driver), 'not_started', 'pending', policy.rows[0].version]);
+  await query(`INSERT INTO policy_acceptances (policy_version_id, user_id, account_type, context_type, context_id, ip_address, user_agent) VALUES ($1,$2,$3,'reservation',$4,$5,$6)`, [policy.rows[0].id, req.user.id, req.user.role, result.rows[0].id, req.ip || null, req.get('user-agent') || null]);
+  await query(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, new_data, ip_address, user_agent) VALUES ($1,'policy_accepted_and_reservation_created','reservation',$2,$3,$4,$5)`, [req.user.id, result.rows[0].id, JSON.stringify({ policy_version: policy.rows[0].version }), req.ip || null, req.get('user-agent') || null]);
 
   // The supplier is notified after successful payment in paymentRoutes.js.
   res.status(201).json({ success: true, data: result.rows[0] });
