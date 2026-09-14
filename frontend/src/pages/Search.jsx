@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowRight, Search as SearchIcon } from 'lucide-react';
 import SearchFilter from '../components/SearchFilter';
+import { SEARCH_RADIUS_KM } from '../data/yemenGovernorates';
 
 const defaultSearch = {
   location: '',
@@ -15,7 +16,7 @@ const defaultSearch = {
   maxPrice: '',
   latitude: '',
   longitude: '',
-  radius: 10,
+  radius: SEARCH_RADIUS_KM,
 };
 
 function readSearchParams(search) {
@@ -32,7 +33,7 @@ function readSearchParams(search) {
     maxPrice: params.get('maxPrice') || params.get('max_price') || '',
     latitude: params.get('latitude') || '',
     longitude: params.get('longitude') || '',
-    radius: Number(params.get('radius')) || 10,
+    radius: Number(params.get('radius')) || SEARCH_RADIUS_KM,
   };
 }
 
@@ -88,7 +89,7 @@ export default function SearchPage() {
     query.set('pickupTime', searchParams.pickupTime);
     query.set('returnTime', searchParams.returnTime);
     query.set('withDriver', searchParams.withDriver || 'false');
-    query.set('radius', String(searchParams.radius || 10));
+    query.set('radius', String(searchParams.radius || SEARCH_RADIUS_KM));
 
     if (searchParams.latitude) query.set('latitude', String(searchParams.latitude));
     else query.delete('latitude');

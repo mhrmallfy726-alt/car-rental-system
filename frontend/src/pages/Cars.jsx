@@ -6,6 +6,7 @@ import { Search, Filter, Star, User, Settings, CheckCircle, ShieldCheck, Car, Ma
 import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '../utils/imageUtils';
+import { SEARCH_RADIUS_KM } from '../data/yemenGovernorates';
 // import ActiveAdvertisements from '../components/ActiveAdvertisements';
 
 // import SearchFilter from "../components/SearchFilter";
@@ -36,7 +37,7 @@ export default function Cars() {
     withDriver: initialParams.get('withDriver') || initialParams.get('with_driver') || 'false',
     latitude: initialParams.get('latitude') || '',
     longitude: initialParams.get('longitude') || '',
-    radius: Number(initialParams.get('radius')) || 10
+    radius: Number(initialParams.get('radius')) || SEARCH_RADIUS_KM
   });
 
   const [showFilters, setShowFilters] = useState(false);
@@ -142,7 +143,7 @@ export default function Cars() {
       withDriver: 'false',
       latitude: '',
       longitude: '',
-      radius: 10
+      radius: SEARCH_RADIUS_KM
     });
     setDateError('');
   };
@@ -203,7 +204,7 @@ export default function Cars() {
       max_price: filters.max_price || '',
       latitude: filters.latitude || '',
       longitude: filters.longitude || '',
-      radius: String(filters.radius || 10),
+      radius: String(filters.radius || SEARCH_RADIUS_KM),
     }).toString();
     navigate(`/search?${query}`);
   };
@@ -399,7 +400,7 @@ export default function Cars() {
                       }}
                       to={{
                         pathname: `/cars/${car.id}`,
-                        search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', withDriver: filters.withDriver || 'false', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || 10), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),
+                        search: new URLSearchParams({ location: filters.search || '', startDate: filters.startDate || '', endDate: filters.endDate || '', pickupTime: filters.pickup_time || '09:00', returnTime: filters.return_time || '18:00', withDriver: filters.withDriver || 'false', latitude: filters.latitude || '', longitude: filters.longitude || '', radius: String(filters.radius || SEARCH_RADIUS_KM), minPrice: filters.min_price || '', maxPrice: filters.max_price || '' }).toString(),
                         state: { search: filters },
                       }}
                       className="car-card-3d"

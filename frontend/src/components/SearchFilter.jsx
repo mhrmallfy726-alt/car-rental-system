@@ -1,7 +1,6 @@
-import LocationPicker from './LocationPicker';
-import LocationSearch from './LocationSearch';
 import UnifiedDatePicker, { parseDateValue } from './UnifiedDatePicker';
 import { MapPin, Search } from "lucide-react";
+import { SEARCH_RADIUS_KM, YEMEN_GOVERNORATES } from '../data/yemenGovernorates';
 
 
 export default function SearchFilter({
@@ -10,15 +9,14 @@ export default function SearchFilter({
   handleSearch,
 }) {
 
-  const applyLocationChange = (location) => {
+  const applyLocationChange = (event) => {
+    const location = YEMEN_GOVERNORATES.find(({ value }) => value === event.target.value);
     setSearchParams((prev) => ({
       ...prev,
-      // Prefer the normalized city because the database stores supplier
-      // locations by city, while `name` may be a long formatted address.
-      location: location?.city || location?.name || '',
+      location: location?.value || '',
       latitude: location?.latitude ?? '',
       longitude: location?.longitude ?? '',
-      radius: 10,
+      radius: SEARCH_RADIUS_KM,
     }));
   };
 
@@ -27,21 +25,21 @@ return (
     <form onSubmit={handleSearch} className="hero-search-container search-form fade-in">
 <div className="search-grid">
   <div className="input-wrapper">
-  <LocationPicker
-  position={[
-    Number(searchParams.latitude) || 15.3694,
-    Number(searchParams.longitude) || 44.1910,
-  ]}
-  mode="pickup"
-  onLocationChange={applyLocationChange}
-/>
     <label>موقع الاستلام</label>
     <div style={{ position: 'relative' }}>
-      <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999' }} />
-      <LocationSearch
-value={searchParams.location}
-  onChange={applyLocationChange}
-/>             </div>
+      <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999', pointerEvents: 'none' }} />
+      <select
+        value={searchParams.location || ''}
+        onChange={applyLocationChange}
+        aria-label="اختيار محافظة الاستلام"
+        className="custom-input"
+        style={{ width: '100%', paddingRight: '40px' }}
+        required
+      >
+        <option value="">اختر محافظة الاستلام</option>
+        {YEMEN_GOVERNORATES.map(({ value, label }) => <option value={value} key={value}>{label}</option>)}
+      </select>
+    </div>
 
   </div>
 

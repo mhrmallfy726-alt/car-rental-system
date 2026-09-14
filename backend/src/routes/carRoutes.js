@@ -35,7 +35,7 @@ router.get('/', asyncHandler(async (req, res) => {
     search, sort_by, page = 1, limit = 12,
     startDate, endDate, start_date, end_date,
     pickup_time, return_time, pickupTime, returnTime,
-    latitude, longitude, radius = 10
+    latitude, longitude, radius = 25
   } = req.query;
 
   const requestedStart = startDate || start_date;
@@ -72,7 +72,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const hasCoordinates = latitude !== undefined && latitude !== '' && longitude !== undefined && longitude !== ''
     && Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
   if (hasCoordinates) {
-    const radiusKm = Math.min(Math.max(Number(radius) || 10, 1), 100);
+    const radiusKm = Math.min(Math.max(Number(radius) || 25, 1), 100);
     const locationText = String(location || '').trim();
     sql += ` AND (loc.latitude IS NOT NULL
       AND loc.longitude IS NOT NULL
