@@ -13,8 +13,10 @@ export default function AddCar() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   const vehicleYears = Array.from({ length: currentYear + 1 - 1980 }, (_, index) => currentYear + 1 - index);
-  const { showroom, options: showrooms, selectShowroom } = useSupplierShowroom();
-  const activeShowroom = showroom?.id ? showroom : showrooms.find((item) => item.is_main) || showrooms[0] || null;
+  const { options: showrooms } = useSupplierShowroom();
+  const [selectedShowroomId, setSelectedShowroomId] = useState('');
+  const defaultShowroom = showrooms.find((item) => item.is_main) || showrooms[0] || null;
+  const activeShowroom = showrooms.find((item) => String(item.id) === String(selectedShowroomId)) || defaultShowroom;
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([]);
@@ -81,14 +83,8 @@ export default function AddCar() {
   };
 
   const handleShowroomChange = async (e) => {
-    try {
-      const locationId = e.target.value || showrooms[0]?.id;
-      if (!locationId) return;
-      await selectShowroom(locationId);
-      toast.success('تم اختيار الفرع');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'تعذر اختيار الفرع');
-    }
+    setSelectedShowroomId(e.target.value);
+    toast.success('تم اختيار المعرض لهذه السيارة');
   };
 
   const removeImage = (index) => {
