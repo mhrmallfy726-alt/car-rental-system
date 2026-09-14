@@ -313,9 +313,12 @@ router.post('/:id/images', protect, authorize('supplier'), uploadCarImages, asyn
   const images = [];
   for (let i = 0; i < req.files.length; i++) {
     const isPrimary = i === 0;
+    const imageUrl = req.files[i].path?.startsWith('http')
+      ? req.files[i].path
+      : `/uploads/${path.basename(req.files[i].path)}`;
     const result = await query(
       'INSERT INTO car_images (car_id, image_url, is_primary) VALUES ($1, $2, $3) RETURNING *',
-      [id, `/uploads/${path.basename(req.files[i].path)}`, isPrimary]
+      [id, imageUrl, isPrimary]
     );
     images.push(result.rows[0]);
   }
