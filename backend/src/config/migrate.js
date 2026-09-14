@@ -7,6 +7,7 @@ async function migrate() {
   const client = await pool.connect();
   try {
     console.log('Starting database migrations...');
+    await client.query('SELECT pg_advisory_lock(729184050)');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -33,17 +34,18 @@ async function migrate() {
 
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
       console.log(`Running ${file}...`);
-      const migrationOwnsTransaction = /^\\s*BEGIN\\s*;/im.test(sql);
+      const migrationOwnsTransaction = /^\s*BEGIN\s*;/im.test(sql);
+      const usesConcurrentIndex = /\bCONCURRENTLY\b/i.test(sql);
       try {
-        if (!migrationOwnsTransaction) await client.query('BEGIN');
+        if (!migrationOwnsTransaction && !usesConcurrentIndex) await client.query('BEGIN');
         await client.query(sql);
         await client.query(
           'INSERT INTO schema_migrations (filename) VALUES ($1)',
           [file]
         );
-        if (!migrationOwnsTransaction) await client.query('COMMIT');
+        if (!migrationOwnsTransaction && !usesConcurrentIndex) await client.query('COMMIT');
       } catch (error) {
-        if (!migrationOwnsTransaction) await client.query('ROLLBACK');
+        if (!migrationOwnsTransaction && !usesConcurrentIndex) await client.query('ROLLBACK');
         throw new Error(`${file}: ${error.message}`);
       }
     }
@@ -53,6 +55,7 @@ async function migrate() {
     console.error('Migration failed:', error.message);
     process.exitCode = 1;
   } finally {
+    try { await client.query('SELECT pg_advisory_unlock(729184050)'); } catch {}
     client.release();
     await pool.end();
   }
