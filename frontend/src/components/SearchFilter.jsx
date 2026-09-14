@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import LocationPicker from './LocationPicker';
+import LocationSearch from './LocationSearch';
 import UnifiedDatePicker, { parseDateValue } from './UnifiedDatePicker';
 import { MapPin, Search } from "lucide-react";
-import { SEARCH_RADIUS_KM, YEMEN_GOVERNORATES } from '../data/yemenGovernorates';
+import { SEARCH_RADIUS_KM } from '../data/yemenGovernorates';
 
 
 export default function SearchFilter({
@@ -10,32 +10,12 @@ export default function SearchFilter({
   setSearchParams,
   handleSearch,
 }) {
-  const selectedGovernorate = YEMEN_GOVERNORATES.find(({ value }) => value === searchParams.location);
-  const [mapPosition, setMapPosition] = useState(() => ({
-    name: selectedGovernorate?.label || 'حدد موقع الاستلام',
-    latitude: Number(searchParams.latitude) || selectedGovernorate?.latitude || 15.3694,
-    longitude: Number(searchParams.longitude) || selectedGovernorate?.longitude || 44.1910,
-  }));
-
-  const applyLocationChange = (event) => {
-    const location = YEMEN_GOVERNORATES.find(({ value }) => value === event.target.value);
-    setMapPosition(location ? { name: location.label, latitude: location.latitude, longitude: location.longitude } : null);
+  const applyLocationChange = (location) => {
     setSearchParams((prev) => ({
       ...prev,
-      location: location?.value || '',
-      // The governorate only chooses the map area. Exact coordinates are set
-      // after the user clicks the map or uses the current GPS location.
-      latitude: '',
-      longitude: '',
-      radius: SEARCH_RADIUS_KM,
-    }));
-  };
-
-  const applyExactLocation = (location) => {
-    setMapPosition(location);
-    setSearchParams((prev) => ({
-      ...prev,
-      location: prev.location || location?.city || '',
+      // Keep the selected place visible in the input and use its exact
+      // coordinates for the 25 km search.
+      location: location?.city || location?.name || '',
       latitude: location?.latitude ?? '',
       longitude: location?.longitude ?? '',
       radius: SEARCH_RADIUS_KM,
@@ -50,27 +30,23 @@ return (
     <label>موقع الاستلام</label>
     <div style={{ position: 'relative' }}>
       <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999', pointerEvents: 'none' }} />
-      <select
-        value={searchParams.location || ''}
+      <LocationSearch
+        value={searchParams.location}
         onChange={applyLocationChange}
-        aria-label="اختيار محافظة الاستلام"
-        className="custom-input"
-        style={{ width: '100%', paddingRight: '40px' }}
-        required
-      >
-        <option value="">اختر محافظة الاستلام</option>
-        {YEMEN_GOVERNORATES.map(({ value, label }) => <option value={value} key={value}>{label}</option>)}
-      </select>
+      />
     </div>
     <LocationPicker
-      position={mapPosition}
+      position={[
+        Number(searchParams.latitude) || 15.3694,
+        Number(searchParams.longitude) || 44.1910,
+      ]}
       mode="pickup"
-      onLocationChange={applyExactLocation}
+      onLocationChange={applyLocationChange}
     />
     <small style={{ display: 'block', marginTop: 7, color: searchParams.latitude && searchParams.longitude ? '#18704b' : '#a66a00', lineHeight: 1.6 }}>
       {searchParams.latitude && searchParams.longitude
         ? 'تم تحديد الموقع بدقة، وسيتم البحث ضمن 25 كم منه.'
-        : 'حدد موقعك بدقة من الخريطة أو اضغط «موقعي الحالي» للبحث ضمن 25 كم.'}
+        : 'ابحث عن المدينة أو الحي في الحقل، أو حدد الموقع من الخريطة للبحث ضمن 25 كم.'}
     </small>
 
   </div>
