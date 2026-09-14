@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { carsAPI } from '../../services/api';
 import SupplierSidebar from '../../components/SupplierSidebar';
 import toast from 'react-hot-toast';
-import { Car, LayoutDashboard, Plus, Calendar, Edit, Trash2, Percent, Settings } from 'lucide-react';
+import { Car, LayoutDashboard, Plus, Calendar, Edit, Trash2, Megaphone, Settings } from 'lucide-react';
 import { getCarImage } from '../../utils/imageUtils';
 import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
 
@@ -12,9 +12,6 @@ export default function MyCars() {
   const { showroom } = useSupplierShowroom();
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingDiscount, setEditingDiscount] = useState(null);
-  const [newDiscount, setNewDiscount] = useState(0);
-  const [updatingDiscount, setUpdatingDiscount] = useState(false);
 
   const fetchCars = useCallback(async () => {
     try {
@@ -42,28 +39,12 @@ export default function MyCars() {
     }
   };
 
-  const handleUpdateDiscount = async (e) => {
-    e.preventDefault();
-    const discountValue = parseInt(newDiscount);
-    if (isNaN(discountValue) || discountValue < 0 || discountValue > 100) {
-      toast.error('نسبة الخصم يجب أن تكون بين 0 و 100');
-      return;
-    }
-    setUpdatingDiscount(true);
-    try {
-      await carsAPI.update(editingDiscount.id, { discount_percentage: discountValue });
-      toast.success('تم تحديث الخصم بنجاح');
-      setEditingDiscount(null);
-      fetchCars();
-    } catch (error) {
-      toast.error('فشل تحديث الخصم');
-    } finally {
-      setUpdatingDiscount(false);
-    }
-  };
-
   const handleEditCar = (carId) => {
     navigate(`/supplier/cars/edit/${carId}`);
+  };
+
+  const handleCreateAdvertisement = (carId) => {
+    navigate(`/supplier/advertisement-request?car_id=${encodeURIComponent(carId)}`);
   };
 
   const getStatusBadge = (status, is_approved) => {
@@ -105,8 +86,7 @@ export default function MyCars() {
               <div className="mobile-car-image-wrap"><img src={getCarImage(car, 'https://via.placeholder.com/640x360?text=Car')} alt={`${car.make} ${car.model}`} className="mobile-car-image" />{!car.is_approved && <span className="mobile-car-review">قيد المراجعة</span>}</div>
               <div className="mobile-car-body"><div className="mobile-car-title-row"><div><h2>{car.make} {car.model}</h2><small>{car.license_plate || 'بدون رقم لوحة'}</small></div>{getStatusBadge(car.status, car.is_approved)}</div>
                 <div className="mobile-car-details"><span><b>سنة الصنع</b>{car.year || '—'}</span><span><b>الفئة</b>{car.category_name || 'غير محددة'}</span><span><b>السعر اليومي</b>${car.price_per_day || 0}</span></div>
-                <div className="mobile-car-offer">{car.discount_percentage > 0 ? <><Percent size={14} /> {car.discount_percentage}% خصم</> : 'لا يوجد عرض'}</div>
-                <div className="mobile-car-actions"><button type="button" onClick={() => { setEditingDiscount(car); setNewDiscount(car.discount_percentage || 0); }}><Percent size={15} /> العروض</button><button type="button" onClick={() => handleEditCar(car.id)}><Edit size={15} /> تعديل</button><button type="button" className="danger" onClick={() => handleDelete(car.id)}><Trash2 size={15} /> حذف</button></div>
+                <div className="mobile-car-actions"><button type="button" onClick={() => handleCreateAdvertisement(car.id)}><Megaphone size={15} /> عرض</button><button type="button" onClick={() => handleEditCar(car.id)}><Edit size={15} /> تعديل</button><button type="button" className="danger" onClick={() => handleDelete(car.id)}><Trash2 size={15} /> حذف</button></div>
               </div>
             </article>)}
           </div>
@@ -117,7 +97,6 @@ export default function MyCars() {
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السيارة</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الفئة</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السعر الأساسي</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الخصم (العرض)</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الحالة</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الإجراءات</th>
                 </tr>
@@ -136,20 +115,11 @@ export default function MyCars() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>{car.category_name}</td>
                     <td style={{ padding: '12px 16px', fontWeight: 'bold' }}>${car.price_per_day}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      {car.discount_percentage > 0 ? (
-                        <span style={{ background: '#E3000F', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Percent size={12} /> {car.discount_percentage}% خصم
-                        </span>
-                      ) : (
-                        <span style={{ color: '#6c757d', fontSize: '0.8rem' }}>لا يوجد عرض</span>
-                      )}
-                    </td>
                     <td style={{ padding: '12px 16px' }}>{getStatusBadge(car.status, car.is_approved)}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => { setEditingDiscount(car); setNewDiscount(car.discount_percentage || 0); }} className="btn btn-warning" style={{ background: '#ffc107', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                          <Percent size={14} /> عروض
+                        <button onClick={() => handleCreateAdvertisement(car.id)} className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                          <Megaphone size={14} /> عرض
                         </button>
                         <button onClick={() => handleEditCar(car.id)} className="btn btn-secondary" style={{ background: '#6c757d', border: 'none', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                           <Edit size={14} />
@@ -167,30 +137,6 @@ export default function MyCars() {
           </>
         )}
       </div>
-
-      {/* مودال تعديل الخصم */}
-      {editingDiscount && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="modal-content" style={{ background: 'white', borderRadius: '12px', maxWidth: '400px', width: '100%', padding: '24px' }}>
-            <h3 style={{ fontWeight: 'bold', marginBottom: '16px' }}>إدارة العروض لسيارة {editingDiscount.make} {editingDiscount.model}</h3>
-            <form onSubmit={handleUpdateDiscount}>
-              <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>نسبة الخصم (%)</label>
-                <input type="number" className="form-input" min="0" max="100" value={newDiscount} onChange={e => setNewDiscount(e.target.value)} style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} />
-                <p style={{ fontSize: '0.7rem', color: '#6c757d', marginTop: '4px' }}>ضع 0 لإلغاء الخصم.</p>
-              </div>
-              <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
-                <button type="submit" className="btn btn-primary" disabled={updatingDiscount} style={{ flex: 1, background: '#0a58ca', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  {updatingDiscount ? 'جاري الحفظ...' : 'حفظ'}
-                </button>
-                <button type="button" onClick={() => setEditingDiscount(null)} className="btn btn-secondary" style={{ flex: 1, background: '#6c757d', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}>
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <style>{`
         .mobile-cars-grid { display: none; }

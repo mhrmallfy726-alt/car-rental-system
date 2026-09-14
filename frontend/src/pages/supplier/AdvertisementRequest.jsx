@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CheckCircle2, Clock3, FileText, Megaphone, Send, XCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { advertisementsAPI, carsAPI, paymentsAPI } from '../../services/api';
 import DatePicker from 'react-datepicker';
@@ -66,6 +66,7 @@ const calculateEndDate = (startDate, durationDays) => {
 };
 
 export default function AdvertisementRequest() {
+  const [searchParams] = useSearchParams();
   const [cars, setCars] = useState([]);
   const [requests, setRequests] = useState([]);
   const [form, setForm] = useState(initialForm);
@@ -89,7 +90,12 @@ export default function AdvertisementRequest() {
       const [carsResponse, requestsResponse, pricingResponse] = await Promise.all([
         carsAPI.getMyCars(), advertisementsAPI.getMyRequests(), advertisementsAPI.getPricing(),
       ]);
-      setCars(carsResponse.data?.data || []);
+      const availableCars = carsResponse.data?.data || [];
+      setCars(availableCars);
+      const requestedCarId = searchParams.get('car_id');
+      if (requestedCarId && availableCars.some((car) => String(car.id) === String(requestedCarId))) {
+        setForm((current) => ({ ...current, car_id: requestedCarId }));
+      }
       setRequests(requestsResponse.data?.data || []);
       setPricing(pricingResponse.data?.data || null);
     } catch (error) {
@@ -103,7 +109,7 @@ export default function AdvertisementRequest() {
   useEffect(() => {
     const timer = window.setTimeout(() => { loadData(); }, 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [searchParams]);
 
   const updateField = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
