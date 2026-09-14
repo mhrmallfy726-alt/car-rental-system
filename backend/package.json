@@ -13,6 +13,7 @@
     "check:reports": "node --check src/routes/reportRoutes.js && node --check server.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.5",
