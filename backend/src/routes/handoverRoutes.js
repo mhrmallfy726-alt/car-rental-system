@@ -4,6 +4,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query, getClient } = require('../config/database');
 const { uploadHandoverImages } = require('../middleware/upload');
+const { releaseReservationEarning } = require('../services/financeService');
 
 const REPORT_WINDOW_MS = 60 * 60 * 1000;
 
@@ -96,6 +97,9 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   }
 
   if (type === 'before') {
+    // The platform captures the card payment at checkout. The supplier gets
+    // the net amount only after this validated delivery report is saved.
+    await releaseReservationEarning(reservationId);
     await query(
       `UPDATE reservations
        SET status = 'active', handover_state = 'with_customer', before_handover_at = NOW(), vehicle_delivered_at = NOW()

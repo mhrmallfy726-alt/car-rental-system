@@ -75,16 +75,62 @@ const createReservationCharge = async ({ reservationId, customerId, savedCardId,
         JSON.stringify({ simulated: true, gateway: 'local_database', event: 'reservation_checkout', base_amount: baseAmountYER, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver), balance_before_yer: gateway.balanceBefore, balance_after_yer: gateway.balanceAfter })]
     );
     await client.query('UPDATE payment_gateway_transactions SET payment_id = $1 WHERE id = $2', [payment.rows[0].id, gateway.transaction.id]);
-    const metadata = JSON.stringify({ simulated: true, commission_rate: Number(settings.commission_rate || 0), base_amount: baseAmountYER });
+    const metadata = JSON.stringify({ simulated: true, commission_rate: Number(settings.commission_rate || 0), base_amount: baseAmountYER, earning_status: 'held' });
     await client.query(
       `INSERT INTO ledger_entries (payment_id,reservation_id,supplier_id,entry_type,direction,amount,currency,description,metadata)
-       VALUES ($1,$2,$3,'charge','credit',$4,$5,'تحصيل حجز محاكى',$6::jsonb),
-              ($1,$2,$3,'platform_fee','credit',$7,$5,'عمولة المنصة من الحجز',$6::jsonb),
-              ($1,$2,$3,'supplier_payable','credit',$8,$5,'إيراد المورد من الحجز',$6::jsonb)`,
-      [payment.rows[0].id, reservationId, reservation.supplier_id, totalAmount, paymentCurrency, metadata, commission, supplierPayable]
+       VALUES ($1,$2,$3,'charge','credit',$4,$5,'تحصيل حجز محاكى إلى حساب المنصة',$6::jsonb),
+              ($1,$2,$3,'supplier_pending','credit',$7,$5,'مستحق المورد المعلق حتى تسليم السيارة',$6::jsonb)`,
+      [payment.rows[0].id, reservationId, reservation.supplier_id, totalAmount, paymentCurrency, metadata, supplierPayable]
     );
     await client.query('COMMIT');
     return { payment: payment.rows[0], reservation, commission, supplierPayable, totalAmount, currency: paymentCurrency, gateway };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+/** Release a reservation earning exactly once after a valid before-handover report. */
+const releaseReservationEarning = async (reservationId) => {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const paymentResult = await client.query(
+      `SELECT p.* FROM payments p
+       WHERE p.reservation_id = $1 AND p.status = 'paid'
+       ORDER BY p.paid_at DESC NULLS LAST LIMIT 1 FOR UPDATE`,
+      [reservationId]
+    );
+    if (!paymentResult.rows.length) throw new Error('لا يوجد دفع ناجح لهذا الحجز');
+    const payment = paymentResult.rows[0];
+    const alreadyReleased = await client.query(
+      `SELECT id FROM ledger_entries WHERE payment_id=$1 AND entry_type='supplier_payable' AND direction='credit' LIMIT 1`,
+      [payment.id]
+    );
+    if (alreadyReleased.rows.length) {
+      await client.query('COMMIT');
+      return { released: false, alreadyReleased: true };
+    }
+    const pending = await client.query(
+      `SELECT COALESCE(SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit'),0) AS amount
+       FROM ledger_entries WHERE payment_id=$1 AND entry_type='supplier_pending'`,
+      [payment.id]
+    );
+    const supplierAmount = Number(pending.rows[0]?.amount || 0);
+    if (supplierAmount <= 0) throw new Error('لا يوجد مستحق معلق لتحريره');
+    const commission = Number((Number(payment.amount) - supplierAmount).toFixed(2));
+    const metadata = JSON.stringify({ simulated: true, released_at_handover: true, release_of: payment.id });
+    await client.query(
+      `INSERT INTO ledger_entries (payment_id,reservation_id,supplier_id,entry_type,direction,amount,currency,description,metadata)
+       VALUES ($1,$2,$3,'supplier_pending','debit',$4,$5,'تحرير المستحق المعلق عند تسليم السيارة',$6::jsonb),
+              ($1,$2,$3,'supplier_payable','credit',$4,$5,'إضافة صافي الحجز إلى رصيد المورد',$6::jsonb),
+              ($1,$2,$3,'platform_fee','credit',$7,$5,'تسجيل عمولة المنصة عند التسليم',$6::jsonb)`,
+      [payment.id, reservationId, payment.supplier_id, supplierAmount, payment.currency, metadata, commission]
+    );
+    await client.query('COMMIT');
+    return { released: true, supplierAmount, commission, currency: payment.currency };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
@@ -114,7 +160,7 @@ const refundReservationPayment = async (reservationId, reason = 'إلغاء أو
     }
     const refundAmount = Number((Number(payment.amount) * normalizedRate).toFixed(2));
     await client.query(`UPDATE payments SET status = $1, refund_amount = $2, refund_reason = $3, refunded_at = NOW() WHERE id = $4`, [normalizedRate === 1 ? 'refunded' : 'partially_refunded', refundAmount, reason, payment.id]);
-    const originalLedger = await client.query(`SELECT entry_type, amount FROM ledger_entries WHERE payment_id = $1 AND entry_type IN ('platform_fee', 'supplier_payable') AND direction = 'credit'`, [payment.id]);
+    const originalLedger = await client.query(`SELECT entry_type, amount FROM ledger_entries WHERE payment_id = $1 AND entry_type IN ('platform_fee', 'supplier_payable', 'supplier_pending') AND direction = 'credit'`, [payment.id]);
     await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, 'refund', 'debit', $4, $5, $6, $7::jsonb)`, [payment.id, reservationId, payment.supplier_id, refundAmount, payment.currency, reason, JSON.stringify({ simulated: true, refund_of: payment.id, refund_rate: normalizedRate })]);
     for (const entry of originalLedger.rows) {
       await client.query(`INSERT INTO ledger_entries (payment_id, reservation_id, supplier_id, entry_type, direction, amount, currency, description, metadata) VALUES ($1, $2, $3, $4, 'debit', $5, $6, $7, $8::jsonb)`, [payment.id, reservationId, payment.supplier_id, entry.entry_type, Number((Number(entry.amount) * normalizedRate).toFixed(2)), payment.currency, `عكس ${entry.entry_type} بسبب الاسترداد`, JSON.stringify({ simulated: true, refund_of: payment.id, refund_rate: normalizedRate })]);
@@ -191,4 +237,4 @@ const completePayout = async (adminId, payoutId, notes = '') => {
   finally { client.release(); }
 };
 
-module.exports = { createAdvertisementCharge, createReservationCharge, refundReservationPayment, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };
+module.exports = { createAdvertisementCharge, createReservationCharge, releaseReservationEarning, refundReservationPayment, getAdvertisementPricing, getSettings, updateSettings, getDashboard, createPayout, completePayout };

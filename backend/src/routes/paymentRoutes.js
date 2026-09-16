@@ -128,16 +128,6 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     withDriver: req.body.with_driver,
   });
   const payment = { rows: [charge.payment] };
-  const financeSettings = await financeService.getSettings();
-  let settlementWarning = null;
-  if (financeSettings.settlement_mode === 'automatic' && charge.supplierPayable > 0) {
-    try {
-      await financeService.createPayout(req.user.id, r.supplier_id, charge.supplierPayable, `تسوية تلقائية محاكاة للحجز ${reservation_id}`, currency);
-    } catch (error) {
-      settlementWarning = 'تم تأكيد الدفع، لكن التسوية التلقائية تحتاج مراجعة الإدارة المالية';
-      console.error('Automatic simulated payout failed:', error.message);
-    }
-  }
 
   // Payment-first flow: payment never marks a reservation active.
   // The supplier must approve it first, then the handover report moves it to active.
@@ -178,9 +168,9 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const latestReservation = await query('SELECT status, handover_state FROM reservations WHERE id = $1', [reservation_id]);
   res.status(201).json({
     success: true,
-    data: { ...payment.rows[0], commission: charge.commission, supplier_payable: charge.supplierPayable, simulated: true },
+    data: { ...payment.rows[0], commission: charge.commission, supplier_payable: charge.supplierPayable, earning_status: 'held', simulated: true },
     verification: { gateway: 'local_database', verified: true, reconciliation_status: 'matched', balance_after_yer: charge.gateway.balanceAfter },
-    settlement_warning: settlementWarning,
+    settlement_warning: null,
     reservation_status: latestReservation.rows[0]?.status || r.status,
     handover_state: latestReservation.rows[0]?.handover_state || r.handover_state,
   });
@@ -191,6 +181,7 @@ router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
     `SELECT p.*, r.customer_id, r.supplier_id,
             COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee' AND direction='credit'),0) AS commission,
             COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable' AND direction='credit'),0) AS supplier_payable,
+            COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_pending'),0) AS supplier_pending,
             COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND direction='credit'),0) AS ledger_total
        FROM payments p JOIN reservations r ON r.id=p.reservation_id
       WHERE p.id=$1`,
@@ -200,12 +191,13 @@ router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
   const payment = result.rows[0];
   const allowed = req.user.role === 'admin' || req.user.id === payment.customer_id || req.user.id === payment.supplier_id;
   if (!allowed) return next(new AppError('غير مصرح لك بالتحقق من عملية الدفع', 403));
+  const supplierAmount = Number(payment.supplier_payable) || Number(payment.supplier_pending);
   const verified = payment.status === 'paid'
     && payment.provider_reference?.startsWith('SIM-')
     && payment.metadata?.simulated === true
-    && Math.abs(Number(payment.commission) + Number(payment.supplier_payable) - Number(payment.amount)) < 0.01
-    && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + Number(payment.supplier_payable))) < 0.01;
-  res.json({ success: true, data: { payment_id: payment.id, gateway: 'sandbox', verified, reconciliation_status: verified ? 'matched' : 'check', amount: payment.amount, currency: payment.currency, commission: payment.commission, supplier_payable: payment.supplier_payable } });
+    && Math.abs(Number(payment.commission) + supplierAmount - Number(payment.amount)) < 0.01
+    && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + Number(payment.supplier_payable) + Number(payment.supplier_pending))) < 0.01;
+  res.json({ success: true, data: { payment_id: payment.id, gateway: 'sandbox', verified, reconciliation_status: verified ? 'matched' : 'check', amount: payment.amount, currency: payment.currency, commission: payment.commission, supplier_payable: payment.supplier_payable, supplier_pending: payment.supplier_pending, earning_status: Number(payment.supplier_payable) > 0 ? 'released' : 'held' } });
 }));
 
 router.get('/history', protect, asyncHandler(async (req, res) => {
