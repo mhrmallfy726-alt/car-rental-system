@@ -13,7 +13,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
   const balancesResult = await query(`
     WITH currencies AS (
       SELECT DISTINCT currency FROM ledger_entries
-      WHERE supplier_id=$1 AND entry_type IN ('supplier_payable','payout')
+      WHERE supplier_id=$1 AND entry_type IN ('supplier_pending','supplier_payable','payout')
       UNION
       SELECT DISTINCT currency FROM supplier_payouts WHERE supplier_id=$1
     ),
@@ -21,6 +21,13 @@ router.get('/summary', asyncHandler(async (req, res) => {
       SELECT currency, COALESCE(SUM(amount),0) AS total_payable
       FROM ledger_entries
       WHERE supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit'
+      GROUP BY currency
+    ),
+    pending AS (
+      SELECT currency,
+             COALESCE(SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit'),0) AS held_amount
+      FROM ledger_entries
+      WHERE supplier_id=$1 AND entry_type='supplier_pending'
       GROUP BY currency
     ),
     payouts AS (
@@ -47,6 +54,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
            COALESCE(g.gross_revenue,0)::numeric AS gross_revenue,
            COALESCE(f.total_commission,0)::numeric AS total_commission,
            COALESCE(p.total_payable,0)::numeric AS total_payable,
+           COALESCE(h.held_amount,0)::numeric AS held_amount,
            COALESCE(po.paid_out,0)::numeric AS paid_out,
            COALESCE(po.pending_payout,0)::numeric AS pending_payout,
            GREATEST(0,COALESCE(p.total_payable,0)-COALESCE(po.paid_out,0)-COALESCE(po.pending_payout,0))::numeric AS available_balance
@@ -54,6 +62,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
     LEFT JOIN gross g ON g.currency=c.currency
     LEFT JOIN fees f ON f.currency=c.currency
     LEFT JOIN payable p ON p.currency=c.currency
+    LEFT JOIN pending h ON h.currency=c.currency
     LEFT JOIN payouts po ON po.currency=c.currency
     ORDER BY c.currency
   `, [supplierId]);

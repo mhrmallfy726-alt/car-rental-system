@@ -191,13 +191,19 @@ router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
   const payment = result.rows[0];
   const allowed = req.user.role === 'admin' || req.user.id === payment.customer_id || req.user.id === payment.supplier_id;
   if (!allowed) return next(new AppError('غير مصرح لك بالتحقق من عملية الدفع', 403));
-  const supplierAmount = Number(payment.supplier_payable) || Number(payment.supplier_pending);
+  const supplierPayable = Number(payment.supplier_payable) || 0;
+  const supplierPending = Number(payment.supplier_pending) || 0;
+  const isHeld = supplierPending > 0 && supplierPayable <= 0;
+  const supplierAmount = isHeld ? supplierPending : supplierPayable;
   const verified = payment.status === 'paid'
     && payment.provider_reference?.startsWith('SIM-')
     && payment.metadata?.simulated === true
-    && Math.abs(Number(payment.commission) + supplierAmount - Number(payment.amount)) < 0.01
-    && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + Number(payment.supplier_payable) + Number(payment.supplier_pending))) < 0.01;
-  res.json({ success: true, data: { payment_id: payment.id, gateway: 'sandbox', verified, reconciliation_status: verified ? 'matched' : 'check', amount: payment.amount, currency: payment.currency, commission: payment.commission, supplier_payable: payment.supplier_payable, supplier_pending: payment.supplier_pending, earning_status: Number(payment.supplier_payable) > 0 ? 'released' : 'held' } });
+    && (isHeld
+      ? Math.abs(supplierPending - Number(payment.amount)) < 0.01
+        && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + supplierPending)) < 0.01
+      : Math.abs(Number(payment.commission) + supplierPayable - Number(payment.amount)) < 0.01
+        && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + supplierPayable)) < 0.01);
+  res.json({ success: true, data: { payment_id: payment.id, gateway: 'sandbox', verified, reconciliation_status: verified ? 'matched' : 'check', amount: payment.amount, currency: payment.currency, commission: payment.commission, supplier_payable: payment.supplier_payable, supplier_pending: payment.supplier_pending, earning_status: isHeld ? 'held' : 'released' } });
 }));
 
 router.get('/history', protect, asyncHandler(async (req, res) => {
