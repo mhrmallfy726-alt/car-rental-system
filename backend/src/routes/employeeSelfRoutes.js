@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const { query } = require('../config/database');
 const advertisementService = require('../services/advertisementService');
+const { refundReservationPayment } = require('../services/financeService');
 
 router.use(protect);
 const requireEmployee = (req, res, next) => {
@@ -503,6 +504,11 @@ router.put(
         }
       }
 
+      const decisionReason = String(cancellation_reason || supplier_notes || '').trim();
+      const refund = status === 'cancelled' || status === 'rejected'
+        ? await refundReservationPayment(id, decisionReason || (status === 'cancelled' ? 'تم إلغاء الحجز من قبل الموظف' : 'تم رفض الحجز من قبل الموظف'), 1)
+        : null;
+
       const result = await query(
         `UPDATE reservations
          SET
@@ -511,6 +517,8 @@ router.put(
            dropoff_location = COALESCE($3, dropoff_location),
            supplier_notes = COALESCE($4, supplier_notes),
            cancellation_reason = COALESCE($5, cancellation_reason),
+           cancelled_by = CASE WHEN $1 = 'cancelled' THEN $8 ELSE cancelled_by END,
+           cancelled_at = CASE WHEN $1 = 'cancelled' THEN NOW() ELSE cancelled_at END,
            updated_at = NOW()
          WHERE id = $6
            AND supplier_id = $7
@@ -522,7 +530,8 @@ router.put(
           supplier_notes ?? null,
           cancellation_reason ?? null,
           id,
-          req.user.supplier_id
+          req.user.supplier_id,
+          req.user.id
         ]
       );
 
@@ -531,14 +540,15 @@ router.put(
         await query(
           `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
            VALUES ($1, $2, $3, 'reservation', $4, 'reservation')`,
-          [current.customer_id, labels[status] || 'تم تحديث حالة الحجز', `تم تحديث حالة حجزك إلى: ${status}`, id]
+          [current.customer_id, labels[status] || 'تم تحديث حالة الحجز', `تم تحديث حالة حجزك إلى: ${status}${decisionReason ? `. السبب: ${decisionReason}` : ""}${refund ? `. تم تسجيل استرداد بقيمة ${refund.refund_amount} ${refund.currency}` : ""}`, id]
         );
       }
 
       res.json({
         success: true,
         message: 'تم تعديل الحجز بنجاح',
-        data: result.rows[0]
+        data: result.rows[0],
+        refund: refund ? { status: "refunded", amount: refund.refund_amount, currency: refund.currency } : { status: "not_required" }
       });
     } catch (error) {
       next(error);
