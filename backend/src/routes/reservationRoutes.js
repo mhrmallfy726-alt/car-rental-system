@@ -234,7 +234,7 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
 
   const r = reservation.rows[0];
   if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
-  if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز', 400));
+  if (!['pending', 'approved', 'awaiting_pickup'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز بعد بدء الاستلام أو الإرجاع', 400));
 
   const policy = r.customer_id === req.user.id ? getCancellationPolicy(r) : { refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
   if (!policy.canCancel) return next(new AppError('لا يمكن إلغاء الحجز بعد موعد الاستلام', 400));

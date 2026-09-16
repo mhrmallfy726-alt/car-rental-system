@@ -453,13 +453,15 @@ router.put(
         cancellation_reason
       } = req.body;
 
-      const allowedStatuses = [
-        'pending',
-        'approved',
-        'rejected',
-        'cancelled',
-        'active',
-        'completed',
+        const allowedStatuses = [
+          'pending',
+          'approved',
+          'awaiting_pickup',
+          'rejected',
+          'cancelled',
+          'active',
+          'returned',
+          'completed',
         'disputed'
       ];
 

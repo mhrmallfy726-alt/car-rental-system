@@ -569,7 +569,9 @@ export default function MyReservations() {
   };
 
   const handleCancel = async (id) => {
-    if (!window.confirm('هل أنت متأكد من إلغاء هذا الحجز؟ لا يمكن التراجع.')) return;
+    const reservation = reservations.find((item) => item.id === id);
+    const policy = reservation ? getCancellationPolicy(reservation) : null;
+    if (!window.confirm(`سياسة الإلغاء: استرداد ${policy?.refund ?? 0}% وخصم ${policy?.fee ?? 100}%. هل تريد المتابعة؟`)) return;
     try {
       await reservationsAPI.cancel(id, { cancellation_reason: 'تم الإلغاء من قبل العميل' });
       toast.success('تم إلغاء الحجز');
@@ -723,7 +725,7 @@ export default function MyReservations() {
 
   const getStatusBadge = (status) => {
     const map = {
-      pending: { label: 'جاهز لإتمام الحجز', bg: '#ffc107', color: '#212529' },
+      pending: { label: 'بانتظار الدفع أو مراجعة المورد', bg: '#ffc107', color: '#212529' },
       approved: { label: 'بانتظار مراجعة المورد', bg: '#17a2b8', color: 'white' },
       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
@@ -738,7 +740,15 @@ export default function MyReservations() {
   };
 
   const canPay = (reservation) => ['pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
-  const canCancel = (status) => ['pending', 'approved'].includes(status);
+  const getCancellationPolicy = (reservation) => {
+    const pickupAt = reservation.pickup_at ? new Date(reservation.pickup_at) : new Date(`${reservation.start_date}T${reservation.pickup_time || '09:00'}:00`);
+    const hours = (pickupAt.getTime() - Date.now()) / (60 * 60 * 1000);
+    if (!Number.isFinite(hours) || hours <= 0) return { refund: 0, fee: 100, canCancel: false };
+    if (hours >= 72) return { refund: 100, fee: 0, canCancel: true };
+    if (hours >= 24) return { refund: 75, fee: 25, canCancel: true };
+    return { refund: 50, fee: 50, canCancel: true };
+  };
+  const canCancel = (reservation) => ['pending', 'approved', 'awaiting_pickup'].includes(reservation.status) && getCancellationPolicy(reservation).canCancel;
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
   const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'awaiting_pickup', 'disputed'].includes(status);
@@ -807,7 +817,7 @@ export default function MyReservations() {
                       <CreditCard size={16} /> إتمام الدفع وإرسال الطلب
                     </Link>
                   )}
-                  {canCancel(res.status) && (
+                  {canCancel(res) && (
                     <button onClick={() => handleCancel(res.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
                       <XCircle size={16} /> إلغاء الحجز
                     </button>
@@ -1004,4 +1014,3 @@ export default function MyReservations() {
     </div>
   );
 }
-

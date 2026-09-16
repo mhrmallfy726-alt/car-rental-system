@@ -144,6 +144,10 @@ export default function SupplierReservations() {
         if (!window.confirm('هل أنت متأكد من رفض هذا الحجز؟ لا يمكن التراجع.')) return;
         await reservationsAPI.reject(id, { supplier_notes: 'مرفوض من قبل المورد' });
       }
+      if (action === 'cancel') {
+        if (!window.confirm('هل أنت متأكد من إلغاء هذا الحجز؟ سيتم إشعار العميل.')) return;
+        await reservationsAPI.cancel(id, { cancellation_reason: 'تم إلغاء الحجز من قبل المورد' });
+      }
       if (action === 'complete') await reservationsAPI.complete(id);
 
       toast.success('تم تحديث حالة الحجز');
@@ -270,6 +274,9 @@ export default function SupplierReservations() {
                   )}
                   {['approved', 'awaiting_pickup'].includes(res.status) && !isReportWindowOpen(res, 'before') && (
                     <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير التسليم قبل الموعد بساعة</span>
+                  )}
+                  {['approved', 'awaiting_pickup'].includes(res.status) && (
+                    <button onClick={() => handleAction(res.id, 'cancel')} className="btn btn-danger" style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> إلغاء الحجز</button>
                   )}
                   {res.status === 'active' && isReportWindowOpen(res, 'after') && (
                     <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#ffc107', color: '#1a1a1a', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>

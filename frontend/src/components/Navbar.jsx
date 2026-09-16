@@ -25,6 +25,7 @@ const roleNavItems = {
   ],
   supplier: [
     { to: '/supplier/dashboard', label: 'لوحة المورد' },
+    { to: '/notifications', label: 'الإشعارات' },
     { to: '/supplier/cars', label: 'سياراتي' },
     { to: '/supplier/reservations', label: 'الحجوزات' },
     { to: '/supplier/employees', label: 'الموظفون' },
