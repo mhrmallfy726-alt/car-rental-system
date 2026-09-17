@@ -88,7 +88,7 @@ export default function SupplierSidebar() {
 
       <aside className={`supplier-sidebar ${mobileOpen ? 'is-mobile-open' : ''}`} aria-label="قائمة المورد">
         <div className="supplier-sidebar-brand">
-          <span className="supplier-sidebar-kicker">RENTAL CIRCLE</span>
+          <span className="supplier-sidebar-kicker">RENTAL CR</span>
           <strong>مساحة المورد</strong>
           <small>إدارة الأسطول والحجوزات والإيرادات</small>
         </div>

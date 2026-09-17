@@ -28,7 +28,7 @@ export default function AdminSidebar() {
     {open && <button type="button" aria-label="إغلاق القائمة" className="admin-sidebar-overlay" onClick={() => setOpen(false)} />}
     <aside className={`admin-sidebar${open ? ' is-mobile-open' : ''}`} aria-label="قائمة الإدارة">
       <button type="button" className="admin-mobile-close" aria-label="إغلاق القائمة" onClick={() => setOpen(false)}><X size={19} /></button>
-      <div className="admin-sidebar-brand"><span className="admin-sidebar-kicker">RENTAL CIRCLE</span><strong>مركز الإدارة</strong><small>إدارة المنصة والعمليات</small></div>
+      <div className="admin-sidebar-brand"><span className="admin-sidebar-kicker">RENTAL CR</span><strong>مركز الإدارة</strong><small>إدارة المنصة والعمليات</small></div>
       <nav className="admin-sidebar-nav">{adminLinks.map(({ to, label, icon: Icon }) => { const active = location.pathname === to || (to !== '/admin/dashboard' && location.pathname.startsWith(`${to}/`)); return <Link key={to} to={to} className={`admin-sidebar-link ${active ? 'is-active' : ''}`}><Icon size={18} /><span>{label}</span></Link>; })}</nav>
     </aside>
     <style>{`

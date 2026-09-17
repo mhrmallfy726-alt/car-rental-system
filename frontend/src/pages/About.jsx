@@ -47,7 +47,7 @@ export default function About() {
         </div>
         <div className="about-hero-stat-card">
           <strong>RC</strong>
-          <span>Rental Circle</span>
+          <span>Rental CR</span>
           <small>نصنع لحظات قيادة أفضل</small>
         </div>
       </section>

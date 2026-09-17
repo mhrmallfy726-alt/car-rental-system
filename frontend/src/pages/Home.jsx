@@ -314,7 +314,7 @@ export default function Home() {
               <h3 style={{ color: 'white', marginBottom: '20px' }}>تواصل معنا</h3>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '15px', color: '#ccc' }}>
                 <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><Phone size={18} /> +967 777 123 456</li>
-                <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><Mail size={18} /> support@carflexi-clone.com</li>
+                <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><Mail size={18} /> support@rentalcr.com</li>
                 <li style={{ display: 'flex', gap: '10px', alignItems: 'center' }}><Map size={18} /> شارع الستين، صنعاء، اليمن</li>
               </ul>
             </div>

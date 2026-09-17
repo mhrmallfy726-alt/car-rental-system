@@ -157,7 +157,7 @@ export default function Navbar() {
           <Link to="/" className="rc-brand" aria-label="العودة للرئيسية">
             <span className="rc-brand-orbit" />
             <span className="rc-brand-mark"><img src={logo} alt="RC" /></span>
-            <span className="rc-brand-copy"><strong>RC</strong><small>RENTAL CIRCLE</small></span>
+            <span className="rc-brand-copy"><strong>RC</strong><small>RENTAL CR</small></span>
           </Link>
 
           <div className="rc-desktop-links">
@@ -267,5 +267,5 @@ function NotificationPanel({ notifications, unreadCount, onOpenNotification, onM
 }
 
 function MobileMenu({ authenticated, navigationItems, getDashboardLink, getDashboardText, handleLogout, setOpen, isActive }) {
-  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CIRCLE</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="#4df5c7" /></div><div className="rc-mobile-menu-nav">{navigationItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,#4df5c7,#c8ffed)' }}>إنشاء حساب جديد</Link></>}</div></div>;
+  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CR</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="#4df5c7" /></div><div className="rc-mobile-menu-nav">{navigationItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,#4df5c7,#c8ffed)' }}>إنشاء حساب جديد</Link></>}</div></div>;
 }

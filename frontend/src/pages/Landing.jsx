@@ -706,7 +706,7 @@ export default function Landing() {
                 }}>
                   <Car size={22} style={{ color: 'white' }} />
                 </div>
-                <span style={{ color: 'white', fontWeight: '800', fontSize: '1.2rem' }}>كار فلكسي</span>
+                <span style={{ color: 'white', fontWeight: '800', fontSize: '1.2rem' }}>Rental CR</span>
               </div>
               <p style={{ fontSize: '0.85rem', lineHeight: 1.8 }}>المنصة الأولى لتأجير السيارات التي تربط الموردين بالعملاء في مكان واحد آمن وموثوق.</p>
             </div>
@@ -727,10 +727,10 @@ export default function Landing() {
               <h4 style={{ color: 'white', fontWeight: '700', marginBottom: '16px' }}>تواصل معنا</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                  <Phone size={14} /> support@carflexi.com
+                  <Phone size={14} /> support@rentalcr.com
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                  <Mail size={14} /> info@carflexi.com
+                  <Mail size={14} /> info@rentalcr.com
                 </div>
               </div>
             </div>
@@ -741,7 +741,7 @@ export default function Landing() {
             textAlign: 'center',
             fontSize: '0.8rem',
           }}>
-            جميع الحقوق محفوظة © {new Date().getFullYear()} كار فلكسي
+            جميع الحقوق محفوظة © {new Date().getFullYear()} Rental CR
           </div>
         </div>
       </footer>
