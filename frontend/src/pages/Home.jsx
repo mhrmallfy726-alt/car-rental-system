@@ -220,7 +220,7 @@ export default function Home() {
       <section className="container" style={{ padding: '60px 0' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '30px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#0a58ca' }}>
+            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#087f68' }}>
               <Shield size={32} />
             </div>
             <h3 style={{ marginBottom: '10px' }}>إلغاء مجاني</h3>
@@ -228,7 +228,7 @@ export default function Home() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#0a58ca' }}>
+            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#087f68' }}>
               <Star size={32} />
             </div>
             <h3 style={{ marginBottom: '10px' }}>تقييمات حقيقية</h3>
@@ -236,7 +236,7 @@ export default function Home() {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#0a58ca' }}>
+            <div style={{ background: '#f0f4f8', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: '#087f68' }}>
               <Zap size={32} />
             </div>
             <h3 style={{ marginBottom: '10px' }}>حجز فوري</h3>
@@ -248,16 +248,16 @@ export default function Home() {
 
 
       {/* Car Types Quick Links - مع أيقونات Lucide وروابط فعلية */}
-      <section style={{ background: '#f8f9fa', padding: '60px 0', borderTop: '1px solid #eee' }}>
+      <section style={{ background: '#f7fafb', padding: '60px 0', borderTop: '1px solid #eee' }}>
         <div className="container">
           <h2 style={{ textAlign: 'center', marginBottom: '40px' }}>تصفح حسب فئة السيارة</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
             {['اقتصادية', 'سيدان', 'دفع رباعي', 'فاخرة', 'عائلية'].map((cat, i) => (
               <div key={i} onClick={() => handleCategoryClick(cat)} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '20px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s', background: 'white' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#0a58ca'}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#087f68'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#eee'}
               >
-                <div style={{ fontSize: '2rem', marginBottom: '10px', color: '#0a58ca', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '10px', color: '#087f68', display: 'flex', justifyContent: 'center' }}>
                   <Car size={32} />
                 </div>
                 <p style={{ fontWeight: '700' }}>{cat}</p>
@@ -268,7 +268,7 @@ export default function Home() {
       </section>
 
       {/* How it works (بدون تغيير) */}
-      <section style={{ padding: '60px 0', background: '#f8f9fa' }}>
+      <section style={{ padding: '60px 0', background: '#f7fafb' }}>
         <div className="container">
           <h2 style={{ textAlign: 'center', marginBottom: '40px' }}>كيف تعمل منصتنا؟</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px', textAlign: 'center' }}>
@@ -296,7 +296,7 @@ export default function Home() {
         <div className="container" style={{ textAlign: 'center' }}>
           <h2 style={{ marginBottom: '40px' }}>أشهر شركائنا الموثوقين</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px', justifyContent: 'center', alignItems: 'center', opacity: 0.7 }}>
-            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#1a1a1a' }}>AVIS</div>
+            <div style={{ fontSize: '2rem', fontWeight: '900', color: '#173a52' }}>AVIS</div>
             <div style={{ fontSize: '2rem', fontWeight: '900', color: '#006400' }}>Europcar</div>
             <div style={{ fontSize: '2rem', fontWeight: '900', color: '#FFB300' }}>Hertz</div>
             <div style={{ fontSize: '2rem', fontWeight: '900', color: '#E3000F' }}>Budget</div>
@@ -307,7 +307,7 @@ export default function Home() {
       </section>
 
       {/* Contact Us Footer */}
-      <footer style={{ background: '#1a1a1a', color: 'white', padding: '60px 0 20px' }}>
+      <footer style={{ background: '#173a52', color: 'white', padding: '60px 0 20px' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px', borderBottom: '1px solid #333', paddingBottom: '40px', marginBottom: '20px' }}>
             <div>

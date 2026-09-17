@@ -210,7 +210,7 @@ export default function Cars() {
   };
 
   return (
-    <div className="page" style={{ background: '#f8f9fa', minHeight: '100vh', paddingTop: '72px' }}>
+    <div className="page" style={{ background: '#f7fafb', minHeight: '100vh', paddingTop: '72px' }}>
 
       <section className="cars-hero-3d">
         <div className="cars-hero-orb cars-hero-orb-one" />
@@ -270,7 +270,7 @@ export default function Cars() {
             <div className="card p-24 sticky" style={{ top: '90px', background: 'white', borderRadius: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e9ecef', paddingBottom: '12px' }}>
                 <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Filter size={20} /> التصفية</h3>
-                <button onClick={clearFilters} style={{ background: 'none', border: 'none', color: '#dc3545', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>مسح الكل</button>
+                <button onClick={clearFilters} style={{ background: 'none', border: 'none', color: '#b42318', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer' }}>مسح الكل</button>
               </div>
 
               {/* Category Filter - تحويل إلى radio buttons */}
@@ -491,7 +491,7 @@ export default function Cars() {
         .car-card-title-row h3 { margin: 0; color: #162337; font-size: 1.17rem; font-weight: 950; letter-spacing: -.02em; }
         .car-card-title-row p { display: flex; align-items: center; gap: 5px; margin: 7px 0 0; color: #81909f; font-size: .69rem; }
         .car-card-title-row p svg { color: #cf6655; }
-        .car-card-arrow { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #c65345; background: #fbeeea; font-size: 1.25rem; transition: transform .2s ease; }
+        .car-card-arrow { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; color: #b42318; background: #fbeeea; font-size: 1.25rem; transition: transform .2s ease; }
         .car-card-3d:hover .car-card-arrow { transform: translate(-2px, -2px); }
         .car-specs-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 18px 0; padding-bottom: 16px; border-bottom: 1px solid #edf0f2; }
         .car-specs-row span { display: inline-flex; align-items: center; gap: 5px; padding: 7px 8px; border-radius: 9px; color: #6d7e8e; background: #f3f6f8; font-size: .66rem; font-weight: 800; }
@@ -505,7 +505,7 @@ export default function Cars() {
         .car-card-price small { margin-right: 4px; color: #8996a3; font-size: .65rem; }
         .cars-layout { align-items: flex-start; }
         .filters-sidebar .card { border: 1px solid #e8edf1; box-shadow: 0 17px 40px rgba(25,43,64,.06); }
-        .spinner { width: 40px; height: 40px; border: 4px solid #e7edf1; border-top-color: #c65345; border-radius: 50%; animation: spin .8s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e7edf1; border-top-color: #b42318; border-radius: 50%; animation: spin .8s linear infinite; }
         @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @media (max-width: 992px) { .cars-layout { flex-direction: column; } .filters-sidebar { position: fixed; right: -320px; top: 0; bottom: 0; z-index: 2001; width: 300px !important; transition: right .28s ease; background: white; box-shadow: -12px 0 35px rgba(0,0,0,.18); overflow-y: auto; padding: 20px; } .filters-sidebar.show { right: 0; } .hide-mobile { display: none; } .show-tablet { display: block; } .cars-hero-stat-card { width: 270px; } }

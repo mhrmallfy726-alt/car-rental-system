@@ -87,7 +87,7 @@ export default function AdminDashboard() {
     
     return (
       <span style={{
-        background: isActive ? '#28a745' : '#6c757d',
+        background: isActive ? '#0f766e' : '#6c757d',
         color: 'white',
         padding: '2px 8px',
         borderRadius: '20px',
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="admin-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <AdminSidebar />
 
       <div className="admin-dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -125,15 +125,15 @@ export default function AdminDashboard() {
             <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats?.totalCars ?? 0}</p><p style={{ color: '#6c757d', margin: 0 }}>السيارات</p></div>
           </div>
           <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffc107' }}><Calendar size={24} /></div>
+            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b78a22' }}><Calendar size={24} /></div>
             <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats?.totalReservations ?? 0}</p><p style={{ color: '#6c757d', margin: 0 }}>إجمالي الحجوزات</p></div>
           </div>
           <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#28a745' }}><DollarSign size={24} /></div>
+            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f766e' }}><DollarSign size={24} /></div>
             <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>${stats?.totalRevenue?.toFixed(2) ?? '0.00'}</p><p style={{ color: '#6c757d', margin: 0 }}>الإيرادات</p></div>
           </div>
           <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc3545' }}><ShieldAlert size={24} /></div>
+            <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b42318' }}><ShieldAlert size={24} /></div>
             <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats?.openComplaints ?? 0}</p><p style={{ color: '#6c757d', margin: 0 }}>شكاوى مفتوحة</p></div>
           </div>
         </div>
@@ -143,14 +143,14 @@ export default function AdminDashboard() {
           {/* أحدث الحجوزات */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px' }}>
-              <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', margin: 0 }}><Calendar size={18} style={{ color: '#0a58ca' }} /> أحدث الحجوزات</h3>
+              <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', margin: 0 }}><Calendar size={18} style={{ color: '#087f68' }} /> أحدث الحجوزات</h3>
             </div>
             {reservations.length === 0 ? (
               <p style={{ color: '#6c757d' }}>لا يوجد حجوزات.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {reservations.map(r => (
-                  <div key={r.id} style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div key={r.id} style={{ background: '#f7fafb', padding: '12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
                       <p style={{ fontWeight: 'bold', fontSize: '0.85rem', margin: 0 }}>{r.make} {r.model}</p>
                       <p style={{ fontSize: '0.7rem', color: '#6c757d', margin: 0 }}>العميل: {r.customer_name} | المورد: {r.supplier_name}</p>
@@ -165,21 +165,21 @@ export default function AdminDashboard() {
           {/* الشكاوى المفتوحة */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px' }}>
-              <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', margin: 0, color: '#dc3545' }}><ShieldAlert size={18} /> شكاوى تتطلب تدخلاً</h3>
-              <Link to="/admin/complaints" style={{ color: '#0a58ca', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة الشكاوى ←</Link>
+              <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', margin: 0, color: '#b42318' }}><ShieldAlert size={18} /> شكاوى تتطلب تدخلاً</h3>
+              <Link to="/admin/complaints" style={{ color: '#087f68', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة الشكاوى ←</Link>
             </div>
             {complaints.length === 0 ? (
               <p style={{ color: '#6c757d' }}>لا يوجد شكاوى مفتوحة.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {complaints.map(c => (
-                  <Link key={c.id} to="/admin/complaints" style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                  <Link key={c.id} to="/admin/complaints" style={{ background: '#f7fafb', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'inherit', display: 'block' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <p style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#dc3545', margin: 0 }}>{c.title}</p>
-                      <span style={{ background: '#dc3545', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 'bold' }}>{c.priority}</span>
+                      <p style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#b42318', margin: 0 }}>{c.title}</p>
+                      <span style={{ background: '#b42318', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 'bold' }}>{c.priority}</span>
                     </div>
                     <p style={{ fontSize: '0.7rem', color: '#6c757d', marginBottom: '6px' }}>الشاكي: {c.complainant_name} ضد {c.against_name}</p>
-                    <p style={{ fontSize: '0.7rem', color: '#0a58ca', display: 'flex', alignItems: 'center', gap: '4px', margin: 0 }}>
+                    <p style={{ fontSize: '0.7rem', color: '#087f68', display: 'flex', alignItems: 'center', gap: '4px', margin: 0 }}>
                       <ArrowRight size={12} /> انقر للدخول والتدخل في النزاع
                     </p>
                   </Link>
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

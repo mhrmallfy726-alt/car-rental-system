@@ -276,7 +276,7 @@ export default function CarDetail() {
         dir="rtl"
         className="flex min-h-[70vh] items-center justify-center bg-[#faf9f7]"
       >
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-stone-200 border-t-[#c65345]" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-stone-200 border-t-[#b42318]" />
       </div>
     );
   }
@@ -304,7 +304,7 @@ export default function CarDetail() {
       <div className="mx-auto flex w-[calc(100%-24px)] max-w-[1280px] items-center gap-2 py-5 text-xs text-stone-400 sm:w-[calc(100%-40px)] sm:py-7">
         <Link
           to="/"
-          className="transition-colors hover:text-[#c65345]"
+          className="transition-colors hover:text-[#b42318]"
         >
           الرئيسية
         </Link>
@@ -316,7 +316,7 @@ export default function CarDetail() {
 
         <Link
           to="/cars"
-          className="transition-colors hover:text-[#c65345]"
+          className="transition-colors hover:text-[#b42318]"
         >
           السيارات
         </Link>
@@ -632,7 +632,7 @@ radius: 10,
                   })
                 }
                 placeholder="اكتب المدينة أو الموقع"
-                className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-xs font-normal text-stone-800 outline-none transition-all placeholder:text-stone-400 focus:border-[#c75b4d] focus:ring-4 focus:ring-[#c65345]/10"
+                className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3.5 text-xs font-normal text-stone-800 outline-none transition-all placeholder:text-stone-400 focus:border-[#c75b4d] focus:ring-4 focus:ring-[#b42318]/10"
               />
             </label>
 
@@ -691,7 +691,7 @@ radius: 10,
                       pickup_time: e.target.value,
                     })
                   }
-                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#c65345]/10"
+                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#b42318]/10"
                 />
               </label>
 
@@ -715,7 +715,7 @@ radius: 10,
                       return_time: e.target.value,
                     })
                   }
-                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#c65345]/10"
+                  className="h-12 w-full rounded-xl border border-stone-200 bg-white px-3 text-xs text-stone-800 outline-none transition-all focus:border-[#c75b4d] focus:ring-4 focus:ring-[#b42318]/10"
                 />
               </label>
             </div>
@@ -736,7 +736,7 @@ radius: 10,
             )}
 
             <label className="flex items-start gap-2 rounded-xl border border-stone-200 bg-stone-50 p-3 text-[11px] leading-5 text-stone-600">
-              <input type="checkbox" checked={policyAccepted} onChange={(e) => setPolicyAccepted(e.target.checked)} className="mt-1 accent-[#c65345]" />
+              <input type="checkbox" checked={policyAccepted} onChange={(e) => setPolicyAccepted(e.target.checked)} className="mt-1 accent-[#b42318]" />
               <span>
                 أقر بأنني قرأت <a href="#rental-policy" className="font-bold text-[#b24e40] underline">سياسة الحجوزات والتسليم والاستلام والشكاوى والنزاعات</a> وأوافق على توثيق حالة السيارة بالصور والعداد والوقود والالتزام بمهل الإبلاغ والاعتراض.
                 {currentPolicy?.version && <small className="block text-stone-400">الإصدار المعتمد: {currentPolicy.version}</small>}
@@ -747,7 +747,7 @@ radius: 10,
 
             <button
               type="submit"
-              className="mt-1 flex min-h-[54px] items-center justify-center gap-2 rounded-[14px] border-0 bg-gradient-to-br from-[#c65345] to-[#a94035] text-xs font-extrabold text-white shadow-[0_10px_25px_rgba(198,83,69,0.22)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(198,83,69,0.28)] active:translate-y-0"
+              className="mt-1 flex min-h-[54px] items-center justify-center gap-2 rounded-[14px] border-0 bg-gradient-to-br from-[#b42318] to-[#a94035] text-xs font-extrabold text-white shadow-[0_10px_25px_rgba(198,83,69,0.22)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(198,83,69,0.28)] active:translate-y-0"
             >
               احجز الآن 
 
@@ -973,7 +973,7 @@ radius: 10,
         .car-detail-booking > div:nth-of-type(2) span { display: inline-flex; margin-bottom: 8px; }
         .car-detail-booking > div:nth-of-type(2) h1 { display: block; font-size: 28px; line-height: 1.25; color: var(--primary); }
         .car-detail-booking > div:nth-of-type(2) p { display: block; margin-top: 8px; color: var(--text-muted); line-height: 1.7; }
-        .car-detail-booking > div:nth-of-type(3) { display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f8f9fa; }
+        .car-detail-booking > div:nth-of-type(3) { display: flex; align-items: baseline; gap: 8px; margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f7fafb; }
         .car-detail-booking > div:nth-of-type(3) small, .car-detail-booking > div:nth-of-type(3) strong, .car-detail-booking > div:nth-of-type(3) span { display: inline-block; }
         .car-detail-booking > div:nth-of-type(3) strong { color: var(--primary); font-size: 28px; line-height: 1; }
         .car-detail-booking form { display: flex; flex-direction: column; gap: 15px; }
@@ -1026,7 +1026,7 @@ radius: 10,
         .detail-gallery-counter { left: 17px; direction: ltr; }
         .detail-gallery-open-hint { position: absolute; z-index: 4; bottom: 17px; left: 17px; color: rgba(255,255,255,.76); font-size: 10px; text-shadow: 0 2px 8px #000; }
         .detail-gallery-progress { height: 3px; margin: 9px 8px 0; overflow: hidden; border-radius: 99px; background: #e9eef2; }
-        .detail-gallery-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #006ce4, #008009); transition: width .35s ease; }
+        .detail-gallery-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #087f68, #0f766e); transition: width .35s ease; }
         @keyframes detailCarouselIn { from { opacity: .45; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
         .detail-gallery-thumb { position: relative; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
         .detail-gallery-thumb:hover { transform: translateY(-4px) scale(1.03); border-color: #df9a7b; box-shadow: 0 8px 16px rgba(25,43,64,.14); }

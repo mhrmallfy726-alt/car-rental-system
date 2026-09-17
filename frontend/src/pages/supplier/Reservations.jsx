@@ -226,7 +226,7 @@ export default function SupplierReservations() {
   };
 
   return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -243,13 +243,13 @@ export default function SupplierReservations() {
           <div className="flex flex-col gap-16" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {reservations.map(res => (
               <div key={res.id} className="card" style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : getImageUrl(res.car_image)) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'contain', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }} />
+                <img src={res.car_image ? (res.car_image.startsWith('http') ? res.car_image : getImageUrl(res.car_image)) : 'https://via.placeholder.com/150'} alt="Car" style={{ width: '120px', height: '80px', objectFit: 'contain', background: '#f7fafb', borderRadius: '8px', border: '1px solid #eee' }} />
 
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '8px' }}>
                     <h3 style={{ fontWeight: 'bold' }}>{res.make} {res.model} <span style={{ color: '#6c757d', fontWeight: 'normal' }}>({res.customer_name})</span></h3>
                     <span className={`badge`} style={{
-                      background: res.status === 'pending' ? '#ffc107' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#17a2b8' : res.status === 'active' ? '#28a745' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#0a58ca' : res.status === 'disputed' ? '#dc3545' : '#6c757d',
+                      background: res.status === 'pending' ? '#b78a22' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#24647d' : res.status === 'active' ? '#0f766e' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#087f68' : res.status === 'disputed' ? '#b42318' : '#6c757d',
                       color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
                     }}>{res.status === 'pending' ? 'طلب مدفوع بانتظار المراجعة' : ['approved', 'awaiting_pickup'].includes(res.status) ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
                   </div>
@@ -257,16 +257,16 @@ export default function SupplierReservations() {
                   <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: '#6c757d', marginBottom: '8px' }}>
                     <span>من: {format(new Date(res.start_date), 'yyyy-MM-dd')}</span>
                     <span>إلى: {format(new Date(res.end_date), 'yyyy-MM-dd')}</span>
-                    <span className="font-bold" style={{ color: '#0a58ca', fontWeight: 'bold' }}>${res.total_price}</span>
+                    <span className="font-bold" style={{ color: '#087f68', fontWeight: 'bold' }}>${res.total_price}</span>
                   </div>
-                  {res.customer_notes && <p style={{ fontSize: '0.8rem', background: '#f8f9fa', padding: '8px', borderRadius: '6px', color: '#495057' }}>ملاحظة العميل: {res.customer_notes}</p>}
+                  {res.customer_notes && <p style={{ fontSize: '0.8rem', background: '#f7fafb', padding: '8px', borderRadius: '6px', color: '#495057' }}>ملاحظة العميل: {res.customer_notes}</p>}
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '160px' }}>
                   {res.status === 'pending' && (
                     <>
-                      <button onClick={() => handleAction(res.id, 'approve')} className="btn btn-success" style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> موافقة</button>
-                      <button onClick={() => handleAction(res.id, 'reject')} className="btn btn-danger" style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> رفض</button>
+                      <button onClick={() => handleAction(res.id, 'approve')} className="btn btn-success" style={{ background: '#0f766e', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> موافقة</button>
+                      <button onClick={() => handleAction(res.id, 'reject')} className="btn btn-danger" style={{ background: '#b42318', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> رفض</button>
                     </>
                   )}
                   {['approved', 'awaiting_pickup'].includes(res.status) && isReportWindowOpen(res, 'before') && (
@@ -276,10 +276,10 @@ export default function SupplierReservations() {
                     <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير التسليم قبل الموعد بساعة</span>
                   )}
                   {['approved', 'awaiting_pickup'].includes(res.status) && (
-                    <button onClick={() => handleAction(res.id, 'cancel')} className="btn btn-danger" style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> إلغاء الحجز</button>
+                    <button onClick={() => handleAction(res.id, 'cancel')} className="btn btn-danger" style={{ background: '#b42318', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><XCircle size={16} /> إلغاء الحجز</button>
                   )}
                   {res.status === 'active' && isReportWindowOpen(res, 'after') && (
-                    <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#ffc107', color: '#1a1a1a', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>
+                    <button onClick={() => openHandover(res.id, 'after')} className="btn btn-warning" style={{ background: '#b78a22', color: '#173a52', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><Camera size={16} /> توثيق الاسترجاع (بعد)</button>
                   )}
                   {res.status === 'active' && !isReportWindowOpen(res, 'after') && (
                     <span style={{ color: '#64748b', fontSize: '0.78rem', lineHeight: 1.5, textAlign: 'center' }}>يظهر تقرير الإرجاع قبل الموعد بساعة</span>
@@ -292,16 +292,16 @@ export default function SupplierReservations() {
                     </div>
                   )}
                   {res.status === 'returned' && (
-                    <button onClick={() => handleAction(res.id, 'complete')} className="btn btn-success" style={{ background: '#28a745', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> إغلاق الحجز وإتاحة السيارة</button>
+                    <button onClick={() => handleAction(res.id, 'complete')} className="btn btn-success" style={{ background: '#0f766e', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}><CheckCircle size={16} /> إغلاق الحجز وإتاحة السيارة</button>
                   )}
-                   <Link to={`/supplier/reservations/${res.id}`} className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', textDecoration: 'none', fontSize: '0.9rem' }}>
+                   <Link to={`/supplier/reservations/${res.id}`} className="btn btn-primary" style={{ background: '#087f68', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', textDecoration: 'none', fontSize: '0.9rem' }}>
                     <Eye size={16} /> عرض التفاصيل والإجراءات
                   </Link>
-                  <button onClick={() => startChat(res.id)} className="btn btn-outline" style={{ background: 'transparent', border: '1px solid #0a58ca', color: '#0a58ca', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                  <button onClick={() => startChat(res.id)} className="btn btn-outline" style={{ background: 'transparent', border: '1px solid #087f68', color: '#087f68', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
                     <MessageSquare size={16} /> مراسلة العميل (محادثة)
                   </button>
                   {res.status !== 'disputed' && ['active', 'returned', 'completed', 'approved', 'awaiting_pickup'].includes(res.status) && (
-                    <button onClick={() => openDisputeModal(res)} className="btn btn-outline-danger" style={{ background: 'transparent', border: '1px solid #dc3545', color: '#dc3545', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', marginTop: '4px' }}>
+                    <button onClick={() => openDisputeModal(res)} className="btn btn-outline-danger" style={{ background: 'transparent', border: '1px solid #b42318', color: '#b42318', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer', marginTop: '4px' }}>
                       <AlertTriangle size={16} /> تقديم شكوى / نزاع
                     </button>
                   )}
@@ -318,7 +318,7 @@ export default function SupplierReservations() {
           <div className="modal-content" style={{ background: 'white', borderRadius: '12px', maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '24px', position: 'relative' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #dee2e6', paddingBottom: '16px', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <Camera size={20} style={{ color: '#0a58ca' }} />
+                <Camera size={20} style={{ color: '#087f68' }} />
                 توثيق حالة السيارة {handoverType === 'before' ? '(قبل التسليم للعميل)' : '(بعد الاسترجاع من العميل)'}
               </h2>
               <button onClick={() => setShowHandover(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}><X size={20} /></button>
@@ -370,7 +370,7 @@ export default function SupplierReservations() {
 
               <div className="form-group">
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', fontSize: '0.85rem' }}>الصور الموثقة (مهم جداً)</label>
-                <div style={{ border: '1px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f8f9fa' }}>
+                <div style={{ border: '1px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f7fafb' }}>
                   <Upload size={24} style={{ margin: '0 auto 8px', color: '#6c757d' }} />
                   <p style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '12px' }}>قم برفع صور لجميع جهات السيارة (الأمام، الخلف، الجوانب، الداخلية)</p>
                   <input type="file" multiple accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} id="handover_images" ref={fileInputRef} />
@@ -393,7 +393,7 @@ export default function SupplierReservations() {
                 )}
               </div>
 
-              <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }} disabled={submittingHandover}>
+              <button type="submit" className="btn btn-primary" style={{ background: '#087f68', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }} disabled={submittingHandover}>
                 {submittingHandover ? 'جاري الحفظ...' : 'حفظ تقرير التوثيق'}
               </button>
             </form>
@@ -427,7 +427,7 @@ export default function SupplierReservations() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#dc3545' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#b42318' }}>
                 <AlertTriangle size={20} /> فتح نزاع / تقديم شكوى
               </h2>
               <button onClick={() => setShowDispute(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -479,7 +479,7 @@ export default function SupplierReservations() {
                 />
               </div>
 
-              <button type="submit" disabled={submittingDispute} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+              <button type="submit" disabled={submittingDispute} style={{ background: '#b42318', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
                 {submittingDispute ? 'جاري الفتح...' : 'تأكيد وفتح النزاع'}
               </button>
             </form>
@@ -514,7 +514,7 @@ export default function SupplierReservations() {
           width: 40px;
           height: 40px;
           border: 4px solid #ddd;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

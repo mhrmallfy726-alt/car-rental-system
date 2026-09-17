@@ -8,7 +8,7 @@ import SupplierSidebar from '../../components/SupplierSidebar';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const navy = '#173a52';
-const teal = '#178263';
+const teal = '#0f766e';
 const input = { width: '100%', boxSizing: 'border-box', border: '1px solid #dbe6e8', borderRadius: 12, padding: '12px 13px', color: navy, background: '#fff', outline: 'none' };
 const primary = { border: 0, borderRadius: 11, padding: '12px 17px', background: teal, color: '#fff', fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 };
 const secondary = { border: '1px solid #cfe1df', borderRadius: 11, padding: '11px 15px', background: '#fff', color: teal, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' };

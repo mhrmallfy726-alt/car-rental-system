@@ -42,7 +42,7 @@
 //       display: 'flex',
 //       alignItems: 'center',
 //       justifyContent: 'center',
-//       background: '#f8f9fa',
+//       background: '#f7fafb',
 //       padding: '20px'
 //     }}>
 //       <div style={{
@@ -60,7 +60,7 @@
 //           alignItems: 'center',
 //           gap: '6px',
 //           background: '#f0f2f5',
-//           color: '#1a1a1a',
+//           color: '#173a52',
 //           padding: '6px 12px',
 //           borderRadius: '20px',
 //           fontSize: '0.8rem',
@@ -74,10 +74,10 @@
 //         {/* الشعار والعنوان */}
 //         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
 //           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-//             <Car size={40} style={{ color: '#0a58ca' }} />
-//             <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0a58ca', letterSpacing: '-1px' }}>لبيتكم</span>
+//             <Car size={40} style={{ color: '#087f68' }} />
+//             <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#087f68', letterSpacing: '-1px' }}>لبيتكم</span>
 //           </div>
-//           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>إنشاء حساب جديد</h1>
+//           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#173a52' }}>إنشاء حساب جديد</h1>
 //           <p style={{ color: '#6c757d', fontSize: '0.9rem' }}>ابدأ رحلتك معنا اليوم باختيار نوع الحساب المناسب</p>
 //         </div>
 
@@ -98,12 +98,12 @@
 //                   alignItems: 'center',
 //                   gap: '8px',
 //                   transition: 'all 0.2s',
-//                   border: formData.role === 'customer' ? '2px solid #0a58ca' : '1px solid #ced4da',
+//                   border: formData.role === 'customer' ? '2px solid #087f68' : '1px solid #ced4da',
 //                   background: formData.role === 'customer' ? 'rgba(10, 88, 202, 0.05)' : 'white'
 //                 }}
 //               >
-//                 <ShieldCheck size={24} color={formData.role === 'customer' ? '#0a58ca' : '#6c757d'} />
-//                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'customer' ? '#0a58ca' : '#1a1a1a' }}>مستأجر سيارة</span>
+//                 <ShieldCheck size={24} color={formData.role === 'customer' ? '#087f68' : '#6c757d'} />
+//                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'customer' ? '#087f68' : '#173a52' }}>مستأجر سيارة</span>
 //               </div>
 //               <div 
 //                 onClick={() => setFormData({...formData, role: 'supplier'})}
@@ -117,12 +117,12 @@
 //                   alignItems: 'center',
 //                   gap: '8px',
 //                   transition: 'all 0.2s',
-//                   border: formData.role === 'supplier' ? '2px solid #0a58ca' : '1px solid #ced4da',
+//                   border: formData.role === 'supplier' ? '2px solid #087f68' : '1px solid #ced4da',
 //                   background: formData.role === 'supplier' ? 'rgba(10, 88, 202, 0.05)' : 'white'
 //                 }}
 //               >
-//                 <Briefcase size={24} color={formData.role === 'supplier' ? '#0a58ca' : '#6c757d'} />
-//                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'supplier' ? '#0a58ca' : '#1a1a1a' }}>مكتب تأجير / مورد</span>
+//                 <Briefcase size={24} color={formData.role === 'supplier' ? '#087f68' : '#6c757d'} />
+//                 <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'supplier' ? '#087f68' : '#173a52' }}>مكتب تأجير / مورد</span>
 //               </div>
 //             </div>
 //           </div>
@@ -228,7 +228,7 @@
 //             disabled={isLoading}
 //             style={{
 //               width: '100%',
-//               background: '#0a58ca',
+//               background: '#087f68',
 //               color: 'white',
 //               border: 'none',
 //               padding: '12px',
@@ -245,7 +245,7 @@
 
 //         <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.85rem', color: '#6c757d' }}>
 //           لديك حساب بالفعل؟{' '}
-//           <Link to="/login" style={{ color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>تسجيل الدخول</Link>
+//           <Link to="/login" style={{ color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>تسجيل الدخول</Link>
 //         </div>
 //       </div>
 
@@ -413,7 +413,7 @@ export default function Register() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f8f9fa',
+      background: '#f7fafb',
       padding: '20px'
     }}>
       <div style={{
@@ -445,15 +445,15 @@ export default function Register() {
                   alignItems: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
-                  border: formData.role === 'customer' ? '0px solid #0a58ca' : '0px solid #ced4da',
+                  border: formData.role === 'customer' ? '0px solid #087f68' : '0px solid #ced4da',
                   background: formData.role === 'customer' ? 'rgba(0, 0, 0, 0)' : 'f8f9fa#'
                 }}
               >
                        
            
                        <img src={logo} alt="RC Logo" style={{ width:'500px', height:'175px',objectFit:'contain'}}/>
-                <ShieldCheck size={24} color={formData.role === 'customer' ? '#0a58ca' : '#6c757d'} />
-                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'customer' ? '#0a58ca' : '#1a1a1a' }}>مستأجر سيارة</span>
+                <ShieldCheck size={24} color={formData.role === 'customer' ? '#087f68' : '#6c757d'} />
+                <span style={{ fontWeight: 700, fontSize: '0.9rem', color: formData.role === 'customer' ? '#087f68' : '#173a52' }}>مستأجر سيارة</span>
                     {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -466,7 +466,7 @@ fontStyle: "italic",
 textTransform: "uppercase",
 }}>RENTALCAR</span> */}
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px', color: '#173a52' }}>
            
           </h1>
           
@@ -487,7 +487,7 @@ textTransform: "uppercase",
                   alignItems: 'center',
                   gap: '8px',
                   transition: 'all 0.2s',
-                  border: formData.role === 'supplier' ? '2px solid #0a58ca' : '1px solid #ced4da',
+                  border: formData.role === 'supplier' ? '2px solid #087f68' : '1px solid #ced4da',
                   background: formData.role === 'supplier' ? 'rgba(10, 88, 202, 0.01)' : 'f8f9fa#'
                 }}
               >
@@ -495,7 +495,7 @@ textTransform: "uppercase",
 
     <Briefcase
       size={24}
-      color={formData.role === "supplier" ? "#0a58ca" : "#6c757d"}
+      color={formData.role === "supplier" ? "#087f68" : "#6c757d"}
     />
     <span 
     >
@@ -616,7 +616,7 @@ textTransform: "uppercase",
             disabled={isLoading}
             style={{
               width: '100%',
-              background: '#0a58ca',
+              background: '#087f68',
               color: 'white',
               border: 'none',
               padding: '12px',
@@ -639,7 +639,7 @@ textTransform: "uppercase",
 
   <ShieldCheck
     size={60}
-    color="#0a58ca"
+    color="#087f68"
     style={{marginBottom:'20px'}}
   />
 
@@ -680,7 +680,7 @@ textTransform: "uppercase",
     style={{
       width:'100%',
       marginTop:'20px',
-      background:'#0a58ca',
+      background:'#087f68',
       color:'white',
       border:'none',
       padding:'12px',
@@ -737,7 +737,7 @@ textTransform: "uppercase",
           alignItems: 'center',
           gap: '6px',
           background: '#f0f2f5',
-          color: '#1a1a1a',
+          color: '#173a52',
           padding: '6px 12px',
           borderRadius: '20px',
           fontSize: '0.8rem',
@@ -753,16 +753,16 @@ textTransform: "uppercase",
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
           {/* <img src={logo} alt="RC Logo" style={{ width:'20%', height:'70px',objectFit:'contain'}}/> */}
 
-            {/* <Car size={40} style={{ color: '#0a58ca' }} /> */}
-            {/* <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0a58ca', letterSpacing: '-1px' }}>RENTALCAR</span> */}
+            {/* <Car size={40} style={{ color: '#087f68' }} /> */}
+            {/* <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#087f68', letterSpacing: '-1px' }}>RENTALCAR</span> */}
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>إنشاء حساب جديد</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#173a52' }}>إنشاء حساب جديد</h1>
           <p style={{ color: '#6c757d', fontSize: '0.9rem' }}>ابدأ رحلتك معنا اليوم باختيار نوع الحساب المناسب</p>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.85rem', color: '#6c757d' }}>
           لديك حساب بالفعل؟{' '}
-          <Link to="/login" style={{ color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>تسجيل الدخول</Link>
+          <Link to="/login" style={{ color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>تسجيل الدخول</Link>
         </div>
       </div>
 

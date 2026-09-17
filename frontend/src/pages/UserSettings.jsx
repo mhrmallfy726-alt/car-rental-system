@@ -8,7 +8,7 @@ import { getImageUrl } from '../utils/imageUtils';
 import { maskEmail } from '../utils/privacy';
 
 const navy = '#173a52';
-const teal = '#178263';
+const teal = '#0f766e';
 const soft = '#f4f8f8';
 
 const Field = ({ label, children, hint }) => (

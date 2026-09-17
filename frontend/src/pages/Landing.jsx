@@ -103,7 +103,7 @@ export default function Landing() {
                 display: 'inline-flex', alignItems: 'center', gap: '8px',
                 background: 'rgba(254,187,2,0.1)', border: '1px solid rgba(254,187,2,0.3)',
                 borderRadius: '50px', padding: '8px 20px', marginBottom: '24px',
-                color: '#febb02', fontSize: '0.85rem', fontWeight: '600',
+                color: '#d4af37', fontSize: '0.85rem', fontWeight: '600',
               }}>
                 <Sparkles size={16} /> المنصة الأولى لتأجير السيارات في اليمن
               </div>
@@ -117,7 +117,7 @@ export default function Landing() {
               }}>
                 تأجير السيارات<br />
                 <span style={{
-                  background: 'linear-gradient(135deg, #febb02, #f5a623)',
+                  background: 'linear-gradient(135deg, #d4af37, #f5a623)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}>بكل سهولة وأمان</span>
@@ -140,7 +140,7 @@ export default function Landing() {
                   to="/cars"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '10px',
-                    background: 'linear-gradient(135deg, #008009, #00a10d)',
+                    background: 'linear-gradient(135deg, #0f766e, #00a10d)',
                     color: 'white', padding: '16px 36px', borderRadius: '12px',
                     fontSize: '1.1rem', fontWeight: '700',
                     boxShadow: '0 8px 25px rgba(0,128,9,0.35)',
@@ -180,7 +180,7 @@ export default function Landing() {
                   { icon: Headphones, text: 'دعم 24/7' },
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-                    <item.icon size={18} style={{ color: '#febb02' }} />
+                    <item.icon size={18} style={{ color: '#d4af37' }} />
                     {item.text}
                   </div>
                 ))}
@@ -202,7 +202,7 @@ export default function Landing() {
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                   <div style={{
                     width: '48px', height: '48px', borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #008009, #00a10d)',
+                    background: 'linear-gradient(135deg, #0f766e, #00a10d)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Car size={24} style={{ color: 'white' }} />
@@ -228,8 +228,8 @@ export default function Landing() {
                   </div>
                   <div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem' }}>التقييم</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#febb02' }}>
-                      <Star size={14} fill="#febb02" /> 4.9
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#d4af37' }}>
+                      <Star size={14} fill="#d4af37" /> 4.9
                     </div>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export default function Landing() {
                   border: '1px solid rgba(0,128,9,0.3)',
                 }}>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginBottom: '4px' }}>احجز الآن</div>
-                  <div style={{ color: 'white', fontWeight: '700' }}>من <span style={{ color: '#008009' }}>$135</span> لـ 3 أيام</div>
+                  <div style={{ color: 'white', fontWeight: '700' }}>من <span style={{ color: '#0f766e' }}>$135</span> لـ 3 أيام</div>
                 </div>
               </div>
             </div>
@@ -293,17 +293,17 @@ export default function Landing() {
         ref={setRef('customers')}
         style={{
           padding: '100px 0',
-          background: 'linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%)',
+          background: 'linear-gradient(180deg, #f7fafb 0%, #ffffff 100%)',
         }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
           <div style={visibleSections.customers ? fadeInUpVisible : fadeInUp}>
             <div style={{ textAlign: 'center', marginBottom: '60px' }}>
           
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#1a1a1a' }}>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
                 احجز سيارتك في لحظات
               </h2>
-              <p style={{ color: '#6b6b6b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
+              <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
                 تجربة حجز سلسة ومريحة مع ضمان أفضل الأسعار والخدمات
               </p>
             </div>
@@ -314,28 +314,28 @@ export default function Landing() {
                   icon: Search,
                   title: 'ابحث وقارن',
                   desc: 'تصفح مئات السيارات من موردين مختلفين وقارن الأسعار والتقييمات بسهولة',
-                  color: '#003580',
+                  color: '#173a52',
                   bg: 'rgba(0,53,128,0.08)',
                 },
                 {
                   icon: CreditCard,
                   title: 'ادفع بأمان',
                   desc: 'دفع إلكتروني آمن ومشفر مع إمكانية حفظ البطاقة للتسريع في المرات القادمة',
-                  color: '#008009',
+                  color: '#0f766e',
                   bg: 'rgba(0,128,9,0.08)',
                 },
                 {
                   icon: CheckCircle2,
                   title: 'تأكيد فوري',
                   desc: 'احصل على تأكيد فوري لحجزك مع إمكانية المراسلة المباشرة مع المورد',
-                  color: '#febb02',
+                  color: '#d4af37',
                   bg: 'rgba(254,187,2,0.15)',
                 },
                 {
                   icon: Shield,
                   title: 'حماية كاملة',
                   desc: 'سياسات إلغاء مرنة وحماية لحقوقك مع إمكانية رفع الشكاوى والنزاعات',
-                  color: '#dc3545',
+                  color: '#b42318',
                   bg: 'rgba(220,53,69,0.08)',
                 },
               ].map((item, i) => (
@@ -360,8 +360,8 @@ export default function Landing() {
                   }}>
                     <item.icon size={28} style={{ color: item.color }} />
                   </div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#1a1a1a' }}>{item.title}</h3>
-                  <p style={{ color: '#6b6b6b', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.desc}</p>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#173a52' }}>{item.title}</h3>
+                  <p style={{ color: '#64748b', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -403,19 +403,19 @@ export default function Landing() {
                   icon: BarChart3,
                   title: 'لوحة تحكم ذكية',
                   desc: 'إحصائيات مفصلة عن حجوزاتك وإيراداتك مع رسوم بيانية واضحة',
-                  gradient: 'linear-gradient(135deg, #008009, #00a10d)',
+                  gradient: 'linear-gradient(135deg, #0f766e, #00a10d)',
                 },
                 {
                   icon: DollarSign,
                   title: 'إدارة الإيرادات',
                   desc: 'تتبع مدفوعاتك بسهولة مع تقارير مالية شاملة ومحدثة',
-                  gradient: 'linear-gradient(135deg, #febb02, #f5a623)',
+                  gradient: 'linear-gradient(135deg, #d4af37, #f5a623)',
                 },
                 {
                   icon: Globe,
                   title: 'وصول عالمي',
                   desc: 'اعرض سياراتك لآلاف العملاء المحتملين في جميع أنحاء المنصة',
-                  gradient: 'linear-gradient(135deg, #003580, #006ce4)',
+                  gradient: 'linear-gradient(135deg, #173a52, #087f68)',
                 },
               ].map((item, i) => (
                 <div
@@ -450,8 +450,8 @@ export default function Landing() {
                 to="/supplier-benefits"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
-                  background: 'linear-gradient(135deg, #febb02, #f5a623)',
-                  color: '#1a1a1a', padding: '16px 40px', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #d4af37, #f5a623)',
+                  color: '#173a52', padding: '16px 40px', borderRadius: '12px',
                   fontSize: '1.1rem', fontWeight: '800',
                   boxShadow: '0 8px 25px rgba(254,187,2,0.3)',
                   transition: 'all 0.3s ease',
@@ -476,10 +476,10 @@ export default function Landing() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
           <div style={visibleSections['how-it-works'] ? fadeInUpVisible : fadeInUp}>
             <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#1a1a1a' }}>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
                 كيف تعمل المنصة؟
               </h2>
-              <p style={{ color: '#6b6b6b', fontSize: '1.1rem' }}>3 خطوات بسيطة للحصول على سيارتك</p>
+              <p style={{ color: '#64748b', fontSize: '1.1rem' }}>3 خطوات بسيطة للحصول على سيارتك</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px' }}>
@@ -489,21 +489,21 @@ export default function Landing() {
                   icon: MapPin,
                   title: 'حدد موقعك وتواريخك',
                   desc: 'اختر مدينة الاستلام وفترة التأجير التي تناسبك',
-                  color: '#003580',
+                  color: '#173a52',
                 },
                 {
                   step: '02',
                   icon: Car,
                   title: 'اختر سيارتك',
                   desc: 'قارن بين العروض والأسعار واختر الأنسب لك',
-                  color: '#008009',
+                  color: '#0f766e',
                 },
                 {
                   step: '03',
                   icon: CreditCard,
                   title: 'ادفع وانطلق',
                   desc: 'أكمل الدفع بأمان واستلم سيارتك في الموعد المحدد',
-                  color: '#febb02',
+                  color: '#d4af37',
                 },
               ].map((item, i) => (
                 <div key={i} style={{ textAlign: 'center', position: 'relative' }}>
@@ -525,8 +525,8 @@ export default function Landing() {
                       fontSize: '0.75rem', fontWeight: '800',
                     }}>{item.step}</span>
                   </div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#1a1a1a' }}>{item.title}</h3>
-                  <p style={{ color: '#6b6b6b', fontSize: '0.95rem' }}>{item.desc}</p>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#173a52' }}>{item.title}</h3>
+                  <p style={{ color: '#64748b', fontSize: '0.95rem' }}>{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -538,12 +538,12 @@ export default function Landing() {
       <section
         id="why-us"
         ref={setRef('why-us')}
-        style={{ padding: '100px 0', background: '#f8f9fa' }}
+        style={{ padding: '100px 0', background: '#f7fafb' }}
       >
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
           <div style={visibleSections['why-us'] ? fadeInUpVisible : fadeInUp}>
             <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#1a1a1a' }}>
+              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
                 لماذا تختار منصتنا؟
               </h2>
             </div>
@@ -558,19 +558,19 @@ export default function Landing() {
                   icon: Award,
                   title: 'موردون معتمدون',
                   desc: 'جميع موردي السيارات لدينا تم التحقق منهم واعتمادهم لضمان جودة الخدمة',
-                  color: '#008009',
+                  color: '#0f766e',
                 },
                 {
                   icon: Shield,
                   title: 'تأمين شامل',
                   desc: 'جميع السيارات مؤمنة بالكامل مع تغطية شاملة لأية حوادث أو أعطال',
-                  color: '#003580',
+                  color: '#173a52',
                 },
                 {
                   icon: Clock,
                   title: 'توافر على مدار الساعة',
                   desc: 'نظامنا يعمل 24/7 مع إمكانية الحجز في أي وقت ومن أي مكان',
-                  color: '#febb02',
+                  color: '#d4af37',
                 },
                 {
                   icon: Headphones,
@@ -588,7 +588,7 @@ export default function Landing() {
                   icon: Users,
                   title: 'مجتمع موثوق',
                   desc: 'تقييمات حقيقية من عملاء حقيقيين تساعدك على اتخاذ القرار الصحيح',
-                  color: '#0a58ca',
+                  color: '#087f68',
                 },
               ].map((item, i) => (
                 <div
@@ -615,8 +615,8 @@ export default function Landing() {
                     <item.icon size={24} style={{ color: item.color }} />
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '8px', color: '#1a1a1a' }}>{item.title}</h3>
-                    <p style={{ color: '#6b6b6b', fontSize: '0.9rem', lineHeight: 1.6 }}>{item.desc}</p>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '8px', color: '#173a52' }}>{item.title}</h3>
+                    <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6 }}>{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -628,7 +628,7 @@ export default function Landing() {
       {/* ===== CTA SECTION ===== */}
       <section style={{
         padding: '100px 0',
-        background: 'linear-gradient(135deg, #003580 0%, #006ce4 100%)',
+        background: 'linear-gradient(135deg, #173a52 0%, #087f68 100%)',
         position: 'relative',
         overflow: 'hidden',
       }}>
@@ -655,7 +655,7 @@ export default function Landing() {
               to="/search"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '10px',
-                background: 'white', color: '#003580',
+                background: 'white', color: '#173a52',
                 padding: '16px 36px', borderRadius: '12px',
                 fontSize: '1.1rem', fontWeight: '800',
                 boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
@@ -701,7 +701,7 @@ export default function Landing() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #008009, #00a10d)',
+                  background: 'linear-gradient(135deg, #0f766e, #00a10d)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Car size={22} style={{ color: 'white' }} />

@@ -105,7 +105,7 @@ export default function SupplierDashboard() {
   };
 
   return (
-    <div className="supplier-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="supplier-dashboard-page" dir="rtl" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="supplier-dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -120,7 +120,7 @@ export default function SupplierDashboard() {
               <RefreshCw size={18} style={refreshing ? { animation: 'spin 1s linear infinite' } : {}} />
               {refreshing ? 'جاري التحديث...' : 'تحديث'}
             </button>
-            <Link to="/supplier/cars/add" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Link to="/supplier/cars/add" style={{ background: '#087f68', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <Plus size={18} /> إضافة سيارة جديدة
             </Link>
           </div>
@@ -139,15 +139,15 @@ export default function SupplierDashboard() {
                 <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats.totalCars}</p><p style={{ color: '#6c757d', margin: 0 }}>إجمالي السيارات</p></div>
               </div>
               <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#28a745' }}><DollarSign size={24} /></div>
+                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f766e' }}><DollarSign size={24} /></div>
                 <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>${stats.revenue.toFixed(2)}</p><p style={{ color: '#6c757d', margin: 0 }}>إجمالي الأرباح</p></div>
               </div>
               <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffc107' }}><Calendar size={24} /></div>
+                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b78a22' }}><Calendar size={24} /></div>
                 <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats.activeReservations}</p><p style={{ color: '#6c757d', margin: 0 }}>حجوزات نشطة</p></div>
               </div>
               <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc3545' }}><Star size={24} /></div>
+                <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b42318' }}><Star size={24} /></div>
                 <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{stats.avgRating.toFixed(1)} / 5</p><p style={{ color: '#6c757d', margin: 0 }}>متوسط التقييم</p></div>
               </div>
             </div>
@@ -157,11 +157,11 @@ export default function SupplierDashboard() {
               {/* العروض الترويجية */}
               <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px' }}>
-                  <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Star size={18} style={{ color: '#ffc107' }} /> العروض الترويجية</h3>
-                  <Link to="/supplier/advertisement-request" style={{ color: '#0a58ca', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة العروض والإعلانات ({stats.activeDeals})</Link>
+                  <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Star size={18} style={{ color: '#b78a22' }} /> العروض الترويجية</h3>
+                  <Link to="/supplier/advertisement-request" style={{ color: '#087f68', fontSize: '0.85rem', textDecoration: 'none' }}>إدارة العروض والإعلانات ({stats.activeDeals})</Link>
                 </div>
-                <div style={{ background: '#f8f9fa', padding: '16px', borderRadius: '8px', border: '1px dashed #ffc107', marginBottom: '16px' }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: '8px', color: '#0a58ca' }}>نصيحة للمورد:</p>
+                <div style={{ background: '#f7fafb', padding: '16px', borderRadius: '8px', border: '1px dashed #b78a22', marginBottom: '16px' }}>
+                  <p style={{ fontWeight: 'bold', marginBottom: '8px', color: '#087f68' }}>نصيحة للمورد:</p>
                   <p style={{ fontSize: '0.85rem', color: '#6c757d' }}>السيارات التي تملك خصماً بنسبة 15% أو أكثر تحصل على مشاهدات أعلى بـ 3 أضعاف.</p>
                 </div>
                 {stats.discountedCars.length > 0 ? (
@@ -170,13 +170,13 @@ export default function SupplierDashboard() {
                       <div key={car.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', borderRadius: '8px' }}>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                           <img src={car.primary_image ? (car.primary_image.startsWith('http') ? car.primary_image : getImageUrl(car.primary_image)) : 'https://via.placeholder.com/40'}
-                            style={{ width: '40px', height: '30px', objectFit: 'contain', borderRadius: '4px', background: '#f8f9fa' }} />
+                            style={{ width: '40px', height: '30px', objectFit: 'contain', borderRadius: '4px', background: '#f7fafb' }} />
                           <div>
                             <p style={{ fontSize: '0.85rem', fontWeight: 'bold', margin: 0 }}>{car.make} {car.model}</p>
                             <p style={{ fontSize: '0.7rem', color: '#E3000F', margin: 0 }}>خصم {car.discount_percentage}%</p>
                           </div>
                         </div>
-                        <button onClick={() => handleEditDiscount(car.id)} style={{ background: 'none', border: 'none', color: '#0a58ca', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <button onClick={() => handleEditDiscount(car.id)} style={{ background: 'none', border: 'none', color: '#087f68', fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Edit size={14} /> تعديل
                         </button>
                       </div>
@@ -204,8 +204,8 @@ export default function SupplierDashboard() {
             {/* أحدث الحجوزات */}
             <div style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '8px', marginBottom: '16px' }}>
-                <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Calendar size={18} style={{ color: '#0a58ca' }} /> أحدث طلبات الحجز</h3>
-                <Link to="/supplier/reservations" style={{ color: '#0a58ca', fontSize: '0.85rem', textDecoration: 'none' }}>عرض الكل</Link>
+                <h3 style={{ fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}><Calendar size={18} style={{ color: '#087f68' }} /> أحدث طلبات الحجز</h3>
+                <Link to="/supplier/reservations" style={{ color: '#087f68', fontSize: '0.85rem', textDecoration: 'none' }}>عرض الكل</Link>
               </div>
 
               {recentReservations.length === 0 ? (
@@ -213,7 +213,7 @@ export default function SupplierDashboard() {
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
-                    <thead style={{ background: '#f8f9fa' }}>
+                    <thead style={{ background: '#f7fafb' }}>
                       <tr>
                         <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>رقم الحجز</th>
                         <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السيارة</th>
@@ -232,7 +232,7 @@ export default function SupplierDashboard() {
                           <td style={{ padding: '12px' }}>${parseFloat(r.total_price).toFixed(2)}</td>
                           <td style={{ padding: '12px' }}>
                             <span style={{
-                              background: r.status === 'pending' ? '#ffc107' : r.status === 'active' ? '#28a745' : r.status === 'completed' ? '#0a58ca' : '#6c757d',
+                              background: r.status === 'pending' ? '#b78a22' : r.status === 'active' ? '#0f766e' : r.status === 'completed' ? '#087f68' : '#6c757d',
                               color: 'white',
                               padding: '2px 8px',
                               borderRadius: '20px',
@@ -268,7 +268,7 @@ export default function SupplierDashboard() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

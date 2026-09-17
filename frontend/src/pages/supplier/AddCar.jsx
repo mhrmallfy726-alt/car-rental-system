@@ -128,7 +128,7 @@ export default function AddCar() {
   };
 
   return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -230,8 +230,8 @@ export default function AddCar() {
 
             {/* رفع الصور */}
             <div className="form-group">
-              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>صور السيارة <span style={{ color: '#dc3545' }}>*</span> <span style={{ color: '#6c757d', fontSize: '0.8rem' }}>(الأولى ستكون الصورة الرئيسية)</span></label>
-              <div style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f8f9fa' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>صور السيارة <span style={{ color: '#b42318' }}>*</span> <span style={{ color: '#6c757d', fontSize: '0.8rem' }}>(الأولى ستكون الصورة الرئيسية)</span></label>
+              <div style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f7fafb' }}>
                 <Image size={32} style={{ margin: '0 auto 8px', color: '#6c757d' }} />
                 <p style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '8px' }}>ارفع صور السيارة (حتى 8 صور - JPG, PNG, WEBP)</p>
                 <p style={{ fontSize: '0.75rem', color: '#6c757d', marginBottom: '12px' }}>المتبقي: {8 - images.length} صورة</p>
@@ -246,7 +246,7 @@ export default function AddCar() {
                   {imagePreviews.map((src, i) => (
                     <div key={i} style={{ position: 'relative', width: '90px', height: '70px', border: '1px solid #dee2e6', borderRadius: '6px', overflow: 'hidden' }}>
                       <img src={src} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      {i === 0 && <span style={{ position: 'absolute', top: '2px', right: '2px', background: '#0a58ca', color: 'white', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '4px' }}>رئيسية</span>}
+                      {i === 0 && <span style={{ position: 'absolute', top: '2px', right: '2px', background: '#087f68', color: 'white', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '4px' }}>رئيسية</span>}
                       <button type="button" onClick={() => removeImage(i)} style={{ position: 'absolute', top: '2px', left: '2px', background: 'rgba(220,38,38,0.8)', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                     </div>
                   ))}
@@ -254,7 +254,7 @@ export default function AddCar() {
               )}
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }} disabled={loading}>
+            <button type="submit" className="btn btn-primary" style={{ background: '#087f68', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }} disabled={loading}>
               {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ وإرسال للمراجعة</>}
             </button>
           </form>

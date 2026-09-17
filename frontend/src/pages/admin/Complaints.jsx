@@ -12,9 +12,9 @@
 // import { io } from 'socket.io-client';
 
 // const STATUS_MAP = {
-//   open: { label: 'مفتوح', icon: AlertTriangle, color: '#dc3545' },
-//   in_progress: { label: 'جارٍ', icon: Clock, color: '#ffc107' },
-//   resolved: { label: 'محلول', icon: CheckCircle, color: '#28a745' },
+//   open: { label: 'مفتوح', icon: AlertTriangle, color: '#b42318' },
+//   in_progress: { label: 'جارٍ', icon: Clock, color: '#b78a22' },
+//   resolved: { label: 'محلول', icon: CheckCircle, color: '#0f766e' },
 //   closed: { label: 'مغلق', icon: Circle, color: '#6c757d' },
 // };
 
@@ -171,29 +171,29 @@
 //   };
 
 //   return (
-//     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8f9fa' }}>
+//     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f7fafb' }}>
 //       <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 100 }}>
 //         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-//           <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+//           <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
 //             <LayoutDashboard size={20} /> الإحصائيات
 //           </Link>
-//           <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+//           <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
 //             <Users size={20} /> المستخدمين
 //           </Link>
-//           <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+//           <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
 //             <Car size={20} /> السيارات
 //           </Link>
-//           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
+//           <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>
 //             <ShieldAlert size={20} /> الشكاوى
 //           </Link>
-//           <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+//           <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
 //             <Settings size={20} /> الإعدادات
 //           </Link>
 //         </div>
 //       </div>
 
 //       <div style={{ marginRight: '260px', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-//         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f8f9fa' }}>
+//         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f7fafb' }}>
 
 //           {/* Left panel */}
 //           <div style={{
@@ -208,9 +208,9 @@
 //             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e9ecef', background: 'white' }}>
 //               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
 //                 <h1 style={{ fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}>
-//                   <ShieldAlert size={22} color="#dc3545" /> إدارة الشكاوى
+//                   <ShieldAlert size={22} color="#b42318" /> إدارة الشكاوى
 //                 </h1>
-//                 <span style={{ background: '#dc3545', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+//                 <span style={{ background: '#b42318', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>
 //                   {complaints.filter(c => c.status === 'open').length} مفتوح
 //                 </span>
 //               </div>
@@ -221,8 +221,8 @@
 //                   const count = s === 'all' ? complaints.length : complaints.filter(c => c.status === s).length;
 //                   return (
 //                     <button key={s} onClick={() => setFilter(s)} style={{
-//                       background: filter === s ? '#0a58ca' : '#e9ecef',
-//                       color: filter === s ? 'white' : '#1a1a1a',
+//                       background: filter === s ? '#087f68' : '#e9ecef',
+//                       color: filter === s ? 'white' : '#173a52',
 //                       border: 'none',
 //                       padding: '6px 12px',
 //                       borderRadius: '20px',
@@ -254,7 +254,7 @@
 //                       borderBottom: '1px solid #e9ecef',
 //                       cursor: 'pointer',
 //                       background: selectedComplaint?.id === c.id ? 'rgba(13,110,253,0.05)' : 'transparent',
-//                       borderRight: selectedComplaint?.id === c.id ? '3px solid #0a58ca' : '3px solid transparent',
+//                       borderRight: selectedComplaint?.id === c.id ? '3px solid #087f68' : '3px solid transparent',
 //                       transition: 'all 0.15s'
 //                     }}>
 //                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
@@ -291,12 +291,12 @@
 
 //           {/* Right panel - chat */}
 //           {selectedComplaint && (
-//             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f8f9fa' }}>
+//             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f7fafb' }}>
 //               <div style={{ padding: '16px 24px', borderBottom: '1px solid #e9ecef', background: 'white' }}>
 //                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
 //                   <div>
 //                     <h2 style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-//                       <MessageSquare size={18} color="#0a58ca" />
+//                       <MessageSquare size={18} color="#087f68" />
 //                       {selectedComplaint.title}
 //                       <span style={{
 //                         background: STATUS_MAP[selectedComplaint.status]?.color || '#6c757d',
@@ -323,8 +323,8 @@
 //                     {selectedComplaint.status !== 'resolved' && selectedComplaint.status !== 'closed' && (
 //                       <>
 //                         <button onClick={() => handleUpdateStatus('in_progress')} disabled={updatingStatus} style={{
-//                           background: '#ffc107',
-//                           color: '#1a1a1a',
+//                           background: '#b78a22',
+//                           color: '#173a52',
 //                           border: 'none',
 //                           padding: '6px 12px',
 //                           borderRadius: '6px',
@@ -337,7 +337,7 @@
 //                           <Clock size={14} /> تحويل لـ "جارٍ"
 //                         </button>
 //                         <button onClick={() => setShowResolveForm(!showResolveForm)} style={{
-//                           background: '#28a745',
+//                           background: '#0f766e',
 //                           color: 'white',
 //                           border: 'none',
 //                           padding: '6px 12px',
@@ -365,8 +365,8 @@
 //                 </div>
 
 //                 {showResolveForm && (
-//                   <div style={{ marginTop: '16px', padding: '16px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #28a745' }}>
-//                     <p style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#28a745', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+//                   <div style={{ marginTop: '16px', padding: '16px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #0f766e' }}>
+//                     <p style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#0f766e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
 //                       <CheckCircle size={14} /> قرار حل النزاع
 //                     </p>
 //                     <textarea
@@ -378,7 +378,7 @@
 //                     />
 //                     <div style={{ display: 'flex', gap: '8px' }}>
 //                       <button onClick={() => handleUpdateStatus('resolved')} disabled={updatingStatus} style={{
-//                         background: '#28a745',
+//                         background: '#0f766e',
 //                         color: 'white',
 //                         border: 'none',
 //                         padding: '6px 12px',
@@ -424,7 +424,7 @@
 //                     if (isSystem) {
 //                       return (
 //                         <div key={idx} style={{ textAlign: 'center' }}>
-//                           <span style={{ background: '#e8f4fd', color: '#0a58ca', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', display: 'inline-block', fontWeight: 'bold' }}>
+//                           <span style={{ background: '#e8f4fd', color: '#087f68', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', display: 'inline-block', fontWeight: 'bold' }}>
 //                             {actualMessage}
 //                           </span>
 //                         </div>
@@ -445,8 +445,8 @@
 //                         )}
 //                         <div style={{
 //                           maxWidth: '65%',
-//                           background: isAdmin ? '#0a58ca' : 'white',
-//                           color: isAdmin ? 'white' : '#1a1a1a',
+//                           background: isAdmin ? '#087f68' : 'white',
+//                           color: isAdmin ? 'white' : '#173a52',
 //                           padding: '10px 14px',
 //                           borderRadius: isAdmin ? '14px 14px 0 14px' : '14px 14px 14px 0',
 //                           boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
@@ -465,7 +465,7 @@
 //                           {msg.attachment_url && (
 //                             <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" style={{
 //                               display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px',
-//                               fontSize: '0.75rem', color: isAdmin ? '#fff' : '#0a58ca', textDecoration: 'underline'
+//                               fontSize: '0.75rem', color: isAdmin ? '#fff' : '#087f68', textDecoration: 'underline'
 //                             }}>
 //                               <Paperclip size={12} /> عرض المرفق
 //                             </a>
@@ -514,7 +514,7 @@
 //                       </button>
 //                       <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*,application/pdf" />
 //                       <button type="submit" disabled={(!newMessage.trim() && !attachment) || sendingMessage || uploading} style={{
-//                         background: '#0a58ca',
+//                         background: '#087f68',
 //                         color: 'white',
 //                         border: 'none',
 //                         padding: '6px 16px',
@@ -540,7 +540,7 @@
 //           width: 40px;
 //           height: 40px;
 //           border: 4px solid #e9ecef;
-//           border-top-color: #0a58ca;
+//           border-top-color: #087f68;
 //           border-radius: 50%;
 //           animation: spin 0.8s linear infinite;
 //         }
@@ -600,9 +600,9 @@ import { io } from 'socket.io-client';
 import SOCKET_URL from '../../utils/socket';
 
 const STATUS_MAP = {
-  open: { label: 'مفتوح', icon: AlertTriangle, color: '#dc3545' },
-  in_progress: { label: 'جارٍ', icon: Clock, color: '#ffc107' },
-  resolved: { label: 'محلول', icon: CheckCircle, color: '#28a745' },
+  open: { label: 'مفتوح', icon: AlertTriangle, color: '#b42318' },
+  in_progress: { label: 'جارٍ', icon: Clock, color: '#b78a22' },
+  resolved: { label: 'محلول', icon: CheckCircle, color: '#0f766e' },
   closed: { label: 'مغلق', icon: Circle, color: '#6c757d' },
 };
 
@@ -759,29 +759,29 @@ export default function AdminComplaints() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f7fafb' }}>
       <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 100 }}>
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <LayoutDashboard size={20} /> الإحصائيات
           </Link>
-          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Users size={20} /> المستخدمين
           </Link>
-          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Car size={20} /> السيارات
           </Link>
-          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
+          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
           </Link>
-          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Settings size={20} /> الإعدادات
           </Link>
         </div>
       </div>
 
       <div style={{ marginRight: '260px', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f8f9fa' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f7fafb' }}>
 
           {/* Left panel */}
           <div style={{
@@ -796,9 +796,9 @@ export default function AdminComplaints() {
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e9ecef', background: 'white' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h1 style={{ fontWeight: 'bold', fontSize: '1.2rem', display: 'flex', gap: '8px', alignItems: 'center', margin: 0 }}>
-                  <ShieldAlert size={22} color="#dc3545" /> إدارة الشكاوى
+                  <ShieldAlert size={22} color="#b42318" /> إدارة الشكاوى
                 </h1>
-                <span style={{ background: '#dc3545', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                <span style={{ background: '#b42318', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>
                   {complaints.filter(c => c.status === 'open').length} مفتوح
                 </span>
               </div>
@@ -809,8 +809,8 @@ export default function AdminComplaints() {
                   const count = s === 'all' ? complaints.length : complaints.filter(c => c.status === s).length;
                   return (
                     <button key={s} onClick={() => setFilter(s)} style={{
-                      background: filter === s ? '#0a58ca' : '#e9ecef',
-                      color: filter === s ? 'white' : '#1a1a1a',
+                      background: filter === s ? '#087f68' : '#e9ecef',
+                      color: filter === s ? 'white' : '#173a52',
                       border: 'none',
                       padding: '6px 12px',
                       borderRadius: '20px',
@@ -842,7 +842,7 @@ export default function AdminComplaints() {
                       borderBottom: '1px solid #e9ecef',
                       cursor: 'pointer',
                       background: selectedComplaint?.id === c.id ? 'rgba(13,110,253,0.05)' : 'transparent',
-                      borderRight: selectedComplaint?.id === c.id ? '3px solid #0a58ca' : '3px solid transparent',
+                      borderRight: selectedComplaint?.id === c.id ? '3px solid #087f68' : '3px solid transparent',
                       transition: 'all 0.15s'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', gap: '8px' }}>
@@ -879,12 +879,12 @@ export default function AdminComplaints() {
 
           {/* Right panel - chat */}
           {selectedComplaint && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f8f9fa' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f7fafb' }}>
               <div style={{ padding: '16px 24px', borderBottom: '1px solid #e9ecef', background: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <h2 style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                      <MessageSquare size={18} color="#0a58ca" />
+                      <MessageSquare size={18} color="#087f68" />
                       {selectedComplaint.title}
                       <span style={{
                         background: STATUS_MAP[selectedComplaint.status]?.color || '#6c757d',
@@ -911,8 +911,8 @@ export default function AdminComplaints() {
                     {selectedComplaint.status !== 'resolved' && selectedComplaint.status !== 'closed' && (
                       <>
                         <button onClick={() => handleUpdateStatus('in_progress')} disabled={updatingStatus} style={{
-                          background: '#ffc107',
-                          color: '#1a1a1a',
+                          background: '#b78a22',
+                          color: '#173a52',
                           border: 'none',
                           padding: '6px 12px',
                           borderRadius: '6px',
@@ -925,7 +925,7 @@ export default function AdminComplaints() {
                           <Clock size={14} /> تحويل لـ "جارٍ"
                         </button>
                         <button onClick={() => setShowResolveForm(!showResolveForm)} style={{
-                          background: '#28a745',
+                          background: '#0f766e',
                           color: 'white',
                           border: 'none',
                           padding: '6px 12px',
@@ -953,8 +953,8 @@ export default function AdminComplaints() {
                 </div>
 
                 {showResolveForm && (
-                  <div style={{ marginTop: '16px', padding: '16px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #28a745' }}>
-                    <p style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#28a745', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ marginTop: '16px', padding: '16px', background: '#e8f5e9', borderRadius: '8px', border: '1px solid #0f766e' }}>
+                    <p style={{ fontWeight: 'bold', fontSize: '0.8rem', color: '#0f766e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <CheckCircle size={14} /> قرار حل النزاع
                     </p>
                     <textarea
@@ -966,7 +966,7 @@ export default function AdminComplaints() {
                     />
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => handleUpdateStatus('resolved')} disabled={updatingStatus} style={{
-                        background: '#28a745',
+                        background: '#0f766e',
                         color: 'white',
                         border: 'none',
                         padding: '6px 12px',
@@ -1012,7 +1012,7 @@ export default function AdminComplaints() {
                     if (isSystem) {
                       return (
                         <div key={idx} style={{ textAlign: 'center' }}>
-                          <span style={{ background: '#e8f4fd', color: '#0a58ca', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', display: 'inline-block', fontWeight: 'bold' }}>
+                          <span style={{ background: '#e8f4fd', color: '#087f68', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', display: 'inline-block', fontWeight: 'bold' }}>
                             {actualMessage}
                           </span>
                         </div>
@@ -1033,8 +1033,8 @@ export default function AdminComplaints() {
                         )}
                         <div style={{
                           maxWidth: '65%',
-                          background: isAdmin ? '#0a58ca' : 'white',
-                          color: isAdmin ? 'white' : '#1a1a1a',
+                          background: isAdmin ? '#087f68' : 'white',
+                          color: isAdmin ? 'white' : '#173a52',
                           padding: '10px 14px',
                           borderRadius: isAdmin ? '14px 14px 0 14px' : '14px 14px 14px 0',
                           boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
@@ -1053,7 +1053,7 @@ export default function AdminComplaints() {
                           {msg.attachment_url && (
                             <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" style={{
                               display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px',
-                              fontSize: '0.75rem', color: isAdmin ? '#fff' : '#0a58ca', textDecoration: 'underline'
+                              fontSize: '0.75rem', color: isAdmin ? '#fff' : '#087f68', textDecoration: 'underline'
                             }}>
                               <Paperclip size={12} /> عرض المرفق
                             </a>
@@ -1102,7 +1102,7 @@ export default function AdminComplaints() {
                       </button>
                       <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*,application/pdf" />
                       <button type="submit" disabled={(!newMessage.trim() && !attachment) || sendingMessage || uploading} style={{
-                        background: '#0a58ca',
+                        background: '#087f68',
                         color: 'white',
                         border: 'none',
                         padding: '6px 16px',
@@ -1128,7 +1128,7 @@ export default function AdminComplaints() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

@@ -471,7 +471,7 @@ export default function Join() {
           alignItems: 'center',
           gap: '6px',
           background: '#f0f2f5',
-          color: '#1a1a1a',
+          color: '#173a52',
           padding: '6px 12px',
           borderRadius: '20px',
           fontSize: '0.8rem',
@@ -493,7 +493,7 @@ fontStyle: "italic",
 textTransform: "uppercase",
 }}>RENTALCAR</span> */}
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 'bold', marginBottom: '8px', color: '#173a52' }}>
             🚗 انضم كمورد سيارات
           </h1>
           <p style={{ color: '#6c757d', fontSize: '0.95rem' }}>
@@ -526,7 +526,7 @@ textTransform: "uppercase",
           {verificationStep ? (
             <div style={{ textAlign: 'center', padding: '32px 12px' }}>
               <Mail size={48} style={{ color: '#0F766E', marginBottom: '16px' }} />
-              <h2 style={{ color: '#1a1a1a', marginBottom: '10px' }}>تحقق من بريدك الإلكتروني</h2>
+              <h2 style={{ color: '#173a52', marginBottom: '10px' }}>تحقق من بريدك الإلكتروني</h2>
               <p style={{ color: '#6c757d', marginBottom: '24px' }}>أدخل الرمز المرسل إلى {verificationEmail}</p>
               <input
                 type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
@@ -569,7 +569,7 @@ textTransform: "uppercase",
           {/* STEP 1: Basic Information */}
           {currentStep === 1 && (
             <div style={{ animation: 'slideIn 0.3s ease-out' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#173a52', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <User size={20} style={{ color: '#0F766E' }} />
                 معلومات المالك
               </h2>
@@ -577,7 +577,7 @@ textTransform: "uppercase",
               {/* Owner Name & Email */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                     اسم المالك *
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -603,7 +603,7 @@ textTransform: "uppercase",
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                     البريد الإلكتروني *
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -634,7 +634,7 @@ textTransform: "uppercase",
               {/* Phone & Password */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                     رقم الهاتف *
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -661,7 +661,7 @@ textTransform: "uppercase",
                   </div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                     كلمة المرور *
                   </label>
                   <div style={{ position: 'relative' }}>
@@ -707,7 +707,7 @@ textTransform: "uppercase",
 
               {/* Confirm Password */}
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   تأكيد كلمة المرور *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -763,7 +763,7 @@ textTransform: "uppercase",
     fontSize: '1.1rem',
     fontWeight: 'bold',
     marginBottom: '20px',
-    color: '#1a1a1a',
+    color: '#173a52',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
@@ -785,7 +785,7 @@ textTransform: "uppercase",
       marginBottom: '8px',
       fontWeight: '600',
       fontSize: '0.85rem',
-      color: '#1a1a1a',
+      color: '#173a52',
     }}
   >
     اسم المعرض *
@@ -836,7 +836,7 @@ textTransform: "uppercase",
       marginBottom: '8px',
       fontWeight: '600',
       fontSize: '0.85rem',
-      color: '#1a1a1a',
+      color: '#173a52',
     }}
   >
     موقع المعرض *
@@ -879,7 +879,7 @@ textTransform: "uppercase",
           marginBottom: '8px',
           fontWeight: '600',
           fontSize: '0.85rem',
-          color: '#1a1a1a',
+          color: '#173a52',
         }}
       >
         المدينة
@@ -895,7 +895,7 @@ textTransform: "uppercase",
           border: '1px solid #d1d5db',
           borderRadius: '8px',
           fontSize: '0.9rem',
-          background: '#f8f9fa',
+          background: '#f7fafb',
         }}
       />
     </div>
@@ -907,7 +907,7 @@ textTransform: "uppercase",
           marginBottom: '8px',
           fontWeight: '600',
           fontSize: '0.85rem',
-          color: '#1a1a1a',
+          color: '#173a52',
         }}
       >
         العنوان
@@ -923,7 +923,7 @@ textTransform: "uppercase",
           border: '1px solid #d1d5db',
           borderRadius: '8px',
           fontSize: '0.9rem',
-          background: '#f8f9fa',
+          background: '#f7fafb',
         }}
       />
        </div> 
@@ -934,7 +934,7 @@ textTransform: "uppercase",
           {/* STEP 2: Rental Settings */}
           {currentStep === 2 && (
             <div style={{ animation: 'slideIn 0.3s ease-out' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#173a52', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Clock size={20} style={{ color: '#0F766E' }} />
                 إعدادات التأجير
               </h2>
@@ -957,7 +957,7 @@ textTransform: "uppercase",
 
               {/* Late Fee */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   سعر التأخير بالساعة *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -991,7 +991,7 @@ textTransform: "uppercase",
 
               {/* Grace Period */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   فترة السماح (بالساعات) *
                 </label>
                 <div style={{ position: 'relative' }}>
@@ -1031,7 +1031,7 @@ textTransform: "uppercase",
                 padding: '16px',
                 marginTop: '24px'
               }}>
-                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px', color: '#1a1a1a' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px', color: '#173a52' }}>
                   معاينة الإعدادات
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -1055,14 +1055,14 @@ textTransform: "uppercase",
           {/* STEP 3: Documents */}
           {currentStep === 3 && (
             <div style={{ animation: 'slideIn 0.3s ease-out' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#1a1a1a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '20px', color: '#173a52', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FileText size={20} style={{ color: '#0F766E' }} />
                 الوثائق الرسمية
               </h2>
 
               {/* Logo Upload */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   📷 شعار المعرض *
                 </label>
                 <div
@@ -1093,7 +1093,7 @@ textTransform: "uppercase",
                   {files.logoPreview ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       <img src={files.logoPreview} alt="Logo" style={{ maxWidth: '100px', maxHeight: '100px', borderRadius: '8px' }} />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0f766e' }}>
                         <CheckCircle size={18} />
                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع الشعار بنجاح</span>
                       </div>
@@ -1127,7 +1127,7 @@ textTransform: "uppercase",
 
               {/* Commercial Register */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   📄 السجل التجاري *
                 </label>
                 <div
@@ -1157,8 +1157,8 @@ textTransform: "uppercase",
                 >
                   {files.commercial ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-                      <FileCheck size={42} style={{ color: '#10B981' }} />
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
+                      <FileCheck size={42} style={{ color: '#0f766e' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0f766e' }}>
                         <CheckCircle size={18} />
                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع ملف PDF</span>
                       </div>
@@ -1196,7 +1196,7 @@ textTransform: "uppercase",
 
               {/* Owner ID */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#1a1a1a' }}>
+                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', fontSize: '0.85rem', color: '#173a52' }}>
                   🪪 هوية المالك *
                 </label>
                 <div
@@ -1228,8 +1228,8 @@ textTransform: "uppercase",
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
                       {files.ownerIdPreview ? (
                         <img src={files.ownerIdPreview} alt="معاينة هوية المالك" style={{ maxWidth: '180px', maxHeight: '100px', objectFit: 'contain', borderRadius: '8px' }} />
-                      ) : <FileCheck size={32} style={{ color: '#10B981' }} />}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981' }}>
+                      ) : <FileCheck size={32} style={{ color: '#0f766e' }} />}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0f766e' }}>
                         <CheckCircle size={18} />
                         <span style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>تم رفع الصورة</span>
                       </div>
@@ -1296,7 +1296,7 @@ textTransform: "uppercase",
                     accentColor: '#0F766E'
                   }}
                 />
-                <label htmlFor="terms" style={{ fontSize: '0.9rem', color: '#1a1a1a', cursor: 'pointer' }}>
+                <label htmlFor="terms" style={{ fontSize: '0.9rem', color: '#173a52', cursor: 'pointer' }}>
                   ☑ أوافق على <strong>الشروط والأحكام</strong> و<strong>سياسة الخصوصية</strong> الخاصة بمنصة لبيتكم
                 </label>
               </div>
@@ -1316,7 +1316,7 @@ textTransform: "uppercase",
                 padding: '12px 24px',
                 border: '1px solid #d1d5db',
                 background: 'white',
-                color: '#1a1a1a',
+                color: '#173a52',
                 borderRadius: '8px',
                 fontSize: '0.95rem',
                 fontWeight: '600',
@@ -1374,7 +1374,7 @@ textTransform: "uppercase",
                 style={{
                   flex: 1,
                   padding: '12px 24px',
-                  background: '#10B981',
+                  background: '#0f766e',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -1392,7 +1392,7 @@ textTransform: "uppercase",
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = '#10B981';
+                  e.target.style.background = '#0f766e';
                   e.target.style.transform = 'translateY(0)';
                   e.target.style.boxShadow = 'none';
                 }}

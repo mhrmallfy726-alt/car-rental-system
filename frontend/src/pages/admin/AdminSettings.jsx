@@ -51,7 +51,7 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="admin-settings-page" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="admin-settings-page" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <AdminSidebar />
 
       {/* المحتوى الرئيسي */}
@@ -63,7 +63,7 @@ export default function AdminSettings() {
 
             {/* العمولات والرسوم */}
             <div>
-              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#0a58ca' }}>العمولات والرسوم</h3>
+              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#087f68' }}>العمولات والرسوم</h3>
               <div>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>نسبة عمولة المنصة (%)</label>
                 <input
@@ -82,7 +82,7 @@ export default function AdminSettings() {
 
             {/* إعدادات الموافقة */}
             <div>
-              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#0a58ca' }}>إعدادات الموافقة</h3>
+              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#087f68' }}>إعدادات الموافقة</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold' }}>
                   <input type="checkbox" name="auto_approve_users" checked={settings.auto_approve_users} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
@@ -97,7 +97,7 @@ export default function AdminSettings() {
 
             {/* إعدادات النظام */}
             <div>
-              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#0a58ca' }}>إعدادات النظام</h3>
+              <h3 style={{ fontWeight: 'bold', borderBottom: '1px solid #dee2e6', paddingBottom: '8px', marginBottom: '16px', color: '#087f68' }}>إعدادات النظام</h3>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>البريد الإلكتروني للدعم الفني</label>
                 <input
@@ -108,7 +108,7 @@ export default function AdminSettings() {
                   onChange={handleChange}
                 />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', color: '#dc3545' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', color: '#b42318' }}>
                 <input type="checkbox" name="maintenance_mode" checked={settings.maintenance_mode} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
                 تفعيل وضع الصيانة (سيمنع وصول المستخدمين للمنصة)
               </label>
@@ -120,7 +120,7 @@ export default function AdminSettings() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  background: '#0a58ca',
+                  background: '#087f68',
                   color: 'white',
                   border: 'none',
                   padding: '10px 20px',

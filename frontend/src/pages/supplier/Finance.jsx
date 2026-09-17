@@ -20,7 +20,7 @@ export default function SupplierFinance() {
   const balances = data?.balances_by_currency || [];
   const settings = data?.settings || {};
   return (
-    <div dir="rtl" style={{display:'flex',minHeight:'100vh',background:'#f8f9fa'}}>
+    <div dir="rtl" style={{display:'flex',minHeight:'100vh',background:'#f7fafb'}}>
       <SupplierSidebar />
       <main style={{flex:1,padding:'30px 24px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}>

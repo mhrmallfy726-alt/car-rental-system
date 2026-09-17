@@ -3,20 +3,20 @@
 :root {
   direction: rtl;
   /* CarFlexi Inspired Palette */
-  --primary: #003580;
+  --primary: #173a52;
   /* Deep Booking Blue */
-  --primary-light: #006ce4;
-  --secondary: #008009;
+  --primary-light: #087f68;
+  --secondary: #0f766e;
   /* CarFlexi Green for buttons */
-  --secondary-hover: #006407;
-  --accent: #febb02;
+  --secondary-hover: #0b5f59;
+  --accent: #d4af37;
   /* Attention Yellow */
 
-  --bg-base: #f5f7fa;
+  --bg-base: #f4f8f9;
   --bg-white: #ffffff;
 
-  --text-main: #1a1a1a;
-  --text-muted: #6b6b6b;
+  --text-main: #173a52;
+  --text-muted: #64748b;
   --text-white: #ffffff;
 
   --radius-lg: 12px;
@@ -25,10 +25,10 @@
   --radius-sm: 8px;
   /* تمت الإضافة */
 
-  --border: #e0e0e0;
-  --border-color: #e0e0e0;
+  --border: #dbe6e8;
+  --border-color: #dbe6e8;
   /* تمت الإضافة */
-  --bg-gray: #f8f9fa;
+  --bg-gray: #f7fafb;
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -36,10 +36,10 @@
   --transition: all 0.3s ease;
 
   /* إضافة متغيرات مفقودة لـ App.css */
-  --accent-bg: #fff8e1;
-  --accent-border: #febb02;
-  --text-h: #1a1a1a;
-  --social-bg: #f1f3f4;
+  --accent-bg: #fffaf0;
+  --accent-border: #d4af37;
+  --text-h: #173a52;
+  --social-bg: #edf2f4;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -895,7 +895,7 @@ textarea:focus-visible {
   padding: 72px 28px;
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(135deg, #062d54, #07548b 60%, #003580);
+  background: linear-gradient(135deg, #062d54, #07548b 60%, #173a52);
 }
 
 .about-hero::after {
@@ -916,7 +916,7 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  color: #febb02;
+  color: #d4af37;
   font-size: 13px;
   font-weight: 900;
 }
@@ -959,7 +959,7 @@ textarea:focus-visible {
 
 .about-primary-action {
   color: #173a52;
-  background: #febb02;
+  background: #d4af37;
   box-shadow: 0 12px 25px rgba(254, 187, 2, .22);
 }
 
@@ -996,7 +996,7 @@ textarea:focus-visible {
 }
 
 .about-hero-stat-card strong {
-  color: #febb02;
+  color: #d4af37;
   font-size: 68px;
   font-style: italic;
   line-height: 1;
@@ -1092,7 +1092,7 @@ textarea:focus-visible {
   margin-bottom: 18px;
   place-items: center;
   border-radius: 14px;
-  color: #003580;
+  color: #173a52;
   background: #fff4cc;
 }
 
@@ -1172,7 +1172,7 @@ textarea:focus-visible {
   left: 0;
   height: 5px;
   content: '';
-  background: linear-gradient(90deg, #003580, #006ce4, #febb02);
+  background: linear-gradient(90deg, #173a52, #087f68, #d4af37);
 }
 
 .notification-detail-icon {
@@ -1182,7 +1182,7 @@ textarea:focus-visible {
   margin-bottom: 22px;
   place-items: center;
   border-radius: 20px;
-  color: #003580;
+  color: #173a52;
   background: #e8f1ff;
   box-shadow: 0 12px 24px rgba(0, 108, 228, .13);
 }
@@ -1238,7 +1238,7 @@ textarea:focus-visible {
   border: 0;
   border-radius: 13px;
   color: #fff;
-  background: #003580;
+  background: #173a52;
   box-shadow: 0 10px 22px rgba(0, 53, 128, .2);
   cursor: pointer;
   font: inherit;
@@ -1248,7 +1248,7 @@ textarea:focus-visible {
 }
 
 .notification-detail-action:hover {
-  background: #006ce4;
+  background: #087f68;
   box-shadow: 0 14px 28px rgba(0, 108, 228, .25);
   transform: translateY(-2px);
 }

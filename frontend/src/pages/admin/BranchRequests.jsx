@@ -62,7 +62,7 @@ export default function BranchRequests() {
     <main dir="rtl" style={{ minHeight: '100vh', background: '#f5f8fa', padding: '34px', color: '#173a52' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <div style={{ marginBottom: 24 }}>
-          <span style={{ color: '#178263', fontWeight: 900, fontSize: 13 }}>إدارة الموردين</span>
+          <span style={{ color: '#0f766e', fontWeight: 900, fontSize: 13 }}>إدارة الموردين</span>
           <h1 style={{ margin: '6px 0', fontSize: 30 }}>طلبات الفروع</h1>
           <p style={{ margin: 0, color: '#70818a' }}>راجع تفاصيل الفرع وموقعه وبيانات المورد قبل الموافقة.</p>
         </div>
@@ -81,7 +81,7 @@ export default function BranchRequests() {
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'end' }}>
                   <button type="button" onClick={() => setSelected(request)} style={button('#edf7f5', '#146f57')}><Eye size={16} /> التفاصيل</button>
-                  {request.approval_status === 'pending' && <><button type="button" disabled={busy} onClick={() => approve(request)} style={button('#178263', '#fff')}><CheckCircle size={16} /> موافقة</button><button type="button" disabled={busy} onClick={() => reject(request)} style={button('#fff0f0', '#a94442')}><XCircle size={16} /> رفض</button></>}
+                  {request.approval_status === 'pending' && <><button type="button" disabled={busy} onClick={() => approve(request)} style={button('#0f766e', '#fff')}><CheckCircle size={16} /> موافقة</button><button type="button" disabled={busy} onClick={() => reject(request)} style={button('#fff0f0', '#a94442')}><XCircle size={16} /> رفض</button></>}
                 </div>
               </article>;
             })}
@@ -97,7 +97,7 @@ export default function BranchRequests() {
           <span>الإحداثيات: {selected.latitude}, {selected.longitude}</span><span>حالة الدفع: {selected.status === 'paid' ? 'مدفوع' : 'غير مدفوع'}</span>
           {selected.rejection_reason && <span style={{ color: '#a94442' }}>سبب الرفض: {selected.rejection_reason}</span>}
         </div>
-        <div style={{ display: 'flex', gap: 9, justifyContent: 'end', marginTop: 22 }}><button type="button" onClick={() => setSelected(null)} style={button('#f1f4f5', '#52656e')}>إغلاق</button>{selected.approval_status === 'pending' && <><button type="button" disabled={busy} onClick={() => approve(selected)} style={button('#178263', '#fff')}>موافقة</button><button type="button" disabled={busy} onClick={() => reject(selected)} style={button('#fff0f0', '#a94442')}>رفض</button></>}</div>
+        <div style={{ display: 'flex', gap: 9, justifyContent: 'end', marginTop: 22 }}><button type="button" onClick={() => setSelected(null)} style={button('#f1f4f5', '#52656e')}>إغلاق</button>{selected.approval_status === 'pending' && <><button type="button" disabled={busy} onClick={() => approve(selected)} style={button('#0f766e', '#fff')}>موافقة</button><button type="button" disabled={busy} onClick={() => reject(selected)} style={button('#fff0f0', '#a94442')}>رفض</button></>}</div>
       </section></div>}
     </main>
   );

@@ -13,9 +13,9 @@ import { format } from 'date-fns';
 import UnifiedDatePicker, { parseDateValue } from '../../components/UnifiedDatePicker';
 
 const STATUS_MAP = {
-  pending: { label: 'قيد المراجعة', icon: Clock, color: '#ffc107' },
-  active: { label: 'نشط', icon: CheckCircle, color: '#28a745' },
-  rejected: { label: 'مرفوض', icon: AlertTriangle, color: '#dc3545' },
+  pending: { label: 'قيد المراجعة', icon: Clock, color: '#b78a22' },
+  active: { label: 'نشط', icon: CheckCircle, color: '#0f766e' },
+  rejected: { label: 'مرفوض', icon: AlertTriangle, color: '#b42318' },
 };
 
 const AD_TYPE_MAP = {
@@ -276,26 +276,26 @@ export default function Admins() {
   };
   console.log();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f7fafb' }}>
       {/* Sidebar */}
       <div className="sidebar" style={{ width: '260px', background: 'white', borderLeft: '1px solid #e9ecef', padding: '24px 0', position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 100 }}>
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <LayoutDashboard size={20} /> الإحصائيات
           </Link>
-          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/users" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Users size={20} /> المستخدمين
           </Link>
-          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/cars" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Car size={20} /> السيارات
           </Link>
-          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/complaints" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <ShieldAlert size={20} /> الشكاوى
           </Link>
-          <Link to="/admin/s" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>
+          <Link to="/admin/s" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', background: '#e9ecef', color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>
             <Zap size={20} /> الإعلانات
           </Link>
-          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#1a1a1a', textDecoration: 'none' }}>
+          <Link to="/admin/settings" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', color: '#173a52', textDecoration: 'none' }}>
             <Settings size={20} /> الإعدادات
           </Link>
         </div>
@@ -305,21 +305,21 @@ export default function Admins() {
       <div style={{ marginRight: '260px', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Stats cards */}
         <div style={{ padding: '24px', background: 'white', borderBottom: '1px solid #e9ecef', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-          <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+          <div style={{ padding: '16px', background: '#f7fafb', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <div style={{ fontSize: '0.8rem', color: '#6c757d', marginBottom: '8px' }}>📢 إجمالي الإعلانات</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#0a58ca' }}>{stats.total}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#087f68' }}>{stats.total}</div>
           </div>
-          <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+          <div style={{ padding: '16px', background: '#f7fafb', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <div style={{ fontSize: '0.8rem', color: '#6c757d', marginBottom: '8px' }}>🟢 الإعلانات النشطة</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#28a745' }}>{stats.active}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#0f766e' }}>{stats.active}</div>
           </div>
-          <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+          <div style={{ padding: '16px', background: '#f7fafb', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <div style={{ fontSize: '0.8rem', color: '#6c757d', marginBottom: '8px' }}>🟡 قيد المراجعة</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#ffc107' }}>{stats.pending}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#b78a22' }}>{stats.pending}</div>
           </div>
-          <div style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+          <div style={{ padding: '16px', background: '#f7fafb', borderRadius: '8px', border: '1px solid #e9ecef' }}>
             <div style={{ fontSize: '0.8rem', color: '#6c757d', marginBottom: '8px' }}>🔴 المنتهية</div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#dc3545' }}>{stats.rejected}</div>
+            <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#b42318' }}>{stats.rejected}</div>
           </div>
         </div>
 
@@ -365,7 +365,7 @@ export default function Admins() {
                       cursor: 'pointer',
                       background: 'white',
                     }}
-                    onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+                    onMouseEnter={(e) => e.target.style.background = '#f7fafb'}
                     onMouseLeave={(e) => e.target.style.background = 'white'}
                   >
                     <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{supplier.name}</div>
@@ -403,7 +403,7 @@ export default function Admins() {
     
             style={{
               padding: '8px 16px',
-              background: '#0a58ca',
+              background: '#087f68',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -419,7 +419,7 @@ export default function Admins() {
         
         {/* Selected supplier info */}
         {selectedSupplier && (
-          <div style={{ padding: '16px 24px', background: '#f8f9fa', borderBottom: '1px solid #e9ecef', borderRadius: '8px', margin: '16px 24px 0' }}>
+          <div style={{ padding: '16px 24px', background: '#f7fafb', borderBottom: '1px solid #e9ecef', borderRadius: '8px', margin: '16px 24px 0' }}>
             <div style={{ fontWeight: 'bold', marginBottom: '20px', fontSize: '0.9rem' }}>المورد</div>
             <div style={{ background: 'white', padding: '20px', borderRadius: '8px', border: '4px solid #e9ecef' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '9px' }}>
@@ -436,7 +436,7 @@ export default function Admins() {
         )}
 
         {/* Main content area */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f8f9fa' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', background: '#f7fafb' }}>
           {/* Left panel - s list */}
           <div style={{
             width: showForm ? '400px' : (selectedAd ? '300px' : '100%'),
@@ -467,7 +467,7 @@ export default function Admins() {
                         borderBottom: '1px solid #e9ecef',
                         cursor: 'pointer',
                         background: selectedAd?._id === ad._id ? 'rgba(13,110,253,0.05)' : 'transparent',
-                        borderRight: selectedAd?._id === ad._id ? '3px solid #0a58ca' : '3px solid transparent',
+                        borderRight: selectedAd?._id === ad._id ? '3px solid #087f68' : '3px solid transparent',
                         transition: 'all 0.15s',
                       }}
                     >
@@ -505,12 +505,12 @@ export default function Admins() {
 
           {/* Right panel - Details and Form */}
           {selectedAd && !showForm && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f8f9fa', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f7fafb', overflowY: 'auto' }}>
               <div style={{ padding: '16px 24px', borderBottom: '1px solid #e9ecef', background: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
                   <div>
                     <h2 style={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px' }}>
-                      <Zap size={18} color="#0a58ca" />
+                      <Zap size={18} color="#087f68" />
                       {selectedAd.title}
                       <span style={{
                         background: STATUS_MAP[selectedAd.status]?.color || '#6c757d',
@@ -541,7 +541,7 @@ export default function Admins() {
                       borderRadius: '6px',
                       color: '#6c757d',
                     }}
-                    onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+                    onMouseEnter={(e) => e.target.style.background = '#f7fafb'}
                     onMouseLeave={(e) => e.target.style.background = 'none'}
                   >
                     <MoreHorizontal size={18} />
@@ -586,7 +586,7 @@ export default function Admins() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
                   <div>
                     <p style={{ fontSize: '0.75rem', color: '#6c757d', fontWeight: 'bold', marginBottom: '6px' }}>حالة الدفع</p>
-                    <p style={{ fontSize: '0.9rem', fontWeight: 'bold', color: selectedAd.payment_status === 'paid' ? '#28a745' : '#dc3545' }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 'bold', color: selectedAd.payment_status === 'paid' ? '#0f766e' : '#b42318' }}>
                       {selectedAd.payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع'}
                     </p>
                   </div>
@@ -605,7 +605,7 @@ export default function Admins() {
                     style={{
                       flex: 1,
                       padding: '10px 16px',
-                      background: '#0a58ca',
+                      background: '#087f68',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -628,7 +628,7 @@ export default function Admins() {
                         style={{
                           flex: 1,
                           padding: '10px 16px',
-                          background: '#28a745',
+                          background: '#0f766e',
                           color: 'white',
                           border: 'none',
                           borderRadius: '6px',
@@ -649,7 +649,7 @@ export default function Admins() {
                         style={{
                           flex: 1,
                           padding: '10px 16px',
-                          background: '#dc3545',
+                          background: '#b42318',
                           color: 'white',
                           border: 'none',
                           borderRadius: '6px',
@@ -672,8 +672,8 @@ export default function Admins() {
                     style={{
                       flex: 1,
                       padding: '10px 16px',
-                      background: selectedAd.featured ? '#ffc107' : '#e9ecef',
-                      color: selectedAd.featured ? 'white' : '#1a1a1a',
+                      background: selectedAd.featured ? '#b78a22' : '#e9ecef',
+                      color: selectedAd.featured ? 'white' : '#173a52',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -693,8 +693,8 @@ export default function Admins() {
                     style={{
                       flex: 1,
                       padding: '10px 16px',
-                      background: selectedAd.is_pinned ? '#0a58ca' : '#e9ecef',
-                      color: selectedAd.is_pinned ? 'white' : '#1a1a1a',
+                      background: selectedAd.is_pinned ? '#087f68' : '#e9ecef',
+                      color: selectedAd.is_pinned ? 'white' : '#173a52',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
@@ -715,7 +715,7 @@ export default function Admins() {
                     style={{
                       flex: 1,
                       padding: '10px 16px',
-                      background: '#dc3545',
+                      background: '#b42318',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -740,7 +740,7 @@ export default function Admins() {
           {showForm && (
             
   
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f8f9fa', overflowY: 'auto' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f7fafb', overflowY: 'auto' }}>
               <div style={{ padding: '16px 24px', borderBottom: '1px solid #e9ecef', background: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ fontWeight: 'bold', fontSize: '1.1rem', margin: 0 }}>
                   {formMode === 'create' ? 'إنشاء إعلان جديد' : 'تعديل الإعلان'}
@@ -758,7 +758,7 @@ export default function Admins() {
                     borderRadius: '6px',
                     color: '#6c757d',
                   }}
-                  onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+                  onMouseEnter={(e) => e.target.style.background = '#f7fafb'}
                   onMouseLeave={(e) => e.target.style.background = 'none'}
                 >
                   <X size={18} />مممم
@@ -809,7 +809,7 @@ export default function Admins() {
                                 cursor: 'pointer',
                                 background: 'white',
                               }}
-                              onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+                              onMouseEnter={(e) => e.target.style.background = '#f7fafb'}
                               onMouseLeave={(e) => e.target.style.background = 'white'}
                             >
                               <div style={{ fontWeight: 'bold', fontSize: '0.85rem' }}>{supplier.name}</div>
@@ -992,7 +992,7 @@ export default function Admins() {
                     style={{
                       flex: 1,
                       padding: '12px 16px',
-                      background: '#0a58ca',
+                      background: '#087f68',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
@@ -1013,7 +1013,7 @@ export default function Admins() {
                       flex: 1,
                       padding: '12px 16px',
                       background: '#e9ecef',
-                      color: '#1a1a1a',
+                      color: '#173a52',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',

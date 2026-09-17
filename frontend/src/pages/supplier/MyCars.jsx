@@ -50,24 +50,24 @@ export default function MyCars() {
   const getStatusBadge = (status, is_approved, rejection_reason) => {
     if (!is_approved) {
       if (rejection_reason) return <span style={{ background: '#ffe0e0', color: '#a23a3a', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>مرفوض</span>;
-      return <span style={{ background: '#ffc107', color: '#1a1a1a', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>قيد المراجعة</span>;
+      return <span style={{ background: '#b78a22', color: '#173a52', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>قيد المراجعة</span>;
     }
     switch (status) {
-      case 'available': return <span style={{ background: '#28a745', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>متاحة</span>;
-      case 'reserved': return <span style={{ background: '#17a2b8', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>محجوزة</span>;
-      case 'maintenance': return <span style={{ background: '#dc3545', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>في الصيانة</span>;
+      case 'available': return <span style={{ background: '#0f766e', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>متاحة</span>;
+      case 'reserved': return <span style={{ background: '#24647d', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>محجوزة</span>;
+      case 'maintenance': return <span style={{ background: '#b42318', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>في الصيانة</span>;
       default: return <span style={{ background: '#6c757d', color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{status}</span>;
     }
   };
 
   return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="dashboard-content supplier-dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
           <div><h1 style={{ fontSize: '1.8rem', marginBottom: '8px' }}>إدارة سياراتي</h1></div>
-          <Link to="/supplier/cars/add" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Link to="/supplier/cars/add" className="btn btn-primary" style={{ background: '#087f68', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Plus size={18} /> إضافة سيارة
           </Link>
         </div>
@@ -78,7 +78,7 @@ export default function MyCars() {
           <div className="card" style={{ background: 'white', borderRadius: '12px', padding: '32px', textAlign: 'center', color: '#6c757d' }}>
             <Car size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
             <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>لم تقم بإضافة أي سيارات بعد</h3>
-            <Link to="/supplier/cars/add" className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none' }}>إضافة أول سيارة</Link>
+            <Link to="/supplier/cars/add" className="btn btn-primary" style={{ background: '#087f68', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none' }}>إضافة أول سيارة</Link>
           </div>
         ) : (
           <>
@@ -93,7 +93,7 @@ export default function MyCars() {
           </div>
           <div style={{ overflowX: 'auto' }} className="table-container desktop-cars-table">
             <table style={{ width: '100%', borderCollapse: 'collapse', background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <thead style={{ background: '#f8f9fa' }}>
+              <thead style={{ background: '#f7fafb' }}>
                 <tr>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>السيارة</th>
                   <th style={{ padding: '12px 16px', textAlign: 'right', borderBottom: '1px solid #e9ecef' }}>الفئة</th>
@@ -119,13 +119,13 @@ export default function MyCars() {
                     <td style={{ padding: '12px 16px' }}>{getStatusBadge(car.status, car.is_approved, car.rejection_reason)}</td>
                     <td style={{ padding: '12px 16px' }}>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleCreateAdvertisement(car.id)} className="btn btn-primary" style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        <button onClick={() => handleCreateAdvertisement(car.id)} className="btn btn-primary" style={{ background: '#087f68', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
                           <Megaphone size={14} /> عرض
                         </button>
                         <button onClick={() => handleEditCar(car.id)} className="btn btn-secondary" style={{ background: '#6c757d', border: 'none', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                           <Edit size={14} />
                         </button>
-                        <button onClick={() => handleDelete(car.id)} className="btn btn-danger" style={{ background: '#dc3545', border: 'none', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
+                        <button onClick={() => handleDelete(car.id)} className="btn btn-danger" style={{ background: '#b42318', border: 'none', padding: '6px 10px', borderRadius: '6px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -170,7 +170,7 @@ export default function MyCars() {
         .mobile-car-actions button:active { transform: scale(.97); }
  3cdf650 (Improve mobile car cards and sidebar layout)
         .mobile-car-actions button:first-child { background: #fff7df; border-color: #f1d589; color: #80601a; }
-        .mobile-car-actions .danger { background: #fff5f5; border-color: #f1d5d5; color: #b64040; }
+        .mobile-car-actions .danger { background: #fff5f5; border-color: #f1d5d5; color: #a23a3a; }
         @media (max-width: 768px) {
           .dashboard { flex-direction: column; }
           .dashboard-content { width: 100%; }
@@ -198,7 +198,7 @@ export default function MyCars() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

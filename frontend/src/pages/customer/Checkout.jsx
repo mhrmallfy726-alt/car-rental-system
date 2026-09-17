@@ -171,7 +171,7 @@ export default function Checkout() {
       <div className="checkout-scene" aria-hidden="true"><span className="checkout-orb checkout-orb-one" /><span className="checkout-orb checkout-orb-two" /><span className="checkout-grid-floor" /></div>
       <div className="checkout-shell">
         {/* زر الرجوع */}
-        <Link to="/my-reservations" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px', color: '#0a58ca', textDecoration: 'none' }}>
+        <Link to="/my-reservations" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px', color: '#087f68', textDecoration: 'none' }}>
           <ArrowRight size={18} /> العودة إلى حجوزاتي
         </Link>
 
@@ -184,7 +184,7 @@ export default function Checkout() {
           {/* قسم نموذج الدفع */}
           <div className="checkout-payment-card">
             <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '24px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <CreditCard size={20} style={{ color: '#0a58ca' }} /> تفاصيل الدفع
+              <CreditCard size={20} style={{ color: '#087f68' }} /> تفاصيل الدفع
             </h2>
 
               <div style={{ marginBottom: '24px', padding: '16px', borderRadius: '12px', background: '#f8fbfc', border: '1px solid #dcebee' }}>
@@ -216,8 +216,8 @@ export default function Checkout() {
                   {savedCards.map(card => (
                     <label key={card.id} style={{
                       display: 'flex', gap: '12px', alignItems: 'center', padding: '16px',
-                      border: selectedCardId === card.id ? '2px solid #0a58ca' : '1px solid #dee2e6',
-                      borderRadius: '8px', background: '#f8f9fa', cursor: 'pointer'
+                      border: selectedCardId === card.id ? '2px solid #087f68' : '1px solid #dee2e6',
+                      borderRadius: '8px', background: '#f7fafb', cursor: 'pointer'
                     }}>
                       <input type="radio" name="saved_card" checked={selectedCardId === card.id} onChange={() => setSelectedCardId(card.id)} />
                       <div>
@@ -227,7 +227,7 @@ export default function Checkout() {
                     </label>
                   ))}
                 </div>
-                <button type="button" onClick={() => setShowNewCard(true)} style={{ marginTop: '16px', background: 'none', border: '1px solid #0a58ca', color: '#0a58ca', padding: '6px 12px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setShowNewCard(true)} style={{ marginTop: '16px', background: 'none', border: '1px solid #087f68', color: '#087f68', padding: '6px 12px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                   <Plus size={16} /> إضافة بطاقة جديدة
                 </button>
               </div>
@@ -241,7 +241,7 @@ export default function Checkout() {
                   <input type="text" className="form-input" required placeholder="مثال: Ahmed Ali"
                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }}
                     value={cardData.card_holder_name} onChange={e => handleCardInputChange('card_holder_name', e.target.value)} />
-                  {cardErrors.card_holder_name && <p style={{ color: '#dc3545', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.card_holder_name}</p>}
+                  {cardErrors.card_holder_name && <p style={{ color: '#b42318', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.card_holder_name}</p>}
                 </div>
 
                 <div>
@@ -249,7 +249,7 @@ export default function Checkout() {
                   <input type="text" className="form-input" required placeholder="0000 0000 0000 0000" maxLength="19" dir="ltr"
                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }}
                     value={cardData.card_number} onChange={e => handleCardInputChange('card_number', e.target.value.replace(/\s/g, ''))} />
-                  {cardErrors.card_number && <p style={{ color: '#dc3545', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.card_number}</p>}
+                  {cardErrors.card_number && <p style={{ color: '#b42318', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.card_number}</p>}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -264,14 +264,14 @@ export default function Checkout() {
                         style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', textAlign: 'center' }}
                         value={cardData.expiry_year} onChange={e => handleCardInputChange('expiry_year', e.target.value)} />
                     </div>
-                    {cardErrors.expiry && <p style={{ color: '#dc3545', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.expiry}</p>}
+                    {cardErrors.expiry && <p style={{ color: '#b42318', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.expiry}</p>}
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>رمز الأمان (CVV)</label>
                     <input type="password" className="form-input" required placeholder="123" maxLength="4" dir="ltr"
                       style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }}
                       value={cardData.cvv} onChange={e => handleCardInputChange('cvv', e.target.value)} />
-                    {cardErrors.cvv && <p style={{ color: '#dc3545', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.cvv}</p>}
+                    {cardErrors.cvv && <p style={{ color: '#b42318', fontSize: '0.7rem', marginTop: '4px' }}>{cardErrors.cvv}</p>}
                   </div>
                 </div>
 
@@ -282,14 +282,14 @@ export default function Checkout() {
                 </div>
 
                 {savedCards.length > 0 && (
-                  <button type="button" onClick={cancelNewCard} style={{ background: 'none', border: 'none', color: '#0a58ca', textAlign: 'right', cursor: 'pointer', fontSize: '0.85rem' }}>
+                  <button type="button" onClick={cancelNewCard} style={{ background: 'none', border: 'none', color: '#087f68', textAlign: 'right', cursor: 'pointer', fontSize: '0.85rem' }}>
                     إلغاء واستخدام بطاقة محفوظة
                   </button>
                 )}
               </form>
             )}
 
-            <div style={{ marginTop: '32px', background: '#e9ecef', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px', color: '#0a58ca', fontSize: '0.85rem' }}>
+            <div style={{ marginTop: '32px', background: '#e9ecef', padding: '16px', borderRadius: '8px', display: 'flex', gap: '12px', color: '#087f68', fontSize: '0.85rem' }}>
               <ShieldCheck size={32} />
               <p>جميع بيانات بطاقتك مشفرة ومؤمنة بالكامل داخل نظامنا. لن يتم مشاركة بياناتك مع أي جهة خارجية.</p>
             </div>
@@ -320,7 +320,7 @@ export default function Checkout() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
               <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>الإجمالي</span>
-              <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#0a58ca' }}>{formatCurrency(selectedTotal, currency)}</span>
+              <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#087f68' }}>{formatCurrency(selectedTotal, currency)}</span>
             </div>
 
             <button className="checkout-submit"
@@ -340,7 +340,7 @@ export default function Checkout() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

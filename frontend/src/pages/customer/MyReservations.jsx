@@ -220,15 +220,15 @@
 
 //   const getStatusBadge = (status) => {
 //     const map = {
-//       pending: { label: 'جاهز لإتمام الحجز', bg: '#ffc107', color: '#212529' },
-//       approved: { label: 'تمت الموافقة — بانتظار الاستلام', bg: '#17a2b8', color: 'white' },
-//       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
+//       pending: { label: 'جاهز لإتمام الحجز', bg: '#b78a22', color: '#212529' },
+//       approved: { label: 'تمت الموافقة — بانتظار الاستلام', bg: '#24647d', color: 'white' },
+//       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#24647d', color: 'white' },
 //       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
-//       active: { label: 'نشط', bg: '#28a745', color: 'white' },
-//       completed: { label: 'مكتمل', bg: '#0a58ca', color: 'white' },
-//       cancelled: { label: 'ملغي', bg: '#dc3545', color: 'white' },
-//       rejected: { label: 'مرفوض', bg: '#dc3545', color: 'white' },
-//       disputed: { label: 'في نزاع', bg: '#dc3545', color: 'white' },
+//       active: { label: 'نشط', bg: '#0f766e', color: 'white' },
+//       completed: { label: 'مكتمل', bg: '#087f68', color: 'white' },
+//       cancelled: { label: 'ملغي', bg: '#b42318', color: 'white' },
+//       rejected: { label: 'مرفوض', bg: '#b42318', color: 'white' },
+//       disputed: { label: 'في نزاع', bg: '#b42318', color: 'white' },
 //     };
 //     const s = map[status] || { label: status, bg: '#6c757d', color: 'white' };
 //     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
@@ -251,7 +251,7 @@
 //   }
 
 //   return (
-//     <div className="customer-reservations-page" dir="rtl" style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
+//     <div className="customer-reservations-page" dir="rtl" style={{ background: '#f7fafb', minHeight: '100vh', padding: '24px' }}>
 //       <div className="customer-reservations-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
 //         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
 //           <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>حجوزاتي</h1>
@@ -262,7 +262,7 @@
 //           <div style={{ background: 'white', borderRadius: '12px', padding: '32px', textAlign: 'center', color: '#6c757d', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
 //             <Calendar size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
 //             <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>ليس لديك أي حجوزات حالياً</h3>
-//             <Link to="/cars" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-block' }}>تصفح السيارات</Link>
+//             <Link to="/cars" style={{ background: '#087f68', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-block' }}>تصفح السيارات</Link>
 //           </div>
 //         ) : (
 //           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -279,7 +279,7 @@
 //                   </div>
 
 //                   <p style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '16px' }}>
-//                     المورد: <span style={{ fontWeight: 'bold', color: '#0a58ca' }}>{res.supplier_name}</span>
+//                     المورد: <span style={{ fontWeight: 'bold', color: '#087f68' }}>{res.supplier_name}</span>
 //                   </p>
 
 //                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', fontSize: '0.8rem', color: '#6c757d' }}>
@@ -302,27 +302,27 @@
 //                     <span style={{ background: '#ede7f6', color: '#5e35b1', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>ﺗﻢ اﺳﺘﻼم اﻟﺴﻴﺎرة، واﻟﺤﺠﺰ ﺑﺎﻧﺘﻈﺎر اﻹﻏﻼق</span>
 //                   )}
 //                   {canPay(res) && (
-//                     <Link to={`/checkout/${res.id}`} style={{ background: '#28a745', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+//                     <Link to={`/checkout/${res.id}`} style={{ background: '#0f766e', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
 //                       <CreditCard size={16} /> إتمام الدفع وإرسال الطلب
 //                     </Link>
 //                   )}
 //                   {canCancel(res.status) && (
-//                     <button disabled={!cancellationPolicy.canCancel} title={!cancellationPolicy.canCancel ? 'انتهى موعد الاستلام' : undefined} onClick={() => handleCancel(res.id)} style={{ background: cancellationPolicy.canCancel ? '#dc3545' : '#adb5bd', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: cancellationPolicy.canCancel ? 'pointer' : 'not-allowed' }}>
+//                     <button disabled={!cancellationPolicy.canCancel} title={!cancellationPolicy.canCancel ? 'انتهى موعد الاستلام' : undefined} onClick={() => handleCancel(res.id)} style={{ background: cancellationPolicy.canCancel ? '#b42318' : '#adb5bd', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: cancellationPolicy.canCancel ? 'pointer' : 'not-allowed' }}>
 //                       <XCircle size={16} /> إلغاء الحجز
 //                     </button>
 //                   )}
 //                   {canReview(res.status) && (
-//                     <button onClick={() => openReviewModal(res)} style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+//                     <button onClick={() => openReviewModal(res)} style={{ background: '#087f68', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
 //                       <Star size={16} /> قيم تجربتك
 //                     </button>
 //                   )}
 //                   {canMessage(res.status) && (
-//                     <button onClick={() => startChat(res.id)} style={{ background: 'transparent', border: '1px solid #0a58ca', color: '#0a58ca', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+//                     <button onClick={() => startChat(res.id)} style={{ background: 'transparent', border: '1px solid #087f68', color: '#087f68', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
 //                       <MessageSquare size={16} /> مراسلة المورد
 //                     </button>
 //                   )}
 //                   {canDispute(res.status) && res.status !== 'disputed' && (
-//                     <button onClick={() => openDisputeModal(res)} style={{ background: 'transparent', border: '1px solid #dc3545', color: '#dc3545', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
+//                     <button onClick={() => openDisputeModal(res)} style={{ background: 'transparent', border: '1px solid #b42318', color: '#b42318', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
 //                       <AlertTriangle size={16} /> تقديم شكوى / نزاع
 //                     </button>
 //                   )}
@@ -357,7 +357,7 @@
 //               <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '12px' }}><small style={{ color: '#64748b' }}>الحالة</small><strong style={{ display: 'block', color: '#173a52', marginTop: 4 }}>{handoverReviewLog.exterior_condition === 'excellent' ? 'ممتازة' : handoverReviewLog.exterior_condition === 'good' ? 'جيدة' : 'تحتاج مراجعة'}</strong></div>
 //             </div>
 
-//             {handoverReviewLog.condition_notes && <p style={{ background: '#fff8e1', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
+//             {handoverReviewLog.condition_notes && <p style={{ background: '#fffaf0', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
 //             {handoverReviewLog.images?.length > 0 && (
 //               <div style={{ margin: '18px 0' }}><h3 style={{ color: '#173a52', fontSize: '.98rem', marginBottom: 10 }}>صور الحالة عند التسليم</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>{handoverReviewLog.images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : getImageUrl(image.image_url)} alt="صورة حالة السيارة" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, border: '1px solid #e2e8f0' }} />)}</div></div>
 //             )}
@@ -365,7 +365,7 @@
 //             <form onSubmit={submitHandoverReview} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 //               <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>نتيجة المطابقة</label><select value={handoverReview.result} onChange={(event) => setHandoverReview({ ...handoverReview, result: event.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit' }}><option value="matched">مطابق — لا توجد اختلافات</option><option value="discrepancy">يوجد اختلاف يحتاج توثيقاً</option></select></div>
 //               <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>ملاحظاتك {handoverReview.result === 'discrepancy' ? '(مطلوبة عند عدم إرفاق صورة)' : '(اختياري)'}</label><textarea rows="3" value={handoverReview.notes} onChange={(event) => setHandoverReview({ ...handoverReview, notes: event.target.value })} placeholder="صف أي خدش أو اختلاف في العداد أو الوقود..." style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit', resize: 'vertical' }} /></div>
-//               {handoverReview.result === 'discrepancy' && <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>صور الاختلاف</label><input type="file" accept="image/*" multiple onChange={handleHandoverReviewImages} style={{ width: '100%' }} />{handoverReviewPreviews.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{handoverReviewPreviews.map((src, index) => <button type="button" key={src} onClick={() => removeHandoverReviewImage(index)} title="حذف الصورة" style={{ padding: 0, border: '2px solid #dc3545', borderRadius: 10, overflow: 'hidden', background: 'white', cursor: 'pointer' }}><img src={src} alt={`اختلاف ${index + 1}`} style={{ width: 76, height: 64, objectFit: 'cover', display: 'block' }} /></button>)}</div>}</div>}
+//               {handoverReview.result === 'discrepancy' && <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>صور الاختلاف</label><input type="file" accept="image/*" multiple onChange={handleHandoverReviewImages} style={{ width: '100%' }} />{handoverReviewPreviews.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{handoverReviewPreviews.map((src, index) => <button type="button" key={src} onClick={() => removeHandoverReviewImage(index)} title="حذف الصورة" style={{ padding: 0, border: '2px solid #b42318', borderRadius: 10, overflow: 'hidden', background: 'white', cursor: 'pointer' }}><img src={src} alt={`اختلاف ${index + 1}`} style={{ width: 76, height: 64, objectFit: 'cover', display: 'block' }} /></button>)}</div>}</div>}
 //               <button type="submit" disabled={submittingHandoverReview} style={{ background: handoverReview.result === 'discrepancy' ? '#b42318' : '#173a52', color: 'white', border: 0, padding: '13px 16px', borderRadius: 12, fontWeight: 900, cursor: 'pointer' }}>{submittingHandoverReview ? 'جاري حفظ المطابقة...' : handoverReview.result === 'discrepancy' ? 'تسجيل الاختلاف وإبلاغ المورد' : 'تأكيد أن السيارة مطابقة'}</button>
 //             </form>
 //           </div>
@@ -378,7 +378,7 @@
 //           <div style={{ background: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
 //             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '24px' }}>
 //               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center' }}>
-//                 <Star size={20} style={{ color: '#ffc107' }} /> تقييم السيارة والمورد
+//                 <Star size={20} style={{ color: '#b78a22' }} /> تقييم السيارة والمورد
 //               </h2>
 //               <button onClick={() => setShowReview(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
 //                 <X size={20} />
@@ -398,7 +398,7 @@
 //                       onClick={() => setReviewData({ ...reviewData, rating: star })}
 //                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
 //                     >
-//                       <Star size={32} fill={reviewData.rating >= star ? '#ffc107' : 'none'} color={reviewData.rating >= star ? '#ffc107' : '#ced4da'} />
+//                       <Star size={32} fill={reviewData.rating >= star ? '#b78a22' : 'none'} color={reviewData.rating >= star ? '#b78a22' : '#ced4da'} />
 //                     </button>
 //                   ))}
 //                 </div>
@@ -413,7 +413,7 @@
 //                       onClick={() => setReviewData({ ...reviewData, platformRating: star })}
 //                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px' }}
 //                     >
-//                       <Star size={32} fill={reviewData.platformRating >= star ? '#ffc107' : 'none'} color={reviewData.platformRating >= star ? '#ffc107' : '#ced4da'} />
+//                       <Star size={32} fill={reviewData.platformRating >= star ? '#b78a22' : 'none'} color={reviewData.platformRating >= star ? '#b78a22' : '#ced4da'} />
 //                     </button>
 //                   ))}
 //                 </div>
@@ -428,7 +428,7 @@
 //                   onChange={e => setReviewData({ ...reviewData, comment: e.target.value })}
 //                 />
 //               </div>
-//               <button type="submit" disabled={submittingReview} style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+//               <button type="submit" disabled={submittingReview} style={{ background: '#087f68', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
 //                 {submittingReview ? 'جاري الحفظ...' : 'نشر التقييم'}
 //               </button>
 //             </form>
@@ -441,7 +441,7 @@
 //         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
 //           <div style={{ background: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
 //             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '24px' }}>
-//               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#dc3545' }}>
+//               <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#b42318' }}>
 //                 <AlertTriangle size={20} /> فتح نزاع / تقديم شكوى
 //               </h2>
 //               <button onClick={() => setShowDispute(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -488,7 +488,7 @@
 //                   onChange={e => setDisputeData({ ...disputeData, description: e.target.value })}
 //                 />
 //               </div>
-//               <button type="submit" disabled={submittingDispute} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+//               <button type="submit" disabled={submittingDispute} style={{ background: '#b42318', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
 //                 {submittingDispute ? 'جاري الفتح...' : 'تأكيد وفتح النزاع'}
 //               </button>
 //             </form>
@@ -501,7 +501,7 @@
 //           width: 40px;
 //           height: 40px;
 //           border: 4px solid #e9ecef;
-//           border-top-color: #0a58ca;
+//           border-top-color: #087f68;
 //           border-radius: 50%;
 //           animation: spin 0.8s linear infinite;
 //         }
@@ -725,15 +725,15 @@ export default function MyReservations() {
 
   const getStatusBadge = (status) => {
     const map = {
-      pending: { label: 'بانتظار الدفع أو مراجعة المورد', bg: '#ffc107', color: '#212529' },
-      approved: { label: 'بانتظار مراجعة المورد', bg: '#17a2b8', color: 'white' },
-      awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#17a2b8', color: 'white' },
+      pending: { label: 'بانتظار الدفع أو مراجعة المورد', bg: '#b78a22', color: '#212529' },
+      approved: { label: 'بانتظار مراجعة المورد', bg: '#24647d', color: 'white' },
+      awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#24647d', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
-      active: { label: 'نشط', bg: '#28a745', color: 'white' },
-      completed: { label: 'مكتمل', bg: '#0a58ca', color: 'white' },
-      cancelled: { label: 'ملغي', bg: '#dc3545', color: 'white' },
-      rejected: { label: 'مرفوض', bg: '#dc3545', color: 'white' },
-      disputed: { label: 'في نزاع', bg: '#dc3545', color: 'white' },
+      active: { label: 'نشط', bg: '#0f766e', color: 'white' },
+      completed: { label: 'مكتمل', bg: '#087f68', color: 'white' },
+      cancelled: { label: 'ملغي', bg: '#b42318', color: 'white' },
+      rejected: { label: 'مرفوض', bg: '#b42318', color: 'white' },
+      disputed: { label: 'في نزاع', bg: '#b42318', color: 'white' },
     };
     const s = map[status] || { label: status, bg: '#6c757d', color: 'white' };
     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
@@ -764,7 +764,7 @@ export default function MyReservations() {
   }
 
   return (
-    <div className="customer-reservations-page" dir="rtl" style={{ background: '#f8f9fa', minHeight: '100vh', padding: '24px' }}>
+    <div className="customer-reservations-page" dir="rtl" style={{ background: '#f7fafb', minHeight: '100vh', padding: '24px' }}>
       <div className="customer-reservations-content" style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '8px' }}>حجوزاتي</h1>
@@ -775,7 +775,7 @@ export default function MyReservations() {
           <div style={{ background: 'white', borderRadius: '12px', padding: '32px', textAlign: 'center', color: '#6c757d', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <Calendar size={48} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
             <h3 style={{ fontSize: '1.2rem', marginBottom: '16px' }}>ليس لديك أي حجوزات حالياً</h3>
-            <Link to="/search" style={{ background: '#0a58ca', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-block' }}>تصفح السيارات</Link>
+            <Link to="/search" style={{ background: '#087f68', color: 'white', padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', display: 'inline-block' }}>تصفح السيارات</Link>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -790,7 +790,7 @@ export default function MyReservations() {
                   </div>
 
                   <p style={{ fontSize: '0.85rem', color: '#6c757d', marginBottom: '16px' }}>
-                    المورد: <span style={{ fontWeight: 'bold', color: '#0a58ca' }}>{res.supplier_name}</span>
+                    المورد: <span style={{ fontWeight: 'bold', color: '#087f68' }}>{res.supplier_name}</span>
                   </p>
 
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', fontSize: '0.8rem', color: '#6c757d' }}>
@@ -813,27 +813,27 @@ export default function MyReservations() {
                     <span style={{ background: '#ede7f6', color: '#5e35b1', padding: '8px 12px', borderRadius: '8px', textAlign: 'center', fontSize: '0.8rem', fontWeight: 'bold' }}>ﺗﻢ اﺳﺘﻼم اﻟﺴﻴﺎرة، واﻟﺤﺠﺰ ﺑﺎﻧﺘﻈﺎر اﻹﻏﻼق</span>
                   )}
                   {canPay(res) && (
-                    <Link to={`/checkout/${res.id}`} style={{ background: '#28a745', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                    <Link to={`/checkout/${res.id}`} style={{ background: '#0f766e', color: 'white', padding: '8px 12px', borderRadius: '8px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold' }}>
                       <CreditCard size={16} /> إتمام الدفع وإرسال الطلب
                     </Link>
                   )}
                   {canCancel(res) && (
-                    <button onClick={() => handleCancel(res.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                    <button onClick={() => handleCancel(res.id)} style={{ background: '#b42318', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
                       <XCircle size={16} /> إلغاء الحجز
                     </button>
                   )}
                   {canReview(res.status) && (
-                    <button onClick={() => openReviewModal(res)} style={{ background: '#0a58ca', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                    <button onClick={() => openReviewModal(res)} style={{ background: '#087f68', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
                       <Star size={16} /> قيم تجربتك
                     </button>
                   )}
                   {canMessage(res.status) && (
-                    <button onClick={() => startChat(res.id)} style={{ background: 'transparent', border: '1px solid #0a58ca', color: '#0a58ca', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
+                    <button onClick={() => startChat(res.id)} style={{ background: 'transparent', border: '1px solid #087f68', color: '#087f68', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer' }}>
                       <MessageSquare size={16} /> مراسلة المورد
                     </button>
                   )}
                   {canDispute(res.status) && res.status !== 'disputed' && (
-                    <button onClick={() => openDisputeModal(res)} style={{ background: 'transparent', border: '1px solid #dc3545', color: '#dc3545', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
+                    <button onClick={() => openDisputeModal(res)} style={{ background: 'transparent', border: '1px solid #b42318', color: '#b42318', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', marginTop: '4px' }}>
                       <AlertTriangle size={16} /> تقديم شكوى / نزاع
                     </button>
                   )}
@@ -862,7 +862,7 @@ export default function MyReservations() {
               <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '12px' }}><small style={{ color: '#64748b' }}>الحالة</small><strong style={{ display: 'block', color: '#173a52', marginTop: 4 }}>{handoverReviewLog.exterior_condition === 'excellent' ? 'ممتازة' : handoverReviewLog.exterior_condition === 'good' ? 'جيدة' : 'تحتاج مراجعة'}</strong></div>
             </div>
 
-            {handoverReviewLog.condition_notes && <p style={{ background: '#fff8e1', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
+            {handoverReviewLog.condition_notes && <p style={{ background: '#fffaf0', color: '#795548', borderRadius: '12px', padding: '12px', fontSize: '.88rem', lineHeight: 1.7 }}>ملاحظات المورد: {handoverReviewLog.condition_notes}</p>}
             {handoverReviewLog.images?.length > 0 && (
               <div style={{ margin: '18px 0' }}><h3 style={{ color: '#173a52', fontSize: '.98rem', marginBottom: 10 }}>صور الحالة عند التسليم</h3><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 10 }}>{handoverReviewLog.images.map((image) => <img key={image.id || image.image_url} src={image.image_url?.startsWith('http') ? image.image_url : getImageUrl(image.image_url)} alt="صورة حالة السيارة" style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 12, border: '1px solid #e2e8f0' }} />)}</div></div>
             )}
@@ -870,7 +870,7 @@ export default function MyReservations() {
             <form onSubmit={submitHandoverReview} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>نتيجة المطابقة</label><select value={handoverReview.result} onChange={(event) => setHandoverReview({ ...handoverReview, result: event.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit' }}><option value="matched">مطابق — لا توجد اختلافات</option><option value="discrepancy">يوجد اختلاف يحتاج توثيقاً</option></select></div>
               <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>ملاحظاتك {handoverReview.result === 'discrepancy' ? '(مطلوبة عند عدم إرفاق صورة)' : '(اختياري)'}</label><textarea rows="3" value={handoverReview.notes} onChange={(event) => setHandoverReview({ ...handoverReview, notes: event.target.value })} placeholder="صف أي خدش أو اختلاف في العداد أو الوقود..." style={{ width: '100%', padding: '12px', border: '1px solid #d8e1e7', borderRadius: 12, fontFamily: 'inherit', resize: 'vertical' }} /></div>
-              {handoverReview.result === 'discrepancy' && <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>صور الاختلاف</label><input type="file" accept="image/*" multiple onChange={handleHandoverReviewImages} style={{ width: '100%' }} />{handoverReviewPreviews.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{handoverReviewPreviews.map((src, index) => <button type="button" key={src} onClick={() => removeHandoverReviewImage(index)} title="حذف الصورة" style={{ padding: 0, border: '2px solid #dc3545', borderRadius: 10, overflow: 'hidden', background: 'white', cursor: 'pointer' }}><img src={src} alt={`اختلاف ${index + 1}`} style={{ width: 76, height: 64, objectFit: 'cover', display: 'block' }} /></button>)}</div>}</div>}
+              {handoverReview.result === 'discrepancy' && <div><label style={{ display: 'block', marginBottom: 8, fontWeight: 800, color: '#173a52' }}>صور الاختلاف</label><input type="file" accept="image/*" multiple onChange={handleHandoverReviewImages} style={{ width: '100%' }} />{handoverReviewPreviews.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{handoverReviewPreviews.map((src, index) => <button type="button" key={src} onClick={() => removeHandoverReviewImage(index)} title="حذف الصورة" style={{ padding: 0, border: '2px solid #b42318', borderRadius: 10, overflow: 'hidden', background: 'white', cursor: 'pointer' }}><img src={src} alt={`اختلاف ${index + 1}`} style={{ width: 76, height: 64, objectFit: 'cover', display: 'block' }} /></button>)}</div>}</div>}
               <button type="submit" disabled={submittingHandoverReview} style={{ background: handoverReview.result === 'discrepancy' ? '#b42318' : '#173a52', color: 'white', border: 0, padding: '13px 16px', borderRadius: 12, fontWeight: 900, cursor: 'pointer' }}>{submittingHandoverReview ? 'جاري حفظ المطابقة...' : handoverReview.result === 'discrepancy' ? 'تسجيل الاختلاف وإبلاغ المورد' : 'تأكيد أن السيارة مطابقة'}</button>
             </form>
           </div>
@@ -885,7 +885,7 @@ export default function MyReservations() {
             <div className="review-modal-orbit orbit-two" />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '24px' }}>
               <h2 className="review-modal-title">
-                <Star size={20} style={{ color: '#ffc107' }} /> تقييم السيارة والمورد
+                <Star size={20} style={{ color: '#b78a22' }} /> تقييم السيارة والمورد
               </h2>
               <button className="review-close-button" onClick={() => setShowReview(false)} aria-label="إغلاق نافذة التقييم">
                 <X size={20} />
@@ -934,7 +934,7 @@ export default function MyReservations() {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div style={{ background: 'white', borderRadius: '12px', maxWidth: '500px', width: '100%', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e9ecef', paddingBottom: '16px', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#dc3545' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', gap: '8px', alignItems: 'center', color: '#b42318' }}>
                 <AlertTriangle size={20} /> فتح نزاع / تقديم شكوى
               </h2>
               <button onClick={() => setShowDispute(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -981,7 +981,7 @@ export default function MyReservations() {
                   onChange={e => setDisputeData({ ...disputeData, description: e.target.value })}
                 />
               </div>
-              <button type="submit" disabled={submittingDispute} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
+              <button type="submit" disabled={submittingDispute} style={{ background: '#b42318', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' }}>
                 {submittingDispute ? 'جاري الفتح...' : 'تأكيد وفتح النزاع'}
               </button>
             </form>
@@ -994,7 +994,7 @@ export default function MyReservations() {
           width: 40px;
           height: 40px;
           border: 4px solid #e9ecef;
-          border-top-color: #0a58ca;
+          border-top-color: #087f68;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }

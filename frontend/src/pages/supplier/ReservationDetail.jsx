@@ -57,7 +57,7 @@ export default function SupplierReservationDetail() {
   if (!reservation) return <div className="container p-32 text-center">الحجز غير موجود</div>;
 
   return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -66,11 +66,11 @@ export default function SupplierReservationDetail() {
           <button onClick={() => navigate(-1)} style={{ background: 'white', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><ArrowLeft size={20} /></button>
           <h1 style={{ fontSize: '1.5rem', margin: 0 }}>تفاصيل الحجز #{reservation.id.split('-')[0]}</h1>
           <span style={{
-            background: reservation.status === 'pending' ? '#ffc107' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? '#17a2b8' : reservation.status === 'active' ? '#28a745' : reservation.status === 'returned' ? '#8b5cf6' : reservation.status === 'completed' ? '#0a58ca' : reservation.status === 'rejected' ? '#dc3545' : '#6c757d',
+            background: reservation.status === 'pending' ? '#b78a22' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? '#24647d' : reservation.status === 'active' ? '#0f766e' : reservation.status === 'returned' ? '#8b5cf6' : reservation.status === 'completed' ? '#087f68' : reservation.status === 'rejected' ? '#b42318' : '#6c757d',
             color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', marginLeft: 'auto'
           }}>{reservation.status === 'pending' ? 'بانتظار مراجعة المورد' : ['approved', 'awaiting_pickup'].includes(reservation.status) ? 'بانتظار استلام العميل' : reservation.status === 'active' ? 'السيارة مع العميل' : reservation.status === 'returned' ? 'تم استلام السيارة' : reservation.status === 'completed' ? 'مكتمل' : reservation.status === 'rejected' ? 'مرفوض' : reservation.status}</span>
           {reservation.payment_status === 'paid' && (
-            <span style={{ background: '#198754', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            <span style={{ background: '#0f766e', color: 'white', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
               مدفوع
             </span>
           )}
@@ -97,7 +97,7 @@ export default function SupplierReservationDetail() {
                 </div>
                 <div>
                   <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '4px' }}>إجمالي المبلغ</p>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#28a745' }}>${reservation.total_price}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f766e' }}>${reservation.total_price}</div>
                 </div>
               </div>
             </div>
@@ -106,13 +106,13 @@ export default function SupplierReservationDetail() {
             <div className="card" style={{ background: 'white', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontWeight: 'bold', marginBottom: '16px', display: 'flex', gap: '8px', alignItems: 'center' }}><Shield size={18} /> تقارير التوثيق (Handover)</h3>
               {handoverLogs.length === 0 ? (
-                <p style={{ color: '#6c757d', fontSize: '0.85rem', textAlign: 'center', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>لم يتم رفع أي تقارير توثيق لهذا الحجز بعد.</p>
+                <p style={{ color: '#6c757d', fontSize: '0.85rem', textAlign: 'center', padding: '20px', background: '#f7fafb', borderRadius: '8px' }}>لم يتم رفع أي تقارير توثيق لهذا الحجز بعد.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                   {handoverLogs.map(log => (
                     <div key={log.id} style={{ border: '1px solid #eee', borderRadius: '12px', padding: '16px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                        <span style={{ fontWeight: 'bold', color: log.type === 'before' ? '#0a58ca' : '#ffc107' }}>
+                        <span style={{ fontWeight: 'bold', color: log.type === 'before' ? '#087f68' : '#b78a22' }}>
                           {log.type === 'before' ? 'تقرير تسليم (قبل)' : 'تقرير استلام (بعد)'}
                         </span>
                         <span style={{ color: '#6c757d', fontSize: '0.8rem' }}>{format(new Date(log.created_at), 'yyyy/MM/dd HH:mm')}</span>
@@ -122,7 +122,7 @@ export default function SupplierReservationDetail() {
                         <div><span style={{ color: '#6c757d' }}>الوقود:</span> {log.fuel_level}</div>
                         <div><span style={{ color: '#6c757d' }}>الحالة:</span> {log.exterior_condition}</div>
                       </div>
-                      <p style={{ fontSize: '0.85rem', background: '#f8f9fa', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>{log.condition_notes || 'لا توجد ملاحظات إضافية'}</p>
+                      <p style={{ fontSize: '0.85rem', background: '#f7fafb', padding: '10px', borderRadius: '6px', marginBottom: '12px' }}>{log.condition_notes || 'لا توجد ملاحظات إضافية'}</p>
                       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                         {log.images?.map((img, i) => (
                           <img key={i} src={img.image_url.startsWith('http') ? img.image_url : getImageUrl(img.image_url)} style={{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px' }} />
@@ -148,7 +148,7 @@ export default function SupplierReservationDetail() {
                   <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>{reservation.customer_email}</div>
                 </div>
               </div>
-              <button onClick={() => navigate(`/supplier/reservations`)} style={{ width: '100%', background: '#f8f9fa', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <button onClick={() => navigate(`/supplier/reservations`)} style={{ width: '100%', background: '#f7fafb', border: '1px solid #ddd', padding: '8px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <MessageSquare size={16} /> مراسلة العميل
               </button>
             </div>
@@ -168,8 +168,8 @@ export default function SupplierReservationDetail() {
                   <DollarSign size={18} /> تم الدفع - بانتظار موافقتك
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <button onClick={() => handleAction('approve')} style={{ background: '#28a745', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><CheckCircle size={20} /> موافقة على الحجز (تفعيل)</button>
-                  <button onClick={() => handleAction('reject')} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><XCircle size={20} /> رفض الحجز (استرداد المبلغ للعميل)</button>
+                  <button onClick={() => handleAction('approve')} style={{ background: '#0f766e', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><CheckCircle size={20} /> موافقة على الحجز (تفعيل)</button>
+                  <button onClick={() => handleAction('reject')} style={{ background: '#b42318', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><XCircle size={20} /> رفض الحجز (استرداد المبلغ للعميل)</button>
                 </div>
               </div>
             )}
@@ -179,7 +179,7 @@ export default function SupplierReservationDetail() {
 
       <style>{`
         .loading-screen { display: flex; justify-content: center; alignItems: center; min-height: 100vh; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: #0a58ca; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: #087f68; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>

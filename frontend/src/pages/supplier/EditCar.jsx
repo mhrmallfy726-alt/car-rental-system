@@ -149,7 +149,7 @@ export default function EditCar() {
   if (loading) return <div className="loading-screen"><div className="spinner"></div></div>;
 
   return (
-    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="dashboard" style={{ display: 'flex', minHeight: '100vh', background: '#f7fafb' }}>
       <SupplierSidebar />
 
       <div className="dashboard-content" style={{ flex: 1, padding: '30px 24px' }}>
@@ -249,7 +249,7 @@ export default function EditCar() {
             {/* إضافة صور جديدة */}
             <div>
               <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>إضافة صور جديدة</label>
-              <div style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f8f9fa' }}>
+              <div style={{ border: '2px dashed #ced4da', borderRadius: '8px', padding: '20px', textAlign: 'center', background: '#f7fafb' }}>
                 <Upload size={32} style={{ margin: '0 auto 8px', color: '#6c757d' }} />
                 <input type="file" id="new_images" multiple style={{ display: 'none' }} onChange={handleImageChange} />
                 <label htmlFor="new_images" className="btn btn-secondary" style={{ cursor: 'pointer' }}>اختر صوراً</label>
@@ -259,7 +259,7 @@ export default function EditCar() {
                   {imagePreviews.map((src, i) => (
                     <div key={i} style={{ position: 'relative', width: '90px', height: '70px', borderRadius: '6px', overflow: 'hidden' }}>
                       <img src={src} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: '2px', left: '2px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer' }}>×</button>
+                      <button type="button" onClick={() => removeNewImage(i)} style={{ position: 'absolute', top: '2px', left: '2px', background: '#b42318', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', cursor: 'pointer' }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -276,7 +276,7 @@ export default function EditCar() {
       <style>{`
         .sidebar-item:hover { background: #f1f3f5; }
         .sidebar-item.active { background: #e9ecef !important; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0a58ca; border-radius: 50%; animation: spin 1s linear infinite; margin: 50px auto; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #087f68; border-radius: 50%; animation: spin 1s linear infinite; margin: 50px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       `}</style>
     </div>

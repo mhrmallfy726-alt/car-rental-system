@@ -126,7 +126,7 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f8f9fa',  // رمادي فاتح محايد
+      background: '#f7fafb',  // رمادي فاتح محايد
       padding: '20px'
     }}>
       <div style={{
@@ -144,7 +144,7 @@ export default function Login() {
           alignItems: 'center',
           gap: '6px',
           background: '#f0f2f5',
-          color: '#1a1a1a',
+          color: '#173a52',
           padding: '6px 12px',
           borderRadius: '20px',
           fontSize: '0.8rem',
@@ -158,11 +158,11 @@ export default function Login() {
         {/* الشعار والعنوان */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            {/* <Car size={40} style={{ color: '#0a58ca' }} /> */}
+            {/* <Car size={40} style={{ color: '#087f68' }} /> */}
             <img src={logo} alt="RC Logo" style={{ width:'70px', height:'70px',objectFit:'contain'}}/>
-            {/* <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0a58ca', letterSpacing: '-1px' }}>RENTALCAR</span> */}
+            {/* <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#087f68', letterSpacing: '-1px' }}>RENTALCAR</span> */}
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#1a1a1a' }}>مرحباً بعودتك</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '8px', color: '#173a52' }}>مرحباً بعودتك</h1>
           <p style={{ color: '#6c757d', fontSize: '0.9rem' }}>سجل دخولك للوصول إلى أفضل العروض</p>
         </div>
 
@@ -188,7 +188,7 @@ export default function Login() {
                   outline: 'none',
                   transition: 'border-color 0.2s'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#0a58ca'}
+                onFocus={(e) => e.target.style.borderColor = '#087f68'}
                 onBlur={(e) => e.target.style.borderColor = '#ced4da'}
               />
             </div>
@@ -197,7 +197,7 @@ export default function Login() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
               <label style={{ fontWeight: '600', fontSize: '0.85rem' }}>كلمة المرور</label>
-              <Link to="/forgot-password" style={{ fontSize: '0.75rem', color: '#0a58ca', textDecoration: 'none', fontWeight: '600' }}>نسيت كلمة المرور؟</Link>
+              <Link to="/forgot-password" style={{ fontSize: '0.75rem', color: '#087f68', textDecoration: 'none', fontWeight: '600' }}>نسيت كلمة المرور؟</Link>
             </div>
             <div style={{ position: 'relative' }}>
               <Lock size={18} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6c757d' }} />
@@ -217,7 +217,7 @@ export default function Login() {
                   outline: 'none',
                   transition: 'border-color 0.2s'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#0a58ca'}
+                onFocus={(e) => e.target.style.borderColor = '#087f68'}
                 onBlur={(e) => e.target.style.borderColor = '#ced4da'}
               />
             </div>
@@ -228,7 +228,7 @@ export default function Login() {
             disabled={isLoading}
             style={{
               width: '100%',
-              background: '#0a58ca',
+              background: '#087f68',
               color: 'white',
               border: 'none',
               padding: '10px',
@@ -246,7 +246,7 @@ export default function Login() {
               }
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = '#10B981';
+              e.target.style.background = '#0f766e';
               e.target.style.transform = 'translateY(0)';
               e.target.style.boxShadow = 'none';
             }}
@@ -414,7 +414,7 @@ export default function Login() {
         {/* رابط التسجيل */}
         <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.85rem', color: '#6c757d' }}>
           ليس لديك حساب؟{' '}
-          <Link to="/register" style={{ color: '#0a58ca', fontWeight: 'bold', textDecoration: 'none' }}>إنشاء حساب جديد</Link>
+          <Link to="/register" style={{ color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>إنشاء حساب جديد</Link>
         </div>
       </div>
 

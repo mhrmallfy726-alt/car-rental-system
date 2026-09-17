@@ -7,7 +7,7 @@ import { getImageUrl } from '../utils/imageUtils';
 import { maskEmail } from '../utils/privacy';
 
 const navy = '#173a52';
-const teal = '#178263';
+const teal = '#0f766e';
 const soft = '#f4f8f8';
 const roleLabel = { customer: 'مستأجر سيارة', supplier: 'مورد / مكتب تأجير', admin: 'مدير النظام' };
 const verificationLabel = { pending: 'بانتظار مراجعة الإدارة', approved: 'تم اعتماد الحساب', rejected: 'تم رفض طلب التوثيق' };

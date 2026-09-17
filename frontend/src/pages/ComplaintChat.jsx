@@ -134,7 +134,7 @@ export default function ComplaintChat() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f8f9fa',
+      background: '#f7fafb',
       padding: '20px'
     }}>
       <div className="card flex flex-col" style={{ height: '85vh', width: '100%', maxWidth: '900px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
@@ -156,7 +156,7 @@ export default function ComplaintChat() {
           </div>
           {complaint && (
             <span style={{
-              background: complaint.type === 'other' ? 'rgba(255,255,255,0.2)' : '#febb02',
+              background: complaint.type === 'other' ? 'rgba(255,255,255,0.2)' : '#d4af37',
               color: 'white',
               padding: '4px 10px',
               borderRadius: '20px',
@@ -176,7 +176,7 @@ export default function ComplaintChat() {
         )}
 
         {/* Messages area */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#f5f7fa', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#f4f8f9', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {messages.length === 0 ? (
             <div style={{ textAlign: 'center', margin: 'auto', color: 'var(--text-muted)' }}>
               <MessageCircle size={48} style={{ marginBottom: '12px', color: 'var(--primary-light)' }} />
@@ -229,7 +229,7 @@ export default function ComplaintChat() {
                     {msg.attachment_url && (
                       <a href={getImageUrl(msg.attachment_url, '#')} target="_blank" rel="noopener noreferrer" style={{
                         display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '8px',
-                        fontSize: '0.75rem', color: isMe ? '#fff' : '#0a58ca', textDecoration: 'underline'
+                        fontSize: '0.75rem', color: isMe ? '#fff' : '#087f68', textDecoration: 'underline'
                       }}>
                         <Paperclip size={12} /> عرض المرفق
                       </a>
