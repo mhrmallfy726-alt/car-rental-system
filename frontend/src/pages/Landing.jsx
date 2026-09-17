@@ -60,7 +60,7 @@ export default function Landing() {
         style={{
           position: 'relative',
           minHeight: '100vh',
-          background: 'linear-gradient(135deg, #0a1628 0%, #1a2d5a 40%, #0f2044 100%)',
+          background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 40%, var(--primary-deep) 100%)',
           display: 'flex',
           alignItems: 'center',
           overflow: 'hidden',
@@ -117,7 +117,7 @@ export default function Landing() {
               }}>
                 تأجير السيارات<br />
                 <span style={{
-                  background: 'linear-gradient(135deg, #d4af37, #f5a623)',
+                  background: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}>بكل سهولة وأمان</span>
@@ -140,7 +140,7 @@ export default function Landing() {
                   to="/cars"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '10px',
-                    background: 'linear-gradient(135deg, #0f766e, #00a10d)',
+                    background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
                     color: 'white', padding: '16px 36px', borderRadius: '12px',
                     fontSize: '1.1rem', fontWeight: '700',
                     boxShadow: '0 8px 25px rgba(0,128,9,0.35)',
@@ -202,7 +202,7 @@ export default function Landing() {
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                   <div style={{
                     width: '48px', height: '48px', borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #0f766e, #00a10d)',
+                    background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <Car size={24} style={{ color: 'white' }} />
@@ -255,7 +255,7 @@ export default function Landing() {
                   border: '1px solid rgba(0,128,9,0.3)',
                 }}>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginBottom: '4px' }}>احجز الآن</div>
-                  <div style={{ color: 'white', fontWeight: '700' }}>من <span style={{ color: '#0f766e' }}>$135</span> لـ 3 أيام</div>
+                  <div style={{ color: 'white', fontWeight: '700' }}>من <span style={{ color: 'var(--secondary)' }}>$135</span> لـ 3 أيام</div>
                 </div>
               </div>
             </div>
@@ -264,7 +264,7 @@ export default function Landing() {
       </section>
 
       {/* ===== STATS BAR ===== */}
-      <section style={{ background: '#0f2044', padding: '10px 0' }}>
+      <section style={{ background: 'var(--primary-deep)', padding: '10px 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{
             display: 'grid',
@@ -321,7 +321,7 @@ export default function Landing() {
                   icon: CreditCard,
                   title: 'ادفع بأمان',
                   desc: 'دفع إلكتروني آمن ومشفر مع إمكانية حفظ البطاقة للتسريع في المرات القادمة',
-                  color: '#0f766e',
+                  color: 'var(--secondary)',
                   bg: 'rgba(0,128,9,0.08)',
                 },
                 {
@@ -375,7 +375,7 @@ export default function Landing() {
         ref={setRef('suppliers')}
         style={{
           padding: '100px 0',
-          background: 'linear-gradient(135deg, #0a1628 0%, #1a2d5a 100%)',
+          background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -403,13 +403,13 @@ export default function Landing() {
                   icon: BarChart3,
                   title: 'لوحة تحكم ذكية',
                   desc: 'إحصائيات مفصلة عن حجوزاتك وإيراداتك مع رسوم بيانية واضحة',
-                  gradient: 'linear-gradient(135deg, #0f766e, #00a10d)',
+                  gradient: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
                 },
                 {
                   icon: DollarSign,
                   title: 'إدارة الإيرادات',
                   desc: 'تتبع مدفوعاتك بسهولة مع تقارير مالية شاملة ومحدثة',
-                  gradient: 'linear-gradient(135deg, #d4af37, #f5a623)',
+                  gradient: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
                 },
                 {
                   icon: Globe,
@@ -450,7 +450,7 @@ export default function Landing() {
                 to="/supplier-benefits"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '10px',
-                  background: 'linear-gradient(135deg, #d4af37, #f5a623)',
+                  background: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
                   color: '#173a52', padding: '16px 40px', borderRadius: '12px',
                   fontSize: '1.1rem', fontWeight: '800',
                   boxShadow: '0 8px 25px rgba(254,187,2,0.3)',
@@ -496,7 +496,7 @@ export default function Landing() {
                   icon: Car,
                   title: 'اختر سيارتك',
                   desc: 'قارن بين العروض والأسعار واختر الأنسب لك',
-                  color: '#0f766e',
+                  color: 'var(--secondary)',
                 },
                 {
                   step: '03',
@@ -558,7 +558,7 @@ export default function Landing() {
                   icon: Award,
                   title: 'موردون معتمدون',
                   desc: 'جميع موردي السيارات لدينا تم التحقق منهم واعتمادهم لضمان جودة الخدمة',
-                  color: '#0f766e',
+                  color: 'var(--secondary)',
                 },
                 {
                   icon: Shield,
@@ -691,7 +691,7 @@ export default function Landing() {
 
       {/* ===== FOOTER ===== */}
       <footer style={{
-        background: '#0a1628',
+        background: 'var(--primary-dark)',
         padding: '60px 0 30px',
         color: 'rgba(255,255,255,0.6)',
       }}>
@@ -701,7 +701,7 @@ export default function Landing() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                 <div style={{
                   width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #0f766e, #00a10d)',
+                  background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Car size={22} style={{ color: 'white' }} />
