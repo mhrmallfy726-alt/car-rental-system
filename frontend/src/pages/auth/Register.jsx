@@ -611,6 +611,9 @@ textTransform: "uppercase",
             <p style={{ color: '#6c757d', fontSize: '0.75rem', marginTop: '6px' }}>استخدم 10 أحرف على الأقل مع حرف كبير وحرف صغير ورقم ورمز خاص.</p>
           </div>
 
+          <p style={{ color: '#64777e', fontSize: '0.78rem', lineHeight: 1.8, margin: '10px 0 4px', textAlign: 'right' }}>
+            بإنشاء الحساب، أقر بأنني قرأت <a href="/terms" target="_blank" rel="noreferrer" style={{ color: '#087f68', fontWeight: '700' }}>الشروط والأحكام</a> و<a href="/privacy" target="_blank" rel="noreferrer" style={{ color: '#087f68', fontWeight: '700' }}>سياسة الخصوصية</a>.
+          </p>
           <button 
             type="submit" 
             disabled={isLoading}

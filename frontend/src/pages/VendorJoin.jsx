@@ -1297,7 +1297,7 @@ textTransform: "uppercase",
                   }}
                 />
                 <label htmlFor="terms" style={{ fontSize: '0.9rem', color: '#173a52', cursor: 'pointer' }}>
-                  ☑ أوافق على <strong>الشروط والأحكام</strong> و<strong>سياسة الخصوصية</strong> الخاصة بمنصة لبيتكم
+                  ☑ أوافق على <a href="/supplier-terms" target="_blank" rel="noreferrer" style={{ color: '#087f68', fontWeight: 800 }}>الشروط والأحكام</a> و<a href="/privacy" target="_blank" rel="noreferrer" style={{ color: '#087f68', fontWeight: 800 }}>سياسة الخصوصية</a> الخاصة بمنصة Rental CR
                 </label>
               </div>
             </div>

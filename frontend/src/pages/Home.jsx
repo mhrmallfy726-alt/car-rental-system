@@ -324,8 +324,8 @@ export default function Home() {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', color: '#ccc' }}>
                 <li><a href="#" style={{ color: '#ccc' }}>من نحن</a></li>
                 <li><a href="#" style={{ color: '#ccc' }}>الأسئلة الشائعة</a></li>
-                <li><a href="#" style={{ color: '#ccc' }}>الشروط والأحكام</a></li>
-                <li><a href="#" style={{ color: '#ccc' }}>سياسة الخصوصية</a></li>
+                <li><a href="/terms" style={{ color: '#ccc' }}>الشروط والأحكام</a></li>
+                <li><a href="/privacy" style={{ color: '#ccc' }}>سياسة الخصوصية</a></li>
               </ul>
             </div>
 

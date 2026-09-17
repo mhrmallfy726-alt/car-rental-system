@@ -738,7 +738,7 @@ radius: 10,
             <label className="flex items-start gap-2 rounded-xl border border-stone-200 bg-stone-50 p-3 text-[11px] leading-5 text-stone-600">
               <input type="checkbox" checked={policyAccepted} onChange={(e) => setPolicyAccepted(e.target.checked)} className="mt-1 accent-[#b42318]" />
               <span>
-                أقر بأنني قرأت <a href="#rental-policy" className="font-bold text-[#b24e40] underline">سياسة الحجوزات والتسليم والاستلام والشكاوى والنزاعات</a> وأوافق على توثيق حالة السيارة بالصور والعداد والوقود والالتزام بمهل الإبلاغ والاعتراض.
+                أقر بأنني قرأت <a href="/rental-policy" target="_blank" rel="noreferrer" className="font-bold text-[#b24e40] underline">سياسة الحجوزات والتسليم والاستلام والشكاوى والنزاعات</a> وأوافق على توثيق حالة السيارة بالصور والعداد والوقود والالتزام بمهل الإبلاغ والاعتراض.
                 {currentPolicy?.version && <small className="block text-stone-400">الإصدار المعتمد: {currentPolicy.version}</small>}
               </span>
             </label>
