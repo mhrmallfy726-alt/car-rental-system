@@ -157,7 +157,7 @@ export default function Navbar() {
           <Link to="/" className="rc-brand" aria-label="العودة للرئيسية">
             <span className="rc-brand-orbit" />
             <span className="rc-brand-mark"><img src={logo} alt="RC" /></span>
-            <span className="rc-brand-copy"><strong>RC</strong><small>RENTAL CR</small></span>
+            <span className="rc-brand-copy"><strong>RC</strong><small>RENTAL CIRCLE</small></span>
           </Link>
 
           <div className="rc-desktop-links">
@@ -192,7 +192,7 @@ export default function Navbar() {
       <style>{`
         .rc-navbar { position: fixed; inset: 0 0 auto; height: 78px; z-index: 1000; color: #f7fbff; background: linear-gradient(180deg, rgba(7,18,33,.84), rgba(7,18,33,.35)); border-bottom: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(16px); transition: background .28s ease, box-shadow .28s ease, border-color .28s ease; }
         .rc-navbar-solid { background: rgba(7,18,33,.94); border-bottom-color: rgba(81,245,202,.18); box-shadow: 0 12px 38px rgba(2,9,19,.26); }
-        .rc-navbar-glow { position: absolute; inset: auto 12% -1px; height: 1px; background: linear-gradient(90deg, transparent, #4df5c7, #ac7cff, transparent); opacity: .72; filter: blur(.3px); }
+        .rc-navbar-glow { position: absolute; inset: auto 12% -1px; height: 1px; background: linear-gradient(90deg, transparent, var(--teal-bright), var(--accent), transparent); opacity: .72; filter: blur(.3px); }
         .rc-navbar-inner { width: min(1240px, calc(100% - 40px)); height: 100%; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 22px; position: relative; z-index: 1; }
         .rc-brand { display: inline-flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; min-width: 174px; }
         .rc-brand-mark { width: 42px; height: 42px; position: relative; display: grid; place-items: center; border-radius: 14px; background: linear-gradient(145deg, rgba(255,255,255,.95), rgba(209,235,255,.78)); box-shadow: 0 0 0 1px rgba(77,245,199,.48), 0 0 22px rgba(77,245,199,.16); overflow: hidden; }
@@ -203,28 +203,28 @@ export default function Navbar() {
         .rc-brand-copy small { color: rgba(220,235,245,.56); font-size: 7px; letter-spacing: 1.5px; font-weight: 800; }
         .rc-desktop-links { display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; }
         .rc-nav-link { position: relative; display: inline-flex; align-items: center; height: 44px; padding: 0 14px; border-radius: 12px; color: rgba(235,244,250,.72); text-decoration: none; font-size: 13px; font-weight: 800; white-space: nowrap; transition: color .2s ease, background .2s ease, transform .2s ease; }
-        .rc-nav-link span { position: absolute; right: 14px; left: 14px; bottom: 5px; height: 2px; border-radius: 99px; background: linear-gradient(90deg, #4df5c7, #ac7cff); transform: scaleX(0); transform-origin: right; transition: transform .22s ease; box-shadow: 0 0 13px rgba(77,245,199,.75); }
+        .rc-nav-link span { position: absolute; right: 14px; left: 14px; bottom: 5px; height: 2px; border-radius: 99px; background: linear-gradient(90deg, var(--teal-bright), var(--accent)); transform: scaleX(0); transform-origin: right; transition: transform .22s ease; box-shadow: 0 0 13px rgba(77,245,199,.75); }
         .rc-nav-link:hover, .rc-nav-link-active { color: #fff; background: rgba(77,245,199,.09); transform: translateY(-1px); }
         .rc-nav-link:hover span, .rc-nav-link-active span { transform: scaleX(1); }
         .rc-actions, .rc-auth-actions { display: flex; align-items: center; gap: 8px; }
         .rc-login-link, .rc-register-link, .rc-dashboard-link, .rc-icon-button, .rc-user-pill { transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease; }
         .rc-login-link { color: rgba(235,244,250,.82); padding: 10px 12px; text-decoration: none; font-size: 13px; font-weight: 800; }
-        .rc-login-link:hover { color: #4df5c7; transform: translateY(-1px); }
-        .rc-register-link { display: inline-flex; align-items: center; gap: 8px; color: #06131f; background: linear-gradient(135deg, #4df5c7, #c8ffed); padding: 10px 14px; border-radius: 12px; text-decoration: none; font-size: 12px; font-weight: 950; box-shadow: 0 0 0 1px rgba(77,245,199,.35), 0 8px 20px rgba(77,245,199,.17); }
-        .rc-register-link:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px #4df5c7, 0 0 22px rgba(77,245,199,.44); }
+        .rc-login-link:hover { color: var(--teal-bright); transform: translateY(-1px); }
+        .rc-register-link { display: inline-flex; align-items: center; gap: 8px; color: #06131f; background: linear-gradient(135deg, var(--teal-bright), #dffaf2); padding: 10px 14px; border-radius: 12px; text-decoration: none; font-size: 12px; font-weight: 950; box-shadow: 0 0 0 1px rgba(77,245,199,.35), 0 8px 20px rgba(77,245,199,.17); }
+        .rc-register-link:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--teal-bright), 0 0 22px rgba(77,245,199,.44); }
         .rc-register-link span { font-size: 16px; line-height: 0; }
-        .rc-dashboard-link { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(172,124,255,.42); border-radius: 11px; padding: 9px 12px; color: #e9dbff; background: rgba(172,124,255,.1); text-decoration: none; font-size: 12px; font-weight: 900; }
+        .rc-dashboard-link { display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(172,124,255,.42); border-radius: 11px; padding: 9px 12px; color: #fff4cf; background: rgba(172,124,255,.1); text-decoration: none; font-size: 12px; font-weight: 900; }
         .rc-dashboard-link:hover { transform: translateY(-2px); color: #fff; background: rgba(172,124,255,.2); box-shadow: 0 0 18px rgba(172,124,255,.22); }
         .rc-icon-button { width: 38px; height: 38px; position: relative; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 11px; color: rgba(245,250,255,.86); background: rgba(255,255,255,.07); cursor: pointer; }
-        .rc-icon-button:hover, .rc-icon-button-active { color: #4df5c7; border-color: rgba(77,245,199,.55); background: rgba(77,245,199,.1); box-shadow: 0 0 18px rgba(77,245,199,.16); transform: translateY(-2px); }
+        .rc-icon-button:hover, .rc-icon-button-active { color: var(--teal-bright); border-color: rgba(77,245,199,.55); background: rgba(77,245,199,.1); box-shadow: 0 0 18px rgba(77,245,199,.16); transform: translateY(-2px); }
         .rc-logout-button:hover { color: #ff95b6; border-color: rgba(255,149,182,.55); background: rgba(255,149,182,.1); box-shadow: 0 0 18px rgba(255,149,182,.16); }
         .rc-notification-wrap { position: relative; }
         .rc-notification-count { position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 4px; border: 2px solid #071221; border-radius: 99px; color: #071221; background: #ff76a8; font-size: 9px; font-weight: 950; box-shadow: 0 0 13px rgba(255,118,168,.68); }
         .rc-user-pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 6px; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; color: #fff; background: rgba(255,255,255,.07); text-decoration: none; }
         .rc-user-pill:hover { border-color: rgba(77,245,199,.45); background: rgba(77,245,199,.08); transform: translateY(-1px); }
-        .rc-avatar { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #071221; background: linear-gradient(135deg, #4df5c7, #ac7cff); font-size: 12px; font-weight: 950; }
+        .rc-avatar { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #071221; background: linear-gradient(135deg, var(--teal-bright), var(--accent)); font-size: 12px; font-weight: 950; }
         .rc-user-name { max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 850; }
-        .rc-menu-button { display: none; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(77,245,199,.36); border-radius: 11px; color: #4df5c7; background: rgba(77,245,199,.09); cursor: pointer; }
+        .rc-menu-button { display: none; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(77,245,199,.36); border-radius: 11px; color: var(--teal-bright); background: rgba(77,245,199,.09); cursor: pointer; }
         .rc-notification-panel { position: absolute; top: 48px; left: 0; width: min(360px, calc(100vw - 32px)); overflow: hidden; border: 1px solid #dfe8ee; border-radius: 16px; background: #fff; box-shadow: 0 20px 50px rgba(3,14,26,.27); color: #173a52; }
         .rc-notification-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #f5f8fa; border-bottom: 1px solid #e8edf0; }
         .rc-notification-head h3 { margin: 0; font-size: 14px; }
@@ -239,13 +239,13 @@ export default function Navbar() {
         .rc-empty-notifications { padding: 30px 18px; color: #96a2aa; text-align: center; font-size: 13px; }
         .rc-mobile-menu { position: fixed; inset: 78px 0 0; z-index: 999; padding: 24px 22px; overflow-y: auto; background: radial-gradient(circle at 90% 10%, rgba(172,124,255,.18), transparent 28%), radial-gradient(circle at 10% 20%, rgba(77,245,199,.12), transparent 25%), #071221; animation: rcMenuIn .2s ease-out; }
         .rc-mobile-menu-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); }
-        .rc-mobile-menu-kicker { color: #4df5c7; font-size: 11px; font-weight: 950; letter-spacing: 2px; }
+        .rc-mobile-menu-kicker { color: var(--teal-bright); font-size: 11px; font-weight: 950; letter-spacing: 2px; }
         .rc-mobile-menu-nav { display: grid; gap: 8px; margin-top: 24px; }
         .rc-mobile-link { display: flex; align-items: center; justify-content: space-between; padding: 15px 14px; border: 1px solid rgba(255,255,255,.09); border-radius: 13px; color: rgba(255,255,255,.78); text-decoration: none; font-size: 16px; font-weight: 850; transition: all .2s ease; }
         .rc-mobile-link:hover, .rc-mobile-link-active { color: #fff; border-color: rgba(77,245,199,.45); background: rgba(77,245,199,.09); transform: translateX(-3px); }
         .rc-mobile-user-actions { display: grid; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); }
         .rc-mobile-user-actions a, .rc-mobile-user-actions button { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border: 0; border-radius: 12px; color: #dbe8f0; background: rgba(255,255,255,.06); text-align: right; text-decoration: none; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
-        .rc-mobile-user-actions a:hover, .rc-mobile-user-actions button:hover { color: #4df5c7; background: rgba(77,245,199,.1); }
+        .rc-mobile-user-actions a:hover, .rc-mobile-user-actions button:hover { color: var(--teal-bright); background: rgba(77,245,199,.1); }
         @keyframes rcOrbit { to { transform: rotate(332deg); } }
         @keyframes rcMenuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 1080px) { .rc-navbar-inner { width: min(100% - 28px, 1240px); } .rc-desktop-links { gap: 0; } .rc-nav-link { padding: 0 10px; font-size: 12px; } .rc-dashboard-link span, .rc-user-name { display: none; } .rc-dashboard-link { width: 38px; height: 38px; justify-content: center; padding: 0; } }
@@ -267,5 +267,5 @@ function NotificationPanel({ notifications, unreadCount, onOpenNotification, onM
 }
 
 function MobileMenu({ authenticated, navigationItems, getDashboardLink, getDashboardText, handleLogout, setOpen, isActive }) {
-  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CR</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="#4df5c7" /></div><div className="rc-mobile-menu-nav">{navigationItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,#4df5c7,#c8ffed)' }}>إنشاء حساب جديد</Link></>}</div></div>;
+  return <div className="rc-mobile-menu" dir="rtl"><div className="rc-mobile-menu-header"><div><div className="rc-mobile-menu-kicker">RENTAL CIRCLE</div><div style={{ color: '#fff', marginTop: 6, fontSize: 22, fontWeight: 950 }}>مساحتك تبدأ من هنا</div></div><CheckCircle size={25} color="var(--teal-bright)" /></div><div className="rc-mobile-menu-nav">{navigationItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`rc-mobile-link ${isActive(item.to) ? 'rc-mobile-link-active' : ''}`}>{item.label}<span>↗</span></Link>)}</div><div className="rc-mobile-user-actions">{authenticated ? <><Link to={getDashboardLink()} onClick={() => setOpen(false)}><LayoutDashboard size={17} />{getDashboardText()}</Link><Link to="/profile" onClick={() => setOpen(false)}>الملف الشخصي</Link><button type="button" onClick={() => { handleLogout(); setOpen(false); }}><LogOut size={17} />تسجيل الخروج</button></> : <><Link to="/login" onClick={() => setOpen(false)}>دخول</Link><Link to="/register" onClick={() => setOpen(false)} style={{ color: '#071221', justifyContent: 'center', background: 'linear-gradient(135deg,var(--teal-bright),#dffaf2)' }}>إنشاء حساب جديد</Link></>}</div></div>;
 }

@@ -5,7 +5,11 @@
   /* CarFlexi Inspired Palette */
   --primary: #173a52;
   /* Deep Booking Blue */
-  --primary-light: #087f68;
+  --primary-light: #0f766e;
+  --primary-dark: #0b1f2d;
+  --primary-deep: #123b55;
+  --teal-bright: #20a88d;
+  --gold-light: #f1cf70;
   --secondary: #0f766e;
   /* CarFlexi Green for buttons */
   --secondary-hover: #0b5f59;

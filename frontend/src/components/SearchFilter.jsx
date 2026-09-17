@@ -25,8 +25,8 @@ export default function SearchFilter({
 return (
   <>
     <form onSubmit={handleSearch} className="hero-search-container search-form fade-in">
-<div className="search-grid">
-  <div className="input-wrapper">
+    <div className="search-grid">
+  <div className="input-wrapper search-location-field">
     <label>موقع الاستلام</label>
     <div style={{ position: 'relative' }}>
       <MapPin size={18} style={{ position: 'absolute', right: '12px', top: '12px', color: '#999', pointerEvents: 'none' }} />
@@ -36,14 +36,14 @@ return (
       />
     </div>
     <LocationPicker
-      position={[
-        Number(searchParams.latitude) || 15.3694,
-        Number(searchParams.longitude) || 44.1910,
-      ]}
+      position={searchParams.latitude && searchParams.longitude ? [
+        Number(searchParams.latitude),
+        Number(searchParams.longitude),
+      ] : null}
       mode="pickup"
       onLocationChange={applyLocationChange}
     />
-    <small style={{ display: 'block', marginTop: 7, color: searchParams.latitude && searchParams.longitude ? '#18704b' : '#a66a00', lineHeight: 1.6 }}>
+    <small className="location-helper-text" style={{ color: searchParams.latitude && searchParams.longitude ? '#18704b' : '#a66a00' }}>
       {searchParams.latitude && searchParams.longitude
         ? 'تم تحديد الموقع بدقة، وسيتم البحث ضمن 25 كم منه.'
         : 'ابحث عن المدينة أو الحي في الحقل، أو حدد الموقع من الخريطة للبحث ضمن 25 كم.'}
