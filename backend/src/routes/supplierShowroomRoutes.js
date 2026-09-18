@@ -95,21 +95,33 @@ router.post('/', asyncHandler(async (req, res, next) => {
       [req.user.id,cleanName,cleanCity,address||null,latitude,longitude,plan]);
     const subscription=await client.query(`INSERT INTO showroom_subscriptions
       (showroom_id,supplier_id,plan,amount,currency,price_snapshot) VALUES($1,$2,$3,$4,$5,$6::jsonb)
-      RETURNING id,plan,amount,currency,status`,
+      RETURNING id,plan,amount,currency,status,approval_status`,
       [location.rows[0].id,req.user.id,plan,amount,pricing.currency,JSON.stringify({monthly_price:pricing.monthly_price,annual_price:pricing.annual_price,captured_at:new Date().toISOString()})]);
-    await client.query('COMMIT');
+    const payment=await client.query(`INSERT INTO payments
+      (reservation_id,customer_id,showroom_subscription_id,payer_id,supplier_id,amount,currency,payment_method,status,provider_reference,metadata,paid_at)
+      VALUES(NULL,NULL,$1,$2,$2,$3,$4,'card','paid',$5,$6::jsonb,NOW()) RETURNING id,status,amount,currency,paid_at`,
+      [subscription.rows[0].id,req.user.id,amount,pricing.currency,
+       `SIM-SHOWROOM-${subscription.rows[0].id}-${Date.now()}`,
+       JSON.stringify({simulated:true,event:'showroom_subscription_checkout',plan,showroom_id:location.rows[0].id})]);
+    await client.query(`UPDATE showroom_subscriptions
+      SET status='paid',starts_at=NOW(),expires_at=CASE WHEN plan='annual' THEN NOW()+INTERVAL '1 year' ELSE NOW()+INTERVAL '1 month' END,payment_id=$1,updated_at=NOW()
+      WHERE id=$2`, [payment.rows[0].id,subscription.rows[0].id]);
+    await client.query(`UPDATE locations SET subscription_status='pending_approval',subscription_started_at=NOW(),subscription_expires_at=CASE WHEN $1='annual' THEN NOW()+INTERVAL '1 year' ELSE NOW()+INTERVAL '1 month' END,updated_at=NOW() WHERE id=$2 AND supplier_id=$3`, [plan,location.rows[0].id,req.user.id]);
+    await client.query(`INSERT INTO ledger_entries (payment_id,supplier_id,entry_type,direction,amount,currency,description,metadata)
+      VALUES($1,$2,'charge','credit',$3,$4,$5,$6::jsonb)`,
+      [payment.rows[0].id,req.user.id,amount,pricing.currency,`اشتراك فرع ${cleanName}`,JSON.stringify({type:'showroom_subscription',plan,showroom_id:location.rows[0].id})]);
     const admins = await query("SELECT id FROM users WHERE role = 'admin' AND COALESCE(is_active, TRUE) = TRUE");
     const io = req.app.get('io');
     for (const admin of admins.rows) {
       const notification = await query(
-        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
-         VALUES ($1, $2, $3, 'system', $4, 'showroom_subscription', $5)
-         RETURNING *`,
-        [admin.id, 'طلب معرض جديد بانتظار المراجعة', `أرسل المورد ${req.user.name || req.user.email || ''} طلب إضافة معرض «${cleanName}» في ${cleanCity}.`, subscription.rows[0].id, '/admin/branch-requests']
+        `INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type,action_url)
+         VALUES ($1,$2,$3,'system',$4,'showroom_subscription',$5) RETURNING *`,
+        [admin.id,'طلب فرع مدفوع بانتظار الموافقة',`دفع المورد ${req.user.name || req.user.email || ''} رسوم إضافة الفرع «${cleanName}» في ${cleanCity}.`,subscription.rows[0].id,'/admin/branch-requests']
       );
-      if (io && notification.rows[0]) io.to(`user_${admin.id}`).emit('new_notification', notification.rows[0]);
+      if (io && notification.rows[0]) io.to(`user_${admin.id}`).emit('new_notification',notification.rows[0]);
     }
-    res.status(201).json({success:true,data:{showroom:location.rows[0],subscription:subscription.rows[0]},message:'تم إنشاء طلب المعرض، أكمل رسوم الاشتراك لتفعيله'});
+    await client.query('COMMIT');
+    res.status(201).json({success:true,data:{showroom:{...location.rows[0],subscription_status:'pending_approval'},subscription:{...subscription.rows[0],status:'paid'},payment:payment.rows[0]},message:'تم الدفع وإرسال طلب الفرع للموافقة'});
   } catch(error) { await client.query('ROLLBACK'); if(error.code==='23505') return next(new AppError('اسم المعرض مستخدم بالفعل',409)); throw error; }
   finally { client.release(); }
 }));
