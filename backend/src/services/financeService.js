@@ -41,7 +41,8 @@ const updateSettings = async (adminId, data = {}) => {
 };
 
 const createReservationCharge = async ({ reservationId, customerId, savedCardId, paymentMethod = 'simulation', currency = DEFAULT_CURRENCY, withDriver }) => {
-  const paymentCurrency = assertCurrency(currency);
+  const requestedCurrency = assertCurrency(currency);
+  const paymentCurrency = DEFAULT_CURRENCY;
   const client = await getClient();
   try {
     await client.query('BEGIN');
@@ -55,9 +56,9 @@ const createReservationCharge = async ({ reservationId, customerId, savedCardId,
       if (typeof withDriver !== 'boolean') throw new Error('اختيار السائق غير صالح');
       await client.query('UPDATE reservations SET with_driver = $1 WHERE id = $2', [withDriver, reservationId]);
     }
-    const baseAmountYER = Number(reservation.total_price || 0);
+    const baseAmountYER = Number(reservation.total_price_yer ?? reservation.total_price ?? 0);
     if (!Number.isFinite(baseAmountYER) || baseAmountYER <= 0) throw new Error('قيمة الحجز غير صالحة');
-    const totalAmount = convertFromYER(baseAmountYER, paymentCurrency);
+    const totalAmount = baseAmountYER;
     const settings = await getSettings();
     const commission = totalAmount * Number(settings.commission_rate || 0) / 100;
     const supplierPayable = Math.max(0, totalAmount - commission);
@@ -72,7 +73,7 @@ const createReservationCharge = async ({ reservationId, customerId, savedCardId,
       `INSERT INTO payments (reservation_id, customer_id, payer_id, supplier_id, amount, currency, payment_method, status, provider_reference, metadata, paid_at)
        VALUES ($1,$2,$2,$3,$4,$5,$6,'paid',$7,$8::jsonb,NOW()) RETURNING *`,
       [reservationId, customerId, reservation.supplier_id, totalAmount, paymentCurrency, paymentMethod, gateway.reference,
-        JSON.stringify({ simulated: true, gateway: 'local_database', event: 'reservation_checkout', base_amount: baseAmountYER, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver), balance_before_yer: gateway.balanceBefore, balance_after_yer: gateway.balanceAfter })]
+        JSON.stringify({ simulated: true, gateway: 'local_database', event: 'reservation_checkout', base_amount_yer: baseAmountYER, requested_currency: requestedCurrency, commission_rate: Number(settings.commission_rate || 0), with_driver: withDriver ?? Boolean(reservation.with_driver), balance_before_yer: gateway.balanceBefore, balance_after_yer: gateway.balanceAfter })]
     );
     await client.query('UPDATE payment_gateway_transactions SET payment_id = $1 WHERE id = $2', [payment.rows[0].id, gateway.transaction.id]);
     const metadata = JSON.stringify({ simulated: true, commission_rate: Number(settings.commission_rate || 0), base_amount: baseAmountYER, earning_status: 'held' });

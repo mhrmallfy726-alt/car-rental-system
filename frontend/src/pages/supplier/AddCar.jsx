@@ -27,7 +27,7 @@ export default function AddCar() {
     category_id: '', color: '',
     license_plate: '', seats: 5, doors: 4,
     transmission: 'automatic', fuel_type: 'petrol',
-    price_per_day: '', description: '', mileage: 0
+    price_per_day: '', price_currency: 'YER', description: '', mileage: 0
   });
 
   useEffect(() => {
@@ -196,7 +196,7 @@ export default function AddCar() {
                   <option value="automatic">أوتوماتيك</option><option value="manual">عادي (يدوي)</option>
                 </select>
               </div>
-              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>السعر اليومي ($)</label>
+              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>السعر اليومي (ر.ي)</label>
                 <input type="number" name="price_per_day" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.price_per_day} onChange={handleChange} min="1" step="1" />
               </div>
             </div>

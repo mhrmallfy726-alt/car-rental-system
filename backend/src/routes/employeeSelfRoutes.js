@@ -235,13 +235,14 @@ router.post('/me/cars', requirePermission('create_cars', 'manage_cars'), async (
         transmission,
         fuel_type,
         price_per_day,
+        price_per_day_yer,
         description,
         mileage,
         status
       )
       VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16
+        $11, $12, $13, $13, $14, $15, $16
       )
       RETURNING *`,
       [
@@ -314,6 +315,7 @@ router.put('/me/cars/:id', requirePermission('edit_cars', 'manage_cars'), async 
          transmission = COALESCE($8, transmission),
          fuel_type = COALESCE($9, fuel_type),
          price_per_day = COALESCE($10, price_per_day),
+         price_per_day_yer = COALESCE($10, price_per_day_yer),
          description = COALESCE($11, description),
          mileage = COALESCE($12, mileage),
          status = COALESCE($13, status),

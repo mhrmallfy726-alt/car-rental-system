@@ -27,7 +27,7 @@ export default function EditCar() {
     category_id: '', location_id: '', color: '',
     license_plate: '', seats: 5, doors: 4,
     transmission: 'automatic', fuel_type: 'petrol',
-    price_per_day: '', description: '', mileage: 0,
+    price_per_day: '', price_currency: 'YER', description: '', mileage: 0,
     discount_percentage: 0
   });
 
@@ -60,7 +60,8 @@ export default function EditCar() {
         doors: car.doors,
         transmission: car.transmission,
         fuel_type: car.fuel_type,
-        price_per_day: car.price_per_day,
+        price_per_day: car.original_price ?? car.price_per_day,
+        price_currency: car.original_currency || 'YER',
         description: car.description,
         mileage: car.mileage || 0,
         discount_percentage: car.discount_percentage || 0
@@ -204,7 +205,7 @@ export default function EditCar() {
                   <option value="automatic">أوتوماتيك</option><option value="manual">يدوي</option>
                 </select>
               </div>
-              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>السعر اليومي ($)</label>
+              <div><label style={{ display: 'block', marginBottom: '6px', fontWeight: '600' }}>السعر اليومي (ر.ي)</label>
                 <input type="number" name="price_per_day" className="form-input" style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }} required value={formData.price_per_day} onChange={handleChange} />
               </div>
             </div>

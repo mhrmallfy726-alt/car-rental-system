@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { uploadCarImages } = require('../middleware/upload');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
+const { assertCurrency, convertToYER } = require('../services/currencyService');
 
 const vehicleTextPattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{0,79}$/u;
 const licensePlatePattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,19}$/u;
@@ -99,8 +100,8 @@ router.get('/', asyncHandler(async (req, res) => {
     params.push(location.trim().startsWith('%') ? location.trim() : `%${location.trim()}%`);
     paramIndex++;
   }
-  if (min_price) { sql += ` AND c.price_per_day >= $${paramIndex++}`; params.push(min_price); }
-  if (max_price) { sql += ` AND c.price_per_day <= $${paramIndex++}`; params.push(max_price); }
+  if (min_price) { sql += ` AND COALESCE(c.price_per_day_yer, c.price_per_day) >= $${paramIndex++}`; params.push(min_price); }
+  if (max_price) { sql += ` AND COALESCE(c.price_per_day_yer, c.price_per_day) <= $${paramIndex++}`; params.push(max_price); }
   if (transmission) { sql += ` AND c.transmission = $${paramIndex++}`; params.push(transmission); }
   if (fuel_type) { sql += ` AND c.fuel_type = $${paramIndex++}`; params.push(fuel_type); }
   if (seats) { sql += ` AND c.seats >= $${paramIndex++}`; params.push(seats); }
@@ -133,8 +134,8 @@ router.get('/', asyncHandler(async (req, res) => {
 
   // Sorting
   const sortOptions = {
-    price_asc: 'c.price_per_day ASC',
-    price_desc: 'c.price_per_day DESC',
+    price_asc: 'COALESCE(c.price_per_day_yer, c.price_per_day) ASC',
+    price_desc: 'COALESCE(c.price_per_day_yer, c.price_per_day) DESC',
     rating: 'c.average_rating DESC',
     newest: 'c.created_at DESC',
   };
@@ -222,11 +223,13 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
   let {
     category_id, make, model, year, color,
     license_plate, seats, doors, transmission, fuel_type,
-    price_per_day, description, mileage, features, location_id
+    price_per_day, price_currency = 'YER', description, mileage, features, location_id
   } = req.body;
 
   const vehicleValidationError = validateVehicleFields({ make, model, year, color, license_plate, seats, doors, price_per_day, mileage, description });
   if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
+  const enteredCurrency = assertCurrency(price_currency);
+  const pricePerDayYER = convertToYER(price_per_day, enteredCurrency);
 
   if (!location_id) {
     const defaultLocation = (await query(
@@ -260,12 +263,15 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
 
   const result = await query(`
     INSERT INTO cars (supplier_id, category_id, location_id, make, model, year, color,
-      license_plate, seats, doors, transmission, fuel_type, price_per_day, discount_percentage, description, mileage)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      license_plate, seats, doors, transmission, fuel_type, price_per_day, price_currency,
+      price_per_day_yer, original_price, original_currency, exchange_rate_used,
+      discount_percentage, description, mileage)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'YER',$14,$15,$16,$17,$18,$19,$20)
     RETURNING *
   `, [req.user.id, category_id, supplierLocation.id, make, model, year, color,
       license_plate, seats || 5, doors || 4, transmission || 'automatic',
-      fuel_type || 'petrol', price_per_day, 0, description, mileage || 0]);
+      fuel_type || 'petrol', pricePerDayYER, pricePerDayYER, price_per_day, enteredCurrency,
+      pricePerDayYER / Number(price_per_day), 0, description, mileage || 0]);
 
   const car = result.rows[0];
 
@@ -337,19 +343,23 @@ router.put('/:id', protect, authorize('supplier'), asyncHandler(async (req, res,
   if (car.rows.length === 0) return next(new AppError('السيارة غير موجودة', 404));
   if (car.rows[0].supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
 
-  const { make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, description, mileage, status } = req.body;
+  const { make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, price_currency = 'YER', description, mileage, status } = req.body;
 
   const vehicleValidationError = validateVehicleFields({ make, model, year, color, seats, doors, price_per_day, mileage, description });
   if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
+  const enteredCurrency = assertCurrency(price_currency);
+  const pricePerDayYER = convertToYER(price_per_day, enteredCurrency);
 
   const result = await query(`
     UPDATE cars SET make = COALESCE($1, make), model = COALESCE($2, model), year = COALESCE($3, year),
       color = COALESCE($4, color), seats = COALESCE($5, seats), doors = COALESCE($6, doors),
       transmission = COALESCE($7, transmission), fuel_type = COALESCE($8, fuel_type),
-      price_per_day = COALESCE($9, price_per_day), discount_percentage = 0, description = COALESCE($10, description),
-      mileage = COALESCE($11, mileage), status = COALESCE($12, status)
-    WHERE id = $13 RETURNING *
-  `, [make, model, year, color, seats, doors, transmission, fuel_type, price_per_day, description, mileage, status, id]);
+      price_per_day = COALESCE($9, price_per_day), price_currency = 'YER', price_per_day_yer = COALESCE($10, price_per_day_yer),
+      original_price = COALESCE($11, original_price), original_currency = COALESCE($12, original_currency),
+      exchange_rate_used = COALESCE($13, exchange_rate_used), discount_percentage = 0, description = COALESCE($14, description),
+      mileage = COALESCE($15, mileage), status = COALESCE($16, status)
+    WHERE id = $17 RETURNING *
+  `, [make, model, year, color, seats, doors, transmission, fuel_type, pricePerDayYER, pricePerDayYER, price_per_day, enteredCurrency, pricePerDayYER / Number(price_per_day), description, mileage, status, id]);
 
   res.json({ success: true, data: result.rows[0] });
 }));
