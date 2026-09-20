@@ -72,7 +72,7 @@ export default function Login() {
             email,
             verificationToken:
             res.verificationToken,
-            isBranchfirstLogen: true,
+            isBranchFirstLogen: true,
           }
         });
         return;
