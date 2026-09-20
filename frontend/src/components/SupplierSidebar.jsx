@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, Megaphone, Calendar, Car, LayoutDashboard, Plus, Settings, Users, Wallet, Store } from 'lucide-react';
 import { supplierContextAPI, getSelectedShowroom, setSelectedShowroom } from '../services/supplierContext';
 import toast from 'react-hot-toast';
+import useAuthStore from '../store/authStore';
 
 const supplierLinks = [
   { to: '/supplier/dashboard', label: 'لوحة المورد', icon: LayoutDashboard },
@@ -18,6 +19,8 @@ const supplierLinks = [
 
 export default function SupplierSidebar() {
   const location = useLocation();
+  const { user } = useAuthStore();
+  const isBranch = user?.account_type === 'branch';
   const [showrooms, setShowrooms] = useState([]);
   const [selected, setSelected] = useState(getSelectedShowroom());
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,7 +46,9 @@ export default function SupplierSidebar() {
 
   useEffect(() => {
     document.body.classList.toggle('supplier-menu-open', mobileOpen);
-    return () => document.body.classList.remove('supplier-menu-open');
+    const visibleLinks = isBranch ? supplierLinks.filter(({ to }) => ['/supplier/dashboard', '/supplier/cars', '/supplier/cars/add', '/supplier/reservations'].includes(to)) : supplierLinks;
+
+  return () => document.body.classList.remove('supplier-menu-open');
   }, [mobileOpen]);
 
   useEffect(() => {
@@ -51,7 +56,7 @@ export default function SupplierSidebar() {
     return () => document.body.classList.remove('supplier-mobile-layout');
   }, []);
 
-  const currentLabel = selected?.showroom_name || (selected?.city ? `فرع ${selected.city}` : 'جاري تحميل الفرع');
+  const currentLabel = isBranch ? (user?.branch_name || 'فرعك') : (selected?.showroom_name || (selected?.city ? `فرع ${selected.city}` : 'جاري تحميل الفرع'));
 
   const chooseShowroom = async (item) => {
     try {
@@ -93,17 +98,19 @@ export default function SupplierSidebar() {
           <small>إدارة الأسطول والحجوزات والإيرادات</small>
         </div>
 
-        <div className="supplier-current-showroom" aria-label="اختيار الفرع الحالي">
+        <div className="supplier-current-showroom" aria-label={isBranch ? 'فرع مدير الحساب' : 'اختيار الفرع الحالي'}>
           <small>الفرع الحالي</small>
-          <button type="button" className="supplier-showroom-trigger" onClick={() => setShowroomMenuOpen(value => !value)}>
-            <span><Store size={16} />{currentLabel}</span><ChevronDown size={15} />
+          <button type="button" className="supplier-showroom-trigger" onClick={() => !isBranch && setShowroomMenuOpen(value => !value)}>
+            <span><Store size={16} />{currentLabel}</span>{!isBranch && <ChevronDown size={15} />}
           </button>
-          {showroomMenuOpen && <div className="supplier-showroom-menu">
+          {!isBranch && showroomMenuOpen && <div className="supplier-showroom-menu">
             {showrooms.map((item, index) => <button type="button" key={item.id} className={selected?.id === item.id ? 'selected' : ''} onClick={() => chooseShowroom(item)}>
               <span>{index === 0 ? 'الفرع الرئيسي — ' : ''}{item.showroom_name || `فرع ${item.city}`}</span>
               <small>{item.city} · {item.car_count || 0} سيارة</small>
             </button>)}
           </div>}
+          <em>{isBranch ? 'هذا الحساب مرتبط بفرع واحد فقط ولا يمكنه الانتقال إلى فروع أخرى.' : 'يمكن تغيير الفرع أيضًا عند إضافة السيارة'}</em>
+        </div>}
           <em>يمكن تغيير الفرع أيضًا عند إضافة السيارة</em>
         </div>
 
@@ -112,7 +119,7 @@ export default function SupplierSidebar() {
         </button>
 
         <nav className="supplier-sidebar-nav">
-          {supplierLinks.map(({ to, label, icon: Icon }) => {
+          {visibleLinks.map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/supplier/dashboard' && location.pathname.startsWith(`${to}/`));
             return (
               <Link key={to} to={to} className={`supplier-sidebar-link ${active ? 'is-active' : ''}`}>
