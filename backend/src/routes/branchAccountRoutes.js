@@ -113,13 +113,27 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال' });
     }
 
-    if (account.status !== 'active' || account.must_change_password) {
+    // الحساب pending يحتاج تحقق البريد. أما الحساب active الذي ما زال
+    // يفرض تغيير كلمة المرور فينتقل مباشرة إلى مرحلة كلمة المرور دون OTP جديد.
+    if (account.status !== 'active') {
       return res.status(200).json({
         success: false,
         requiresVerification: true,
         verificationToken: createPendingToken(account, 'branch-email-verification'),
         user: { id: account.id, account_type: 'branch', name: account.name, email: account.email, branch_id: account.branch_id },
+        onboarding_stage: 'email_verification',
         message: 'يرجى إكمال التحقق من البريد لإتمام تفعيل الحساب',
+      });
+    }
+
+    if (account.must_change_password) {
+      return res.status(200).json({
+        success: false,
+        requiresPasswordChange: true,
+        passwordChangeToken: createPendingToken(account, 'branch-password-change'),
+        user: { id: account.id, account_type: 'branch', name: account.name, email: account.email, branch_id: account.branch_id },
+        onboarding_stage: 'password_change',
+        message: 'تم التحقق من البريد. يرجى تعيين كلمة مرور جديدة',
       });
     }
 
