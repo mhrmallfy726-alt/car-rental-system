@@ -7,6 +7,7 @@ const {
 
 const { protect } = require('../middleware/auth');
 const { uploadDocuments, uploadAvatar } = require('../middleware/upload');
+const branchAccountRoutes = require('./branchAccountRoutes');
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.post(
 router.post('/verify-otp', verifyOTP);
 router.post('/resend-otp', resendOTP);
 router.post('/login', login);
+router.use('/branch', branchAccountRoutes);
 router.post('/forgot-password', requestPasswordReset);
 router.post('/forgot-password/verify', verifyPasswordReset);
 router.post('/forgot-password/reset', resetPassword);

@@ -1,6 +1,3 @@
-
-
-
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/database');
 // يجب أن يستخدم تسجيل الدخول والتحقق نفس المفتاح في كل بيئات النشر.
@@ -13,141 +10,114 @@ const getBearerToken = (req) => {
   return null;
 };
 
-// حماية المسارات للمستخدمين والموظفين.
+const getScope = (req) => ({
+  supplierId: req.user?.supplier_id || (req.user?.role === 'supplier' ? req.user?.id : null),
+  branchId: req.user?.account_type === 'branch' ? req.user?.branch_id : null,
+});
+
+const loadBranchAccount = async (id) => {
+  const result = await query(
+    `SELECT ba.id, ba.supplier_id, ba.branch_id, ba.name, ba.email,
+            ba.status, ba.must_change_password, l.is_active AS branch_active,
+            l.subscription_status
+     FROM branch_accounts ba JOIN locations l ON l.id = ba.branch_id
+     WHERE ba.id = $1 LIMIT 1`,
+    [id]
+  );
+  return result.rows[0];
+};
+
+// حماية المسارات للمستخدمين والموظفين وحسابات الفروع.
 const protect = async (req, res, next) => {
   const token = getBearerToken(req);
-
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'غير مصرح لك. يرجى تسجيل الدخول أولاً.',
-    });
+    return res.status(401).json({ success: false, message: 'غير مصرح لك. يرجى تسجيل الدخول أولاً.' });
   }
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    if (decoded.account_type === 'employee') {
-      const result = await query(
-        `SELECT id, supplier_id, full_name, phone_number, email,
-                role, job_role, status
-         FROM employees
-         WHERE id = $1
-         LIMIT 1`,
-        [decoded.employee_id || decoded.id]
-      );
-
-      const employee = result.rows[0];
-      if (!employee) {
-        return res.status(401).json({ success: false, message: 'الموظف غير موجود.' });
+    if (decoded.account_type === 'branch') {
+      const branch = await loadBranchAccount(decoded.id);
+      if (!branch) return res.status(401).json({ success: false, message: 'حساب الفرع غير موجود.' });
+      if (branch.status !== 'active' || branch.branch_active === false || ['suspended', 'expired'].includes(branch.subscription_status)) {
+        return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال.' });
       }
-
-      const normalizedEmployeeStatus = String(employee.status || '').trim().toLowerCase();
-      if (normalizedEmployeeStatus !== 'active') {
-        return res.status(403).json({ success: false, message: 'حساب الموظف غير فعال.' });
-      }
-
-      req.employeeId = String(employee.id);
       req.user = {
-        id: String(employee.id),
-        employee_id: String(employee.id),
-        supplier_id: String(employee.supplier_id),
-        name: employee.full_name,
-        full_name: employee.full_name,
-        email: employee.email,
-        phone: employee.phone_number,
-        role: employee.role,
-        job_role: employee.job_role,
-        account_type: 'employee',
-        status: normalizedEmployeeStatus,
-        is_active: true,
-        
+        id: String(branch.id), supplier_id: String(branch.supplier_id), branch_id: String(branch.branch_id),
+        name: branch.name, email: branch.email, role: 'supplier', account_type: 'branch',
+        must_change_password: branch.must_change_password, is_active: true,
       };
-
+      req.scope = getScope(req);
       return next();
     }
-
+    if (decoded.account_type === 'employee') {
+      const result = await query(
+        `SELECT id, supplier_id, full_name, phone_number, email, role, job_role, status
+         FROM employees WHERE id = $1 LIMIT 1`,
+        [decoded.employee_id || decoded.id]
+      );
+      const employee = result.rows[0];
+      if (!employee) return res.status(401).json({ success: false, message: 'الموظف غير موجود.' });
+      const normalizedEmployeeStatus = String(employee.status || '').trim().toLowerCase();
+      if (normalizedEmployeeStatus !== 'active') return res.status(403).json({ success: false, message: 'حساب الموظف غير فعال.' });
+      req.employeeId = String(employee.id);
+      req.user = {
+        id: String(employee.id), employee_id: String(employee.id), supplier_id: String(employee.supplier_id),
+        name: employee.full_name, full_name: employee.full_name, email: employee.email,
+        phone: employee.phone_number, role: employee.role, job_role: employee.job_role,
+        account_type: 'employee', status: normalizedEmployeeStatus, is_active: true,
+      };
+      req.scope = getScope(req);
+      return next();
+    }
     const result = await query(
-      `SELECT id, name, email, role, is_active, is_verified
-       FROM users
-       WHERE id = $1
-       LIMIT 1`,
+      `SELECT id, name, email, role, is_active, is_verified FROM users WHERE id = $1 LIMIT 1`,
       [decoded.id]
     );
-
     const user = result.rows[0];
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'المستخدم غير موجود.' });
-    }
-
-    if (!user.is_active) {
-      return res.status(403).json({ success: false, message: 'تم تعطيل حسابك. تواصل مع الإدارة.' });
-    }
-
+    if (!user) return res.status(401).json({ success: false, message: 'المستخدم غير موجود.' });
+    if (!user.is_active) return res.status(403).json({ success: false, message: 'تم تعطيل حسابك. تواصل مع الإدارة.' });
     req.user = { ...user, account_type: 'user' };
+    req.scope = getScope(req);
     return next();
   } catch (err) {
     console.error('Auth error:', err.message);
-    return res.status(401).json({
-      success: false,
-      message: 'الجلسة منتهية. يرجى تسجيل الدخول مجدداً.',
-    });
+    return res.status(401).json({ success: false, message: 'الجلسة منتهية. يرجى تسجيل الدخول مجدداً.' });
   }
 };
 
-const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: `هذا الإجراء غير مسموح لـ ${req.user?.role || 'هذا الحساب'}`,
-      });
-    }
-    next();
-  };
+const authorize = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: `هذا الإجراء غير مسموح لـ ${req.user?.role || 'هذا الحساب'}` });
+  }
+  next();
 };
 
 const optionalAuth = async (req, res, next) => {
   const token = getBearerToken(req);
   if (!token) return next();
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    if (decoded.account_type === 'employee') {
-      const result = await query(
-        `SELECT id, supplier_id, full_name, phone_number, email, role, status
-         FROM employees WHERE id = $1 LIMIT 1`,
-        [decoded.employee_id || decoded.id]
-      );
+    if (decoded.account_type === 'branch') {
+      const branch = await loadBranchAccount(decoded.id);
+      if (branch?.status === 'active' && branch.branch_active !== false && !['suspended', 'expired'].includes(branch.subscription_status)) {
+        req.user = { id: String(branch.id), supplier_id: String(branch.supplier_id), branch_id: String(branch.branch_id), name: branch.name, email: branch.email, role: 'supplier', account_type: 'branch', is_active: true };
+      }
+    } else if (decoded.account_type === 'employee') {
+      const result = await query('SELECT id, supplier_id, full_name, email, role, status FROM employees WHERE id = $1 LIMIT 1', [decoded.employee_id || decoded.id]);
       const employee = result.rows[0];
       if (employee?.status === 'active') {
         req.employeeId = String(employee.id);
-        req.user = {
-          id: String(employee.id),
-          employee_id: String(employee.id),
-          supplier_id: String(employee.supplier_id),
-          name: employee.full_name,
-          email: employee.email,
-          role: employee.role,
-          account_type: 'employee',
-          is_active: true,
-        };
+        req.user = { id: String(employee.id), employee_id: String(employee.id), supplier_id: String(employee.supplier_id), name: employee.full_name, email: employee.email, role: employee.role, account_type: 'employee', is_active: true };
       }
     } else {
-      const result = await query(
-        'SELECT id, name, email, role FROM users WHERE id = $1',
-        [decoded.id]
-      );
-      if (result.rows.length > 0) {
-        req.user = { ...result.rows[0], account_type: 'user' };
-      }
+      const result = await query('SELECT id, name, email, role FROM users WHERE id = $1', [decoded.id]);
+      if (result.rows.length > 0) req.user = { ...result.rows[0], account_type: 'user' };
     }
+    if (req.user) req.scope = getScope(req);
   } catch (_) {
     // optionalAuth لا يرفض الطلب عند غياب أو انتهاء التوكن.
   }
-
   next();
 };
 
-module.exports = { protect, authorize, optionalAuth };
+module.exports = { protect, authorize, optionalAuth, getScope };

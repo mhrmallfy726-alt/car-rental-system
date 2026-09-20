@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query, getClient } = require('../config/database');
+const { hashPassword } = require('../utils/hash');
 
 router.use(protect, authorize('supplier'));
 
@@ -72,9 +73,12 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
 }));
 
 router.post('/', asyncHandler(async (req, res, next) => {
-  const { name, city, address, latitude, longitude, plan='monthly' } = req.body;
+  if (req.user.account_type === 'branch') return next(new AppError('مدير الفرع لا يستطيع إنشاء فروع إضافية',403));
+  const { name, city, address, latitude, longitude, plan='monthly', manager_name, manager_email, manager_password } = req.body;
   const cleanName=normalize(name), cleanCity=normalize(city);
+  const cleanManagerName=normalize(manager_name), cleanManagerEmail=normalize(manager_email).toLowerCase();
   if (!cleanName) return next(new AppError('اسم المعرض مطلوب',400));
+  if (!cleanManagerName || !cleanManagerEmail || !manager_password || String(manager_password).length < 8) return next(new AppError('اسم مدير الفرع وبريده وكلمة المرور (8 أحرف على الأقل) مطلوبة',400));
   if (!YEMEN_CITIES.includes(cleanCity)) return next(new AppError('اختر مدينة يمنية صحيحة',400));
   if (!['monthly','annual'].includes(plan)) return next(new AppError('نوع الاشتراك غير صحيح',400));
   const pricingResult=await query('SELECT monthly_price,annual_price,currency,enabled FROM showroom_subscription_settings WHERE id=1');
@@ -83,6 +87,8 @@ router.post('/', asyncHandler(async (req, res, next) => {
   await assertLocationInYemenCity(cleanCity,latitude,longitude);
   const duplicate=await query('SELECT id FROM locations WHERE supplier_id=$1 AND LOWER(TRIM(showroom_name))=LOWER(TRIM($2))',[req.user.id,cleanName]);
   if (duplicate.rows.length) return next(new AppError('لديك معرض بنفس الاسم بالفعل',409));
+  const managerEmailOwner=await query(`SELECT 1 FROM users WHERE LOWER(email)=$1 UNION ALL SELECT 1 FROM employees WHERE LOWER(email)=$1 UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(email)=$1`,[cleanManagerEmail]);
+  if (managerEmailOwner.rows.length) return next(new AppError('بريد مدير الفرع مستخدم مسبقاً، أدخل بريداً مختلفاً',409));
 
   const amount=Number(plan==='annual'?pricing.annual_price:pricing.monthly_price);
   const client=await getClient();
@@ -93,6 +99,9 @@ router.post('/', asyncHandler(async (req, res, next) => {
       VALUES($1,$2,$3,'Yemen',$4,$5,$6,FALSE,'pending_payment',$7,FALSE)
       RETURNING id,showroom_name AS name,city,country,address,latitude,longitude,is_active,is_main,subscription_status,subscription_plan`,
       [req.user.id,cleanName,cleanCity,address||null,latitude,longitude,plan]);
+    const manager=await client.query(`INSERT INTO branch_accounts (supplier_id,branch_id,name,email,password)
+      VALUES($1,$2,$3,$4,$5) RETURNING id,name,email,status,must_change_password,created_at`,
+      [req.user.id,location.rows[0].id,cleanManagerName,cleanManagerEmail,await hashPassword(manager_password)]);
     const subscription=await client.query(`INSERT INTO showroom_subscriptions
       (showroom_id,supplier_id,plan,amount,currency,price_snapshot) VALUES($1,$2,$3,$4,$5,$6::jsonb)
       RETURNING id,plan,amount,currency,status,approval_status`,
@@ -121,8 +130,8 @@ router.post('/', asyncHandler(async (req, res, next) => {
       if (io && notification.rows[0]) io.to(`user_${admin.id}`).emit('new_notification',notification.rows[0]);
     }
     await client.query('COMMIT');
-    res.status(201).json({success:true,data:{showroom:{...location.rows[0],subscription_status:'pending_approval'},subscription:{...subscription.rows[0],status:'paid'},payment:payment.rows[0]},message:'تم الدفع وإرسال طلب الفرع للموافقة'});
-  } catch(error) { await client.query('ROLLBACK'); if(error.code==='23505') return next(new AppError('اسم المعرض مستخدم بالفعل',409)); throw error; }
+    res.status(201).json({success:true,data:{showroom:{...location.rows[0],subscription_status:'pending_approval'},manager:manager.rows[0],subscription:{...subscription.rows[0],status:'paid'},payment:payment.rows[0]},message:'تم إنشاء الفرع ومديره وإرسال طلب الاشتراك للموافقة'});
+  } catch(error) { await client.query('ROLLBACK'); if(error.code==='23505') return next(new AppError('اسم الفرع أو بريد المدير مستخدم بالفعل',409)); throw error; }
   finally { client.release(); }
 }));
 

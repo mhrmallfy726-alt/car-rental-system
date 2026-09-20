@@ -8,6 +8,7 @@ const {
   sendReservationStatusMessage,
 } = require('../services/whatsappService');
 const { refundReservationPayment } = require('../services/financeService');
+const getSupplierId = (req) => req.user.supplier_id || req.user.id;
 
 async function notifyReservationWhatsApp(reservationId, status, reason = null) {
   try {
@@ -128,8 +129,10 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
 // @access  Private
 // ========================
 router.get('/my', protect, asyncHandler(async (req, res) => {
-  const { location_id } = req.query;
-  const params = [req.user.id];
+  const requestedLocationId = req.query.location_id;
+  const location_id = req.user.account_type === 'branch' ? req.user.branch_id : requestedLocationId;
+  const supplierId = req.user.supplier_id || req.user.id;
+  const params = [supplierId];
   let locationFilter = '';
   let sql;
   if (req.user.role === 'customer') {
@@ -146,7 +149,7 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
     if (location_id) {
       const ownedLocation = await query(
         `SELECT id FROM locations WHERE id = $1 AND supplier_id = $2 AND COALESCE(is_active, TRUE) = TRUE`,
-        [location_id, req.user.id]
+        [location_id, supplierId]
       );
       if (!ownedLocation.rows.length) return res.status(403).json({ success: false, message: 'الفرع المحدد غير تابع لحسابك أو غير نشط' });
       params.push(location_id);
@@ -173,7 +176,7 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
 // ========================
 router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, req.user.id]);
+  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, getSupplierId(req)]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن الموافقة على هذا الحجز', 400));
   const paidPayment = await query(`SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`, [id]);
@@ -202,7 +205,7 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
 router.put('/:id/reject', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { supplier_notes } = req.body;
-  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, req.user.id]);
+  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, getSupplierId(req)]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن رفض هذا الحجز', 400));
 
@@ -262,7 +265,7 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
 // ========================
 router.put('/:id/complete', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, req.user.id]);
+  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, getSupplierId(req)]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (!['returned', 'active'].includes(reservation.rows[0].status)) return next(new AppError('لا يمكن إغلاق الحجز قبل استلام السيارة', 400));
   if (reservation.rows[0].status === 'active' && reservation.rows[0].handover_state !== 'returned') {

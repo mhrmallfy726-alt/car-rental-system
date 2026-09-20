@@ -4,7 +4,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 
-router.use(protect, authorize('admin'));
+router.use(protect);
 
 function dateRange(value) {
   const end = new Date();
@@ -15,6 +15,7 @@ function dateRange(value) {
 }
 
 router.get('/overview', asyncHandler(async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'هذا التقرير مخصص للإدارة' });
   const { start, end } = dateRange(req.query.days);
   const params = [start, end];
   const [kpis, reservationStatuses, paymentStatuses, paymentMethods, monthly, topCars, topSuppliers, complaints, ratings] = await Promise.all([
@@ -50,6 +51,23 @@ router.get('/overview', asyncHandler(async (req, res) => {
     complaints: complaints.rows,
     ratings: ratings.rows[0],
   }});
+}));
+
+router.get('/branch/overview', authorize('supplier'), asyncHandler(async (req, res) => {
+  if (req.user.account_type !== 'branch') return res.status(403).json({ success: false, message: 'هذا المسار مخصص لحساب الفرع' });
+  const { start, end } = dateRange(req.query.days);
+  const params = [req.user.supplier_id, req.user.branch_id, start, end];
+  const [kpis, statuses] = await Promise.all([
+    query(`SELECT
+      (SELECT COUNT(*) FROM cars c WHERE c.supplier_id = $1 AND c.location_id = $2 AND c.created_at >= $3 AND c.created_at < $4) AS new_cars,
+      (SELECT COUNT(*) FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.supplier_id = $1 AND c.location_id = $2 AND r.created_at >= $3 AND r.created_at < $4) AS reservations,
+      (SELECT COALESCE(SUM(r.total_price), 0) FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.supplier_id = $1 AND c.location_id = $2 AND r.created_at >= $3 AND r.created_at < $4 AND r.status NOT IN ('rejected','cancelled')) AS booking_value,
+      (SELECT COUNT(*) FROM payments p JOIN reservations r ON r.id = p.reservation_id JOIN cars c ON c.id = r.car_id WHERE r.supplier_id = $1 AND c.location_id = $2 AND p.status = 'paid' AND p.created_at >= $3 AND p.created_at < $4) AS paid_transactions`, params),
+    query(`SELECT r.status, COUNT(*)::int AS count FROM reservations r JOIN cars c ON c.id = r.car_id
+           WHERE r.supplier_id = $1 AND c.location_id = $2 AND r.created_at >= $3 AND r.created_at < $4
+           GROUP BY r.status ORDER BY count DESC`, params),
+  ]);
+  res.json({ success: true, data: { range: { start, end, days: Number(req.query.days) || 30 }, kpis: kpis.rows[0], reservationStatuses: statuses.rows } });
 }));
 
 module.exports = router;

@@ -225,6 +225,8 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     license_plate, seats, doors, transmission, fuel_type,
     price_per_day, price_currency = 'YER', description, mileage, features, location_id
   } = req.body;
+  const supplierId = req.user.supplier_id || req.user.id;
+  if (req.user.account_type === 'branch') location_id = req.user.branch_id;
 
   const vehicleValidationError = validateVehicleFields({ make, model, year, color, license_plate, seats, doors, price_per_day, mileage, description });
   if (vehicleValidationError) throw new AppError(vehicleValidationError, 400);
@@ -240,7 +242,7 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
           AND COALESCE(subscription_status, 'active') = 'active'
         ORDER BY created_at ASC, LOWER(COALESCE(showroom_name, city))
         LIMIT 1`,
-      [req.user.id]
+      [supplierId]
     )).rows[0];
     if (!defaultLocation) throw new AppError('لا يوجد فرع رئيسي نشط لهذا الحساب', 400);
     location_id = defaultLocation.id;
@@ -255,7 +257,7 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
        AND supplier_id = $2
        AND COALESCE(is_active, TRUE) = TRUE
        AND COALESCE(subscription_status, 'active') = 'active'`,
-    [location_id, req.user.id]
+    [location_id, supplierId]
   )).rows[0];
   if (!supplierLocation) {
     throw new AppError('المعرض المحدد غير متاح أو لا يتبع حسابك', 403);
@@ -268,7 +270,7 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
       discount_percentage, description, mileage)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'YER',$14,$15,$16,$17,$18,$19,$20)
     RETURNING *
-  `, [req.user.id, category_id, supplierLocation.id, make, model, year, color,
+  `, [supplierId, category_id, supplierLocation.id, make, model, year, color,
       license_plate, seats || 5, doors || 4, transmission || 'automatic',
       fuel_type || 'petrol', pricePerDayYER, pricePerDayYER, price_per_day, enteredCurrency,
       pricePerDayYER / Number(price_per_day), 0, description, mileage || 0]);
@@ -385,13 +387,15 @@ router.delete('/:id', protect, authorize('supplier', 'admin'), asyncHandler(asyn
 // @access  Supplier
 // ========================
 router.get('/my/list', protect, authorize('supplier'), asyncHandler(async (req, res) => {
-  const { location_id } = req.query;
-  const params = [req.user.id];
+  const requestedLocationId = req.query.location_id;
+  const location_id = req.user.account_type === 'branch' ? req.user.branch_id : requestedLocationId;
+  const supplierId = req.user.supplier_id || req.user.id;
+  const params = [supplierId];
   let locationFilter = '';
   if (location_id) {
     const ownedLocation = await query(
       `SELECT id FROM locations WHERE id = $1 AND supplier_id = $2 AND COALESCE(is_active, TRUE) = TRUE`,
-      [location_id, req.user.id]
+      [location_id, supplierId]
     );
     if (!ownedLocation.rows.length) return res.status(403).json({ success: false, message: 'الفرع المحدد غير تابع لحسابك أو غير نشط' });
     params.push(location_id);
