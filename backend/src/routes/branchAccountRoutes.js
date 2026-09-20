@@ -113,8 +113,8 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال' });
     }
 
-    // الحساب pending يحتاج تحقق البريد. أما الحساب active الذي ما زال
-    // يفرض تغيير كلمة المرور فينتقل مباشرة إلى مرحلة كلمة المرور دون OTP جديد.
+    // لا يعتبر حساب مدير الفرع نشطاً إلا بعد إكمال OTP وتعيين كلمة المرور الجديدة.
+    // لذلك أي حساب pending يعاد إلى مرحلة التحقق، ولا يتم إصدار جلسة نهائية.
     if (account.status !== 'active') {
       return res.status(200).json({
         success: false,
@@ -122,10 +122,11 @@ router.post('/login', async (req, res) => {
         verificationToken: createPendingToken(account, 'branch-email-verification'),
         user: { id: account.id, account_type: 'branch', name: account.name, email: account.email, branch_id: account.branch_id },
         onboarding_stage: 'email_verification',
-        message: 'يرجى إكمال التحقق من البريد لإتمام تفعيل الحساب',
+        message: 'يجب التحقق من البريد أولاً لإكمال تفعيل حساب الفرع',
       });
     }
 
+    // الحالة active لا تصل هنا إلا بعد اكتمال التحقق وتعيين كلمة المرور.
     if (account.must_change_password) {
       return res.status(200).json({
         success: false,
@@ -133,7 +134,7 @@ router.post('/login', async (req, res) => {
         passwordChangeToken: createPendingToken(account, 'branch-password-change'),
         user: { id: account.id, account_type: 'branch', name: account.name, email: account.email, branch_id: account.branch_id },
         onboarding_stage: 'password_change',
-        message: 'تم التحقق من البريد. يرجى تعيين كلمة مرور جديدة',
+        message: 'يجب تعيين كلمة مرور جديدة قبل الدخول',
       });
     }
 
@@ -193,7 +194,8 @@ router.post('/verification/verify-otp', async (req, res) => {
     await query('UPDATE email_verifications SET attempts = COALESCE(attempts, 0) + 1 WHERE id = $1', [item.id]);
     if (String(item.otp) !== otp) return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح' });
 
-    const updated = await query(`UPDATE branch_accounts SET status = 'active', updated_at = NOW() WHERE id = $1 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password`, [pending.id]);
+    // لا نفعّل الحساب هنا. يظل pending حتى يتم تعيين كلمة المرور الجديدة بنجاح.
+    const updated = await query(`SELECT id, supplier_id, branch_id, name, email, status, must_change_password FROM branch_accounts WHERE id = $1 LIMIT 1`, [pending.id]);
     if (!updated.rows.length) return res.status(404).json({ success: false, message: 'حساب الفرع غير موجود' });
     await query('DELETE FROM email_verifications WHERE id = $1', [item.id]);
 
@@ -221,7 +223,7 @@ router.post('/password/change-first-login', async (req, res) => {
     const accountResult = await query('SELECT ba.*, l.showroom_name, l.city, l.subscription_status, l.is_active AS branch_active FROM branch_accounts ba JOIN locations l ON l.id = ba.branch_id WHERE ba.id = $1 LIMIT 1', [pending.id]);
     const account = accountResult.rows[0];
     if (!account) return res.status(404).json({ success: false, message: 'حساب الفرع غير موجود' });
-    if (account.status !== 'active') return res.status(403).json({ success: false, message: 'يجب التحقق من البريد الإلكتروني أولاً' });
+    if (account.status !== 'pending') return res.status(403).json({ success: false, message: 'حالة حساب الفرع غير صالحة لمرحلة التفعيل الأولي' });
     if (!account.must_change_password) return res.status(400).json({ success: false, message: 'لا يوجد تغيير أولي لكلمة المرور مطلوب لهذا الحساب' });
     if (account.branch_active === false || ['suspended', 'expired'].includes(account.subscription_status)) return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال' });
     const hashed = await hashPassword(password);
