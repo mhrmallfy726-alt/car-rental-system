@@ -76,7 +76,7 @@ const protect = async (req, res, next) => {
     const user = result.rows[0];
     if (!user) return res.status(401).json({ success: false, message: 'المستخدم غير موجود.' });
     if (!user.is_active) return res.status(403).json({ success: false, message: 'تم تعطيل حسابك. تواصل مع الإدارة.' });
-    req.user = { ...user, account_type: 'user' };
+    req.user = { ...user, account_type: 'user', is_verified: user.is_verified === true };
     req.scope = getScope(req);
     return next();
   } catch (err) {
@@ -110,8 +110,8 @@ const optionalAuth = async (req, res, next) => {
         req.user = { id: String(employee.id), employee_id: String(employee.id), supplier_id: String(employee.supplier_id), name: employee.full_name, email: employee.email, role: employee.role, account_type: 'employee', is_active: true };
       }
     } else {
-      const result = await query('SELECT id, name, email, role FROM users WHERE id = $1', [decoded.id]);
-      if (result.rows.length > 0) req.user = { ...result.rows[0], account_type: 'user' };
+      const result = await query('SELECT id, name, email, role, is_verified FROM users WHERE id = $1', [decoded.id]);
+      if (result.rows.length > 0) req.user = { ...result.rows[0], account_type: 'user', is_verified: result.rows[0].is_verified === true };
     }
     if (req.user) req.scope = getScope(req);
   } catch (_) {
