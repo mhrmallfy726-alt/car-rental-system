@@ -66,7 +66,17 @@ export default function Login() {
         navigate('/employee/dashboard', { replace: true });
         return;
       }
-
+      if(res?.requiresVerification){
+        navigate('/forgot-password',{
+          state:{
+            email,
+            verificationToken:
+            res.verificationToken,
+            isBranchfirstLogen: true,
+          }
+        });
+        return;
+      }
       switch (res.user.role) {
         case "admin":
           navigate("/admin/dashboard", { replace: true });
