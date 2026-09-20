@@ -37,7 +37,6 @@ export default function Login() {
       toast.error("حدث خطأ أثناء تسجيل الدخول");
       return;
     }
-    console.log(res);
     // إذا كان حساب المورد بانتظار المراجعة أو مرفوضًا
     if (
       res.verification_status === "pending" ||
@@ -47,6 +46,20 @@ export default function Login() {
       return;
     }
   
+    // حساب الفرع في أول دخول لا يحصل على جلسة عادية؛ ينتقل إلى مسار التحقق ثم تغيير كلمة المرور.
+    if (res.requiresVerification || res.requiresPasswordChange) {
+      navigate('/branch-first-login', {
+        replace: true,
+        state: {
+          email,
+          user: res.user,
+          verificationToken: res.verificationToken,
+          passwordChangeToken: res.passwordChangeToken,
+        },
+      });
+      return;
+    }
+
     // نجاح تسجيل الدخول
     if (res.success) {
       // إذا كانت دالة login ترجع token
@@ -64,17 +77,6 @@ export default function Login() {
 
       if (res.user.account_type === 'employee' || res.user.role === 'employee') {
         navigate('/employee/dashboard', { replace: true });
-        return;
-      }
-      if(res?.requiresVerification){
-        navigate('/forgot-password',{
-          state:{
-            email,
-            verificationToken:
-            res.verificationToken,
-            isBranchFirstLogen: true,
-          }
-        });
         return;
       }
       switch (res.user.role) {
