@@ -3,16 +3,18 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 const { hashPassword } = require('../utils/hash');
+const { sendEmail, generateOTP } = require('../services/emailService');
 
 const secret = () => process.env.JWT_SECRET || 'fallback_secret';
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
-// Supplier creates one login account for an owned branch.
+// Start branch-account creation by sending an OTP to the branch email.
 router.post('/account', protect, authorize('supplier'), async (req, res) => {
   try {
     const { branch_id, name, email, password } = req.body || {};
-    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
     if (!branch_id || !name || !normalizedEmail || !password || String(password).length < 8) {
       return res.status(400).json({ success: false, message: 'بيانات الفرع والبريد وكلمة المرور (8 أحرف على الأقل) مطلوبة' });
     }
@@ -27,10 +29,84 @@ router.post('/account', protect, authorize('supplier'), async (req, res) => {
     if (!branch.rows.length) return res.status(403).json({ success: false, message: 'الفرع غير تابع للمورد أو غير نشط' });
 
     const existing = await query(
-      `SELECT 1 FROM users WHERE LOWER(email) = $1
-       UNION ALL SELECT 1 FROM employees WHERE LOWER(email) = $1
-       UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(email) = $1`,
+      `SELECT 1 FROM users WHERE LOWER(TRIM(email)) = $1
+       UNION ALL SELECT 1 FROM employees WHERE LOWER(TRIM(email)) = $1
+       UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(TRIM(email)) = $1`,
       [normalizedEmail]
+    );
+    if (existing.rows.length) return res.status(409).json({ success: false, message: 'البريد الإلكتروني مستخدم مسبقاً' });
+
+    const otp = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const hashed = await hashPassword(password);
+    const pendingData = {
+      account_type: 'branch_account',
+      supplier_id: req.user.id,
+      branch_id,
+      name: String(name).trim(),
+      email: normalizedEmail,
+      password: hashed,
+    };
+
+    await query(
+      `DELETE FROM email_verifications WHERE LOWER(email) = $1`,
+      [normalizedEmail]
+    );
+    await query(
+      `INSERT INTO email_verifications (email, otp, expires_at, user_data)
+       VALUES ($1, $2, $3, $4)`,
+      [normalizedEmail, otp, expiresAt, pendingData]
+    );
+
+    await sendEmail(
+      normalizedEmail,
+      'رمز التحقق من حساب المعرض',
+      `<h2>رمز التحقق من حساب المعرض</h2><h1>${otp}</h1><p>الرمز صالح لمدة 5 دقائق فقط.</p>`
+    );
+
+    return res.status(202).json({
+      success: true,
+      requiresVerification: true,
+      email: normalizedEmail,
+      message: 'تم إرسال رمز التحقق إلى بريد المعرض',
+    });
+  } catch (error) {
+    console.error('Branch account OTP sending error:', error);
+    return res.status(502).json({ success: false, message: 'تعذر إرسال رمز التحقق إلى بريد المعرض' });
+  }
+});
+
+// Verify the OTP and create the branch account only after successful verification.
+router.post('/account/verify-otp', protect, authorize('supplier'), async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const otp = String(req.body?.otp || '').trim();
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'البريد ورمز التحقق مطلوبان' });
+
+    const verification = await query(
+      `SELECT id, otp, attempts, expires_at, user_data
+       FROM email_verifications
+       WHERE LOWER(email) = $1
+       ORDER BY created_at DESC LIMIT 1`,
+      [email]
+    );
+    if (!verification.rows.length) return res.status(400).json({ success: false, message: 'لا يوجد طلب تحقق لهذا البريد' });
+
+    const pending = verification.rows[0];
+    if ((pending.attempts || 0) >= 3) return res.status(400).json({ success: false, message: 'تم تجاوز عدد المحاولات، أرسل رمزًا جديدًا' });
+    if (new Date() > new Date(pending.expires_at)) return res.status(400).json({ success: false, message: 'انتهت صلاحية رمز التحقق' });
+
+    await query('UPDATE email_verifications SET attempts = COALESCE(attempts, 0) + 1 WHERE id = $1', [pending.id]);
+    if (String(pending.otp) !== otp) return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح' });
+
+    const data = typeof pending.user_data === 'string' ? JSON.parse(pending.user_data) : pending.user_data;
+    if (String(data.supplier_id) !== String(req.user.id)) return res.status(403).json({ success: false, message: 'طلب التحقق لا يخص هذا المورد' });
+
+    const existing = await query(
+      `SELECT 1 FROM users WHERE LOWER(TRIM(email)) = $1
+       UNION ALL SELECT 1 FROM employees WHERE LOWER(TRIM(email)) = $1
+       UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(TRIM(email)) = $1`,
+      [email]
     );
     if (existing.rows.length) return res.status(409).json({ success: false, message: 'البريد الإلكتروني مستخدم مسبقاً' });
 
@@ -38,19 +114,20 @@ router.post('/account', protect, authorize('supplier'), async (req, res) => {
       `INSERT INTO branch_accounts (supplier_id, branch_id, name, email, password)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, supplier_id, branch_id, name, email, status, must_change_password, created_at`,
-      [req.user.id, branch_id, String(name).trim(), normalizedEmail, await hashPassword(password)]
+      [data.supplier_id, data.branch_id, data.name, email, data.password]
     );
-    res.status(201).json({ success: true, data: created.rows[0] });
+    await query('DELETE FROM email_verifications WHERE id = $1', [pending.id]);
+    return res.status(201).json({ success: true, data: created.rows[0], message: 'تم التحقق وإنشاء حساب المعرض بنجاح' });
   } catch (error) {
     if (error.code === '23505') return res.status(409).json({ success: false, message: 'يوجد حساب لهذا الفرع أو البريد مسبقاً' });
-    console.error('Create branch account error:', error);
-    res.status(500).json({ success: false, message: 'خطأ في الخادم' });
+    console.error('Verify branch account OTP error:', error);
+    return res.status(500).json({ success: false, message: 'حدث خطأ أثناء التحقق وإنشاء حساب المعرض' });
   }
 });
 
 router.post('/login', async (req, res) => {
   try {
-    const email = String(req.body?.email || '').trim().toLowerCase();
+    const email = normalizeEmail(req.body?.email);
     const password = String(req.body?.password || '');
     if (!email || !password) return res.status(400).json({ success: false, message: 'البريد الإلكتروني وكلمة المرور مطلوبان' });
 
