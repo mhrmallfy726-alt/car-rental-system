@@ -27,6 +27,7 @@ export default function SupplierSidebar() {
   const [showroomMenuOpen, setShowroomMenuOpen] = useState(false);
 
   useEffect(() => {
+    if (isBranch) return;
     supplierContextAPI.getOptions().then((list) => {
       setShowrooms(list);
       const current = getSelectedShowroom();
@@ -38,7 +39,7 @@ export default function SupplierSidebar() {
         setSelected(list[0]);
       }
     }).catch(() => {});
-  }, []);
+  }, [isBranch]);
 
   useEffect(() => {
     setMobileOpen(false);
