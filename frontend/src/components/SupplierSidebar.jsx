@@ -111,8 +111,6 @@ export default function SupplierSidebar() {
             </button>)}
           </div>}
           <em>{isBranch ? 'هذا الحساب مرتبط بفرع واحد فقط ولا يمكنه الانتقال إلى فروع أخرى.' : 'يمكن تغيير الفرع أيضًا عند إضافة السيارة'}</em>
-        </div>}
-          <em>يمكن تغيير الفرع أيضًا عند إضافة السيارة</em>
         </div>
 
         <button type="button" className="supplier-mobile-close" aria-label="إغلاق القائمة" onClick={() => setMobileOpen(false)}>
