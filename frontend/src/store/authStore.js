@@ -10,6 +10,9 @@ const normalizeFailure = (data = {}) => ({
   verification_status: data.verification_status,
   requiresVerification: data.requiresVerification,
   verificationToken: data.verificationToken,
+  requiresPasswordChange: data.requiresPasswordChange,
+  passwordChangeToken: data.passwordChangeToken,
+  onboarding_stage: data.onboarding_stage,
   account_type: data.account_type,
   reason: data.reason,
   commercial_register_reason: data.commercial_register_reason,
@@ -35,7 +38,7 @@ const useAuthStore = create(
           const branchResponse = await branchAuthAPI.login(credentials);
           const branchData = branchResponse.data || {};
 
-          if (branchData.requiresVerification) {
+          if (branchData.requiresVerification || branchData.requiresPasswordChange) {
             set({ isLoading: false });
             return normalizeFailure(branchData);
           }
@@ -96,13 +99,23 @@ const useAuthStore = create(
         }
       },
 
-      sendBranchOTP: async (data) => {
-        const response = await branchAuthAPI.sendOTP(data);
+      sendBranchOTP: async (token) => {
+        const response = await branchAuthAPI.sendOTP(token);
         return response.data;
       },
 
-      verifyBranchOTP: async (data) => {
-        const response = await branchAuthAPI.verifyOTP(data);
+      verifyBranchOTP: async (token, data) => {
+        const response = await branchAuthAPI.verifyOTP(token, data);
+        const result = response.data || {};
+        if (result.token && result.user) {
+          localStorage.setItem('token', result.token);
+          set({ user: result.user, token: result.token });
+        }
+        return result;
+      },
+
+      changeBranchFirstPassword: async (token, data) => {
+        const response = await branchAuthAPI.changeFirstPassword(token, data);
         const result = response.data || {};
         if (result.token && result.user) {
           localStorage.setItem('token', result.token);
