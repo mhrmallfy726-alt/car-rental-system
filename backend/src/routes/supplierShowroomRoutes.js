@@ -99,8 +99,8 @@ router.post('/', asyncHandler(async (req, res, next) => {
       VALUES($1,$2,$3,'Yemen',$4,$5,$6,FALSE,'pending_payment',$7,FALSE)
       RETURNING id,showroom_name AS name,city,country,address,latitude,longitude,is_active,is_main,subscription_status,subscription_plan`,
       [req.user.id,cleanName,cleanCity,address||null,latitude,longitude,plan]);
-    const manager=await client.query(`INSERT INTO branch_accounts (supplier_id,branch_id,name,email,password)
-      VALUES($1,$2,$3,$4,$5) RETURNING id,name,email,status,must_change_password,created_at`,
+    const manager=await client.query(`INSERT INTO branch_accounts (supplier_id,branch_id,name,email,password,status,must_change_password)
+      VALUES($1,$2,$3,$4,$5,'pending',TRUE) RETURNING id,name,email,status,must_change_password,created_at`,
       [req.user.id,location.rows[0].id,cleanManagerName,cleanManagerEmail,await hashPassword(manager_password)]);
     const subscription=await client.query(`INSERT INTO showroom_subscriptions
       (showroom_id,supplier_id,plan,amount,currency,price_snapshot) VALUES($1,$2,$3,$4,$5,$6::jsonb)
