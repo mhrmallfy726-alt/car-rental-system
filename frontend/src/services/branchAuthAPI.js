@@ -7,10 +7,13 @@ const branchApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const authConfig = (token) => token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+
 export const branchAuthAPI = {
   login: (data) => branchApi.post('/auth/branch/login', data),
-  sendOTP: (data) => branchApi.post('/auth/branch/verification/send-otp', data),
-  verifyOTP: (data) => branchApi.post('/auth/branch/verification/verify-otp', data),
+  sendOTP: (token) => branchApi.post('/auth/branch/verification/send-otp', {}, authConfig(token)),
+  verifyOTP: (token, data) => branchApi.post('/auth/branch/verification/verify-otp', data, authConfig(token)),
+  changeFirstPassword: (token, data) => branchApi.post('/auth/branch/password/change-first-login', data, authConfig(token)),
 };
 
 export default branchAuthAPI;
