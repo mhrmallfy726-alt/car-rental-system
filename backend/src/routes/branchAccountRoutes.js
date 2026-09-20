@@ -18,19 +18,19 @@ const createBranchToken = (account, expiresIn = process.env.JWT_EXPIRES_IN || '7
   branch_id: account.branch_id,
 }, secret(), { expiresIn });
 
-const createPendingToken = (account) => jwt.sign({
+const createPendingToken = (account, purpose = 'branch-onboarding-verification') => jwt.sign({
   id: account.id,
   account_type: 'branch',
-  purpose: 'branch-onboarding-verification',
+  purpose,
 }, secret(), { expiresIn: '15m' });
 
-const readPendingToken = (req) => {
+const readPendingToken = (req, purpose) => {
   const authorization = String(req.headers.authorization || '');
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
   if (!token) return null;
   try {
     const payload = jwt.verify(token, secret());
-    if (payload.account_type !== 'branch' || payload.purpose !== 'branch-onboarding-verification') return null;
+    if (payload.account_type !== 'branch' || payload.purpose !== purpose) return null;
     return payload;
   } catch (_) {
     return null;
@@ -117,7 +117,7 @@ router.post('/login', async (req, res) => {
       return res.status(200).json({
         success: false,
         requiresVerification: true,
-        verificationToken: createPendingToken(account),
+        verificationToken: createPendingToken(account, 'branch-email-verification'),
         user: { id: account.id, account_type: 'branch', name: account.name, email: account.email, branch_id: account.branch_id },
         message: 'يرجى إكمال التحقق من البريد لإتمام تفعيل الحساب',
       });
@@ -143,7 +143,7 @@ router.post('/login', async (req, res) => {
 // Send OTP only after the pending account has successfully logged in.
 router.post('/verification/send-otp', async (req, res) => {
   try {
-    const pending = readPendingToken(req);
+    const pending = readPendingToken(req, 'branch-email-verification');
     if (!pending) return res.status(401).json({ success: false, message: 'جلسة التحقق غير صالحة أو منتهية' });
 
     const result = await query(`SELECT id, email, name, status FROM branch_accounts WHERE id = $1 LIMIT 1`, [pending.id]);
@@ -179,12 +179,12 @@ router.post('/verification/verify-otp', async (req, res) => {
     await query('UPDATE email_verifications SET attempts = COALESCE(attempts, 0) + 1 WHERE id = $1', [item.id]);
     if (String(item.otp) !== otp) return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح' });
 
-    const updated = await query(`UPDATE branch_accounts SET status = 'active', must_change_password = FALSE, last_login_at = NOW() WHERE id = $1 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password`, [pending.id]);
-    if (!updated.rows.length) return res.status(404).json({ success: false, message: 'حساب المعرض غير موجود' });
+    const updated = await query(`UPDATE branch_accounts SET status = 'active', updated_at = NOW() WHERE id = $1 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password`, [pending.id]);
+    if (!updated.rows.length) return res.status(404).json({ success: false, message: 'حساب الفرع غير موجود' });
     await query('DELETE FROM email_verifications WHERE id = $1', [item.id]);
 
     const account = updated.rows[0];
-    return res.json({ success: true, token: createBranchToken(account), user: { ...account, account_type: 'branch', role: 'supplier' }, message: 'تم التحقق وتفعيل الحساب بنجاح' });
+    return res.json({ success: true, requiresPasswordChange: true, passwordChangeToken: createPendingToken(account, 'branch-password-change'), user: { ...account, account_type: 'branch', role: 'supplier', onboarding_stage: 'password_change' }, message: 'تم التحقق من البريد. أنشئ كلمة مرور جديدة للمتابعة.' });
   } catch (error) {
     console.error('Branch verification OTP error:', error);
     return res.status(500).json({ success: false, message: 'حدث خطأ أثناء التحقق من الرمز' });
@@ -192,3 +192,30 @@ router.post('/verification/verify-otp', async (req, res) => {
 });
 
 module.exports = router;
+
+
+// Complete first-login onboarding: only the short-lived password-change token can call this route.
+router.post('/password/change-first-login', async (req, res) => {
+  try {
+    const pending = readPendingToken(req, 'branch-password-change');
+    const password = String(req.body?.password || '');
+    const confirmPassword = String(req.body?.confirmPassword || '');
+    const isStrongPassword = (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d\\s])[\\x21-\\x7E]{10,72}$/.test(String(value || ''));
+    if (!pending) return res.status(401).json({ success: false, message: 'جلسة تغيير كلمة المرور غير صالحة أو منتهية' });
+    if (!isStrongPassword(password)) return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تكون 10 أحرف على الأقل وتحتوي حرفاً كبيراً وصغيراً ورقماً ورمزاً خاصاً' });
+    if (password !== confirmPassword) return res.status(400).json({ success: false, message: 'كلمتا المرور غير متطابقتين' });
+    const accountResult = await query('SELECT ba.*, l.showroom_name, l.city, l.subscription_status, l.is_active AS branch_active FROM branch_accounts ba JOIN locations l ON l.id = ba.branch_id WHERE ba.id = $1 LIMIT 1', [pending.id]);
+    const account = accountResult.rows[0];
+    if (!account) return res.status(404).json({ success: false, message: 'حساب الفرع غير موجود' });
+    if (account.status !== 'active') return res.status(403).json({ success: false, message: 'يجب التحقق من البريد الإلكتروني أولاً' });
+    if (!account.must_change_password) return res.status(400).json({ success: false, message: 'لا يوجد تغيير أولي لكلمة المرور مطلوب لهذا الحساب' });
+    if (account.branch_active === false || ['suspended', 'expired'].includes(account.subscription_status)) return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال' });
+    const hashed = await hashPassword(password);
+    const updated = await query('UPDATE branch_accounts SET password = $1, must_change_password = FALSE, last_login_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password', [hashed, account.id]);
+    const finalAccount = { ...updated.rows[0], showroom_name: account.showroom_name, city: account.city };
+    return res.json({ success: true, token: createBranchToken(finalAccount), user: { ...finalAccount, account_type: 'branch', role: 'supplier', onboarding_stage: 'complete' }, message: 'تم تفعيل حساب الفرع وتعيين كلمة المرور بنجاح' });
+  } catch (error) {
+    console.error('Branch first-login password change error:', error);
+    return res.status(500).json({ success: false, message: 'تعذر تعيين كلمة المرور الجديدة' });
+  }
+});
