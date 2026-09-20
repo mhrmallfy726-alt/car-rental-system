@@ -40,6 +40,14 @@ const readPendingToken = (req) => {
 // The supplier creates the branch account immediately. No OTP is sent here.
 router.post('/account', protect, authorize('supplier'), async (req, res) => {
   try {
+    // إنشاء حسابات المعارض مسموح فقط للمورد الذي وافق عليه الأدمن.
+    if (req.user.is_verified !== true) {
+      return res.status(403).json({
+        success: false,
+        message: 'لا يمكنك إنشاء حساب للمعرض قبل موافقة الأدمن على حساب المورد',
+      });
+    }
+
     const { branch_id, name, email, password } = req.body || {};
     const normalizedEmail = normalizeEmail(email);
     if (!branch_id || !name || !normalizedEmail || !password || String(password).length < 8) {
@@ -138,10 +146,7 @@ router.post('/verification/send-otp', async (req, res) => {
     const pending = readPendingToken(req);
     if (!pending) return res.status(401).json({ success: false, message: 'جلسة التحقق غير صالحة أو منتهية' });
 
-    const result = await query(
-      `SELECT id, email, name, status FROM branch_accounts WHERE id = $1 LIMIT 1`,
-      [pending.id]
-    );
+    const result = await query(`SELECT id, email, name, status FROM branch_accounts WHERE id = $1 LIMIT 1`, [pending.id]);
     const account = result.rows[0];
     if (!account) return res.status(404).json({ success: false, message: 'حساب المعرض غير موجود' });
     if (account.status === 'active') return res.status(400).json({ success: false, message: 'الحساب مفعّل بالفعل' });
@@ -149,16 +154,8 @@ router.post('/verification/send-otp', async (req, res) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
     await query('DELETE FROM email_verifications WHERE LOWER(email) = $1', [account.email]);
-    await query(
-      `INSERT INTO email_verifications (email, otp, expires_at, user_data)
-       VALUES ($1, $2, $3, $4)`,
-      [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]
-    );
-    await sendEmail(
-      account.email,
-      'رمز التحقق لتفعيل حساب المعرض',
-      `<h2>مرحباً ${account.name || ''}</h2><p>رمز التحقق الخاص بتفعيل حساب المعرض هو:</p><h1>${otp}</h1><p>الرمز صالح لمدة 5 دقائق فقط.</p>`
-    );
+    await query(`INSERT INTO email_verifications (email, otp, expires_at, user_data) VALUES ($1, $2, $3, $4)`, [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]);
+    await sendEmail(account.email, 'رمز التحقق لتفعيل حساب المعرض', `<h2>مرحباً ${account.name || ''}</h2><p>رمز التحقق الخاص بتفعيل حساب المعرض هو:</p><h1>${otp}</h1><p>الرمز صالح لمدة 5 دقائق فقط.</p>`);
     return res.json({ success: true, message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
   } catch (error) {
     console.error('Branch verification OTP sending error:', error);
@@ -173,13 +170,7 @@ router.post('/verification/verify-otp', async (req, res) => {
     const otp = String(req.body?.otp || '').trim();
     if (!pending || !otp) return res.status(400).json({ success: false, message: 'جلسة التحقق ورمز OTP مطلوبان' });
 
-    const verification = await query(
-      `SELECT id, otp, attempts, expires_at, user_data
-       FROM email_verifications
-       WHERE LOWER(email) = (SELECT LOWER(email) FROM branch_accounts WHERE id = $1)
-       ORDER BY created_at DESC LIMIT 1`,
-      [pending.id]
-    );
+    const verification = await query(`SELECT id, otp, attempts, expires_at, user_data FROM email_verifications WHERE LOWER(email) = (SELECT LOWER(email) FROM branch_accounts WHERE id = $1) ORDER BY created_at DESC LIMIT 1`, [pending.id]);
     if (!verification.rows.length) return res.status(400).json({ success: false, message: 'لا يوجد رمز تحقق. اطلب رمزاً جديداً' });
     const item = verification.rows[0];
     if ((item.attempts || 0) >= 3) return res.status(400).json({ success: false, message: 'تم تجاوز عدد المحاولات. اطلب رمزاً جديداً' });
@@ -188,23 +179,12 @@ router.post('/verification/verify-otp', async (req, res) => {
     await query('UPDATE email_verifications SET attempts = COALESCE(attempts, 0) + 1 WHERE id = $1', [item.id]);
     if (String(item.otp) !== otp) return res.status(400).json({ success: false, message: 'رمز التحقق غير صحيح' });
 
-    const updated = await query(
-      `UPDATE branch_accounts
-       SET status = 'active', must_change_password = FALSE, last_login_at = NOW()
-       WHERE id = $1
-       RETURNING id, supplier_id, branch_id, name, email, status, must_change_password`,
-      [pending.id]
-    );
+    const updated = await query(`UPDATE branch_accounts SET status = 'active', must_change_password = FALSE, last_login_at = NOW() WHERE id = $1 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password`, [pending.id]);
     if (!updated.rows.length) return res.status(404).json({ success: false, message: 'حساب المعرض غير موجود' });
     await query('DELETE FROM email_verifications WHERE id = $1', [item.id]);
 
     const account = updated.rows[0];
-    return res.json({
-      success: true,
-      token: createBranchToken(account),
-      user: { ...account, account_type: 'branch', role: 'supplier' },
-      message: 'تم التحقق وتفعيل الحساب بنجاح',
-    });
+    return res.json({ success: true, token: createBranchToken(account), user: { ...account, account_type: 'branch', role: 'supplier' }, message: 'تم التحقق وتفعيل الحساب بنجاح' });
   } catch (error) {
     console.error('Branch verification OTP error:', error);
     return res.status(500).json({ success: false, message: 'حدث خطأ أثناء التحقق من الرمز' });
