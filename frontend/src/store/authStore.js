@@ -1,6 +1,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authAPI } from '../services/api';
+import { branchAuthAPI } from '../services/branchAuthAPI';
+
+const normalizeFailure = (data = {}) => ({
+  success: false,
+  message: data.message || 'فشل تسجيل الدخول',
+  error: data.error,
+  verification_status: data.verification_status,
+  requiresVerification: data.requiresVerification,
+  verificationToken: data.verificationToken,
+  account_type: data.account_type,
+  reason: data.reason,
+  commercial_register_reason: data.commercial_register_reason,
+  owner_id_reason: data.owner_id_reason,
+  avatar_reason: data.avatar_reason,
+  phone: data.phone,
+  email: data.email,
+});
 
 const useAuthStore = create(
   persist(
@@ -10,73 +27,56 @@ const useAuthStore = create(
       isLoading: false,
       error: null,
 
-      // Login
       login: async (credentials) => {
         set({ isLoading: true, error: null });
+
+        // حسابات المعارض تستخدم مسارًا مستقلًا.
+        try {
+          const branchResponse = await branchAuthAPI.login(credentials);
+          const branchData = branchResponse.data || {};
+
+          if (branchData.requiresVerification) {
+            set({ isLoading: false });
+            return normalizeFailure(branchData);
+          }
+
+          if (branchData.success && branchData.token && branchData.user) {
+            localStorage.setItem('token', branchData.token);
+            set({ user: branchData.user, token: branchData.token, isLoading: false });
+            return { success: true, user: branchData.user, token: branchData.token };
+          }
+        } catch (branchError) {
+          // إذا لم يكن الحساب تابعًا لمعرض، نتابع تسجيل الدخول العادي.
+          if (branchError.response?.status !== 401 && branchError.response?.status !== 404) {
+            const data = branchError.response?.data || {};
+            if (data.requiresVerification) {
+              set({ isLoading: false });
+              return normalizeFailure(data);
+            }
+          }
+        }
+
         try {
           const res = await authAPI.login(credentials);
-      
-          console.log(res.data);
-      
-          // إذا كان السيرفر أعاد success:false
-          if (!res.data.success) {
-            set({
-              error: res.data.message,
-              isLoading: false,
-            });
-      
-            return {
-              success: false,
-              message: res.data.message,
-              verification_status: res.data.verification_status,
-              reason: res.data.reason,
-              commercial_register_reason: res.data.commercial_register_reason,
-              owner_id_reason: res.data.owner_id_reason,
-              avatar_reason: res.data.avatar_reason,
-              phone: res.data.phone,
-              email: res.data.email,
-            };
+          const data = res.data || {};
+
+          if (!data.success) {
+            const result = normalizeFailure(data);
+            set({ error: result.message, isLoading: false });
+            return result;
           }
-      
-          const { token, user } = res.data;
-      
-          localStorage.setItem("token", token);
-      
-          set({
-            user,
-            token,
-            isLoading: false,
-          });
-      
-          return {
-            success: true,
-            user,
-            token,
-          };
-      
+
+          const { token, user } = data;
+          localStorage.setItem('token', token);
+          set({ user, token, isLoading: false });
+          return { success: true, user, token };
         } catch (err) {
-          const data = err.response?.data || {};
-      
-          set({
-            error: data.message || "فشل تسجيل الدخول",
-            isLoading: false,
-          });
-      
-          return {
-            success: false,
-            message: data.message || "فشل تسجيل الدخول",
-            verification_status: data.verification_status,
-            reason: data.reason,
-            commercial_register_reason: data.commercial_register_reason,
-            owner_id_reason: data.owner_id_reason,
-            avatar_reason: data.avatar_reason,
-            phone: data.phone,
-            email: data.email,
-          };
+          const result = normalizeFailure(err.response?.data || {});
+          set({ error: result.message, isLoading: false });
+          return result;
         }
       },
 
-      // Register
       register: async (data) => {
         set({ isLoading: true, error: null });
         try {
@@ -96,34 +96,35 @@ const useAuthStore = create(
         }
       },
 
-      // Logout
+      sendBranchOTP: async (data) => {
+        const response = await branchAuthAPI.sendOTP(data);
+        return response.data;
+      },
+
+      verifyBranchOTP: async (data) => {
+        const response = await branchAuthAPI.verifyOTP(data);
+        const result = response.data || {};
+        if (result.token && result.user) {
+          localStorage.setItem('token', result.token);
+          set({ user: result.user, token: result.token });
+        }
+        return result;
+      },
+
       logout: () => {
         localStorage.removeItem('token');
         set({ user: null, token: null, error: null });
       },
 
-      // Refresh user
       fetchMe: async () => {
         if (!get().token) return;
-      
         set({ isLoading: true });
-      
         try {
           const res = await authAPI.getMe();
-      
-          set({
-            user: res.data.user,
-            isLoading: false,
-          });
-      
+          set({ user: res.data.user, isLoading: false });
         } catch (err) {
-      
           get().logout();
-      
-          set({
-            isLoading: false,
-          });
-      
+          set({ isLoading: false });
         }
       },
 
@@ -131,7 +132,7 @@ const useAuthStore = create(
       isAdmin: () => get().user?.role === 'admin',
       isSupplier: () => get().user?.role === 'supplier',
       isCustomer: () => get().user?.role === 'customer',
-       isE: () => get().user?.role === 'employee',
+      isE: () => get().user?.role === 'employee',
     }),
     {
       name: 'car-rental-auth',
