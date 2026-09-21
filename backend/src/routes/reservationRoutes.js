@@ -9,6 +9,7 @@ const {
 } = require('../services/whatsappService');
 const { refundReservationPayment } = require('../services/financeService');
 const getSupplierId = (req) => req.user.supplier_id || req.user.id;
+const getBranchId = (req) => req.user.account_type === 'branch' ? req.user.branch_id : null;
 
 async function notifyReservationWhatsApp(reservationId, status, reason = null) {
   try {
@@ -176,7 +177,7 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
 // ========================
 router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, getSupplierId(req)]);
+  const reservation = await query('SELECT r.* FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::text IS NULL OR c.location_id = $3)', [id, getSupplierId(req), getBranchId(req)]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن الموافقة على هذا الحجز', 400));
   const paidPayment = await query(`SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`, [id]);
@@ -233,11 +234,12 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
   const { id } = req.params;
   const { cancellation_reason } = req.body;
 
-  const reservation = await query('SELECT * FROM reservations WHERE id = $1', [id]);
+  const reservation = await query(`SELECT r.*, c.location_id AS car_location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1`, [id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
 
   const r = reservation.rows[0];
-  if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
+  const supplierOwnsReservation = String(r.supplier_id) === String(getSupplierId(req)) && (!getBranchId(req) || String(r.car_location_id) === String(getBranchId(req)));
+  if (r.customer_id !== req.user.id && !supplierOwnsReservation) return next(new AppError('غير مصرح لك', 403));
   if (!['pending', 'approved', 'awaiting_pickup'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز بعد بدء الاستلام أو الإرجاع', 400));
 
   const policy = r.customer_id === req.user.id ? getCancellationPolicy(r) : { refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
@@ -289,7 +291,7 @@ router.put('/:id/complete', protect, authorize('supplier'), asyncHandler(async (
 // ========================
 router.get('/:id', protect, asyncHandler(async (req, res, next) => {
   const result = await query(`
-    SELECT r.*, c.make, c.model, c.year, c.color, c.license_plate,
+    SELECT r.*, c.location_id AS car_location_id, c.make, c.model, c.year, c.color, c.license_plate,
       cu.name as customer_name, cu.phone as customer_phone,
       su.name as supplier_name, su.phone as supplier_phone,
       COALESCE((SELECT p.status FROM payments p WHERE p.reservation_id = r.id ORDER BY p.created_at DESC LIMIT 1), 'unpaid') AS payment_status,
@@ -304,10 +306,11 @@ router.get('/:id', protect, asyncHandler(async (req, res, next) => {
   if (result.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
 
   const r = result.rows[0];
-  if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id && req.user.role !== 'admin') {
+  const supplierCanView = String(r.supplier_id) === String(getSupplierId(req)) && (!getBranchId(req) || String(r.car_location_id) === String(getBranchId(req)));
+  if (r.customer_id !== req.user.id && !supplierCanView && req.user.role !== 'admin') {
     return next(new AppError('غير مصرح لك', 403));
   }
-  if (r.supplier_id === req.user.id && r.payment_status !== 'paid' && req.user.role !== 'admin') {
+  if (supplierCanView && r.customer_id !== req.user.id && r.payment_status !== 'paid' && req.user.role !== 'admin') {
     return next(new AppError('الحجز غير متاح للمورد قبل إتمام الدفع', 404));
   }
 
