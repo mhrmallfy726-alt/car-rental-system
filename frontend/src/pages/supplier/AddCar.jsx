@@ -118,7 +118,7 @@ export default function AddCar() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      toast.success('تم إضافة السيارة بنجاح (بانتظار موافقة الإدارة)');
+      toast.success(carRes.data.message || 'تمت إضافة السيارة واعتمادها وإتاحتها مباشرة');
       navigate('/supplier/cars');
     } catch (error) {
       toast.error(error.response?.data?.message || 'فشل إضافة السيارة');

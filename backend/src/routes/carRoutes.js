@@ -267,8 +267,8 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     INSERT INTO cars (supplier_id, category_id, location_id, make, model, year, color,
       license_plate, seats, doors, transmission, fuel_type, price_per_day, price_currency,
       price_per_day_yer, original_price, original_currency, exchange_rate_used,
-      discount_percentage, description, mileage)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'YER',$14,$15,$16,$17,$18,$19,$20)
+      discount_percentage, description, mileage, is_approved, status, approved_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'YER',$14,$15,$16,$17,$18,$19,$20,TRUE,'available',NOW())
     RETURNING *
   `, [supplierId, category_id, supplierLocation.id, make, model, year, color,
       license_plate, seats || 5, doors || 4, transmission || 'automatic',
@@ -284,23 +284,11 @@ router.post('/', protect, authorize('supplier'), asyncHandler(async (req, res) =
     }
   }
 
-  // Notify Admins about the new car pending approval
-  try {
-    const admins = await query("SELECT id FROM users WHERE role = 'admin'");
-    const io = req.app.get('io');
-    for (const admin of admins.rows) {
-      const notif = await query(
-        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-        [admin.id, 'سيارة جديدة بانتظار الموافقة', `تمت إضافة سيارة جديدة (${make} ${model}) بانتظار مراجعتك.`, 'car', car.id, 'car', `/admin/cars/${car.id}`]
-      );
-      if (io) io.to(`user_${admin.id}`).emit('new_notification', notif.rows[0]);
-    }
-  } catch (err) {
-    console.error('Error sending admin notification for new car:', err);
-  }
-
-  res.status(201).json({ success: true, data: car });
+  res.status(201).json({
+    success: true,
+    data: car,
+    message: 'تمت إضافة السيارة واعتمادها وإتاحتها مباشرة دون انتظار موافقة الأدمن',
+  });
 }));
 
 // ========================
