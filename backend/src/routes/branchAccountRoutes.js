@@ -216,7 +216,7 @@ router.post('/password/change-first-login', async (req, res) => {
     const pending = readPendingToken(req, 'branch-password-change');
     const password = String(req.body?.password || '');
     const confirmPassword = String(req.body?.confirmPassword || '');
-    const isStrongPassword = (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d\\s])[\\x21-\\x7E]{10,72}$/.test(String(value || ''));
+    const isStrongPassword = (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s])[\x21-\x7E]{10,72}$/.test(String(value || ''));
     if (!pending) return res.status(401).json({ success: false, message: 'جلسة تغيير كلمة المرور غير صالحة أو منتهية' });
     if (!isStrongPassword(password)) return res.status(400).json({ success: false, message: 'كلمة المرور يجب أن تكون 10 أحرف على الأقل وتحتوي حرفاً كبيراً وصغيراً ورقماً ورمزاً خاصاً' });
     if (password !== confirmPassword) return res.status(400).json({ success: false, message: 'كلمتا المرور غير متطابقتين' });
