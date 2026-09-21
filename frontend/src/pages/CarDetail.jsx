@@ -259,6 +259,17 @@ export default function CarDetail() {
       return;
     }
 
+    if (booking.start_date === new Date().toISOString().slice(0, 10)) {
+      const now = new Date();
+      const [hours, minutes] = String(booking.pickup_time).split(':').map(Number);
+      const pickupMinutes = hours * 60 + minutes;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      if (pickupMinutes < currentMinutes) {
+        toast.error('وقت الاستلام يجب أن يكون الآن أو بعد الوقت الحالي');
+        return;
+      }
+    }
+
     if (!currentPolicy || !policyAccepted) {
       toast.error('يجب قراءة السياسة والموافقة عليها قبل إنشاء الحجز');
       return;
@@ -727,6 +738,9 @@ radius: 10,
                 <input
                   required
                   type="time"
+                  min={booking.start_date === new Date().toISOString().slice(0, 10)
+                    ? new Date().toTimeString().slice(0, 5)
+                    : undefined}
                   value={booking.pickup_time}
                   onChange={(e) =>
                     setBooking({
