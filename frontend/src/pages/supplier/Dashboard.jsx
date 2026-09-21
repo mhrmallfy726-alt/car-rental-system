@@ -9,6 +9,7 @@ import { Car, Calendar, DollarSign, Star, LayoutDashboard, Plus, Eye, Settings, 
 import { format } from 'date-fns';
 import { getImageUrl } from '../../utils/imageUtils';
 import { useSupplierShowroom } from '../../hooks/useSupplierShowroom';
+import { formatCurrency } from '../../utils/currency';
 export default function SupplierDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -140,7 +141,7 @@ export default function SupplierDashboard() {
               </div>
               <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0f766e' }}><DollarSign size={24} /></div>
-                <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>${stats.revenue.toFixed(2)}</p><p style={{ color: '#6c757d', margin: 0 }}>إجمالي الأرباح</p></div>
+                <div><p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{formatCurrency(stats.revenue, 'YER')}</p><p style={{ color: '#6c757d', margin: 0 }}>إجمالي الأرباح</p></div>
               </div>
               <div style={{ background: 'white', borderRadius: '12px', padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ background: '#e9ecef', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#b78a22' }}><Calendar size={24} /></div>
@@ -194,7 +195,7 @@ export default function SupplierDashboard() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span>نسبة إشغال الأسطول:</span> <span style={{ fontWeight: 'bold' }}>{occupancyRate}%</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span>إجمالي الإيرادات:</span> <span style={{ fontWeight: 'bold' }}>${stats.revenue.toFixed(2)}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span>إجمالي الإيرادات:</span> <span style={{ fontWeight: 'bold' }}>{formatCurrency(stats.revenue, 'YER')}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span>السيارات المعروضة (خصم):</span> <span style={{ fontWeight: 'bold' }}>{stats.activeDeals}</span></div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}><span>عدد السيارات الكلي:</span> <span style={{ fontWeight: 'bold' }}>{stats.totalCars}</span></div>
                 </div>
@@ -229,7 +230,7 @@ export default function SupplierDashboard() {
                           <td style={{ padding: '12px' }}>{r.id?.split('-')[0] || r.id}</td>
                           <td style={{ padding: '12px' }}>{getCarName(r)}</td>
                           <td style={{ padding: '12px' }} dir="ltr">{format(new Date(r.start_date), 'dd/MM/yyyy')}</td>
-                          <td style={{ padding: '12px' }}>${parseFloat(r.total_price).toFixed(2)}</td>
+                          <td style={{ padding: '12px' }}>{formatCurrency(parseFloat(r.total_price), 'YER')}</td>
                           <td style={{ padding: '12px' }}>
                             <span style={{
                               background: r.status === 'pending' ? '#b78a22' : r.status === 'active' ? '#0f766e' : r.status === 'completed' ? '#087f68' : '#6c757d',
