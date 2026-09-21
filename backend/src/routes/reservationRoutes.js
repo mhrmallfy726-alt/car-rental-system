@@ -214,7 +214,7 @@ router.get('/my', protect, asyncHandler(async (req, res) => {
 // ========================
 router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const reservation = await query('SELECT r.* FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::text IS NULL OR c.location_id = $3)', [id, getSupplierId(req), getBranchId(req)]);
+  const reservation = await query('SELECT r.* FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::uuid IS NULL OR c.location_id = $3::uuid)', [id, getSupplierId(req), getBranchId(req)]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن الموافقة على هذا الحجز', 400));
   const paidPayment = await query(`SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`, [id]);
