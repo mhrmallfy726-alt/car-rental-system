@@ -521,7 +521,7 @@
 //     </div>
 //   );
 // }
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { reservationsAPI, reviewsAPI, handoverAPI, default as api } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -534,6 +534,7 @@ import { getImageUrl } from '../../utils/imageUtils';
 export default function MyReservations() {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
   const navigate = useNavigate();
 
   const [showReview, setShowReview] = useState(false);
@@ -554,19 +555,25 @@ export default function MyReservations() {
   const [submittingHandoverReview, setSubmittingHandoverReview] = useState(false);
 
   useEffect(() => {
-    fetchReservations();
+    const timer = window.setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
-  const fetchReservations = async () => {
+  const fetchReservations = useCallback(async () => {
     try {
       const res = await reservationsAPI.getMy();
       setReservations(res.data.data);
-    } catch (error) {
+    } catch {
       toast.error('فشل جلب الحجوزات');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void fetchReservations(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchReservations]);
 
   const handleCancel = async (id) => {
     const reservation = reservations.find((item) => item.id === id);
@@ -610,15 +617,6 @@ export default function MyReservations() {
     } finally {
       setSubmittingReview(false);
     }
-  };
-
-  // Check if there is already an open complaint/chat for this reservation
-  const hasOpenComplaint = (reservationId) => {
-    // This would ideally be checked by fetching existing complaints, but for simplicity we'll allow
-    // In a real app, you'd call API to check. We'll just allow creation and let backend handle duplicates? 
-    // backend does not prevent duplicates. So we'll add a check by calling GET /complaints/my and filter.
-    // To keep it simple, we assume user can have multiple chats per reservation.
-    return false;
   };
 
   const startChat = async (resId) => {
@@ -742,7 +740,7 @@ export default function MyReservations() {
   const canPay = (reservation) => ['pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
   const getCancellationPolicy = (reservation) => {
     const pickupAt = reservation.pickup_at ? new Date(reservation.pickup_at) : new Date(`${reservation.start_date}T${reservation.pickup_time || '09:00'}:00`);
-    const hours = (pickupAt.getTime() - Date.now()) / (60 * 60 * 1000);
+    const hours = (pickupAt.getTime() - now) / (60 * 60 * 1000);
     if (!Number.isFinite(hours) || hours <= 0) return { refund: 0, fee: 100, canCancel: false };
     if (hours >= 72) return { refund: 100, fee: 0, canCancel: true };
     if (hours >= 24) return { refund: 75, fee: 25, canCancel: true };

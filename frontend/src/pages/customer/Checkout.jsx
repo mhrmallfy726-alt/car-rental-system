@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { reservationsAPI, paymentsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { ShieldCheck, CreditCard, CheckCircle, Plus, ArrowRight, X } from 'lucide-react';
+import { ShieldCheck, CreditCard, CheckCircle, Plus, ArrowRight } from 'lucide-react';
 import { getCarImage } from '../../utils/imageUtils';
 import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, convertFromYER, formatCurrency, getCurrency } from '../../utils/currency';
 
@@ -59,11 +59,7 @@ export default function Checkout() {
   });
   const [cardErrors, setCardErrors] = useState({});
 
-  useEffect(() => {
-    fetchData();
-  }, [reservationId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [resRes, cardsRes] = await Promise.all([
         reservationsAPI.getOne(reservationId),
@@ -86,13 +82,18 @@ export default function Checkout() {
       } else {
         setShowNewCard(true);
       }
-    } catch (error) {
+    } catch {
       toast.error('الحجز غير موجود أو فشل جلب البيانات');
       navigate('/my-reservations');
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, reservationId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void fetchData(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchData]);
 
   const selectedTotal = reservation ? convertFromYER(reservation.total_price, currency) : 0;
   const selectedDailyPrice = reservation ? convertFromYER(reservation.price_per_day, currency) : 0;

@@ -275,7 +275,7 @@ import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 
 import logo from '../../assets/LOGO.png';
-import { Car, Mail, Lock, User, Phone, ChevronLeft, ShieldCheck, Briefcase,KeyRound } from 'lucide-react';
+import { Mail, Lock, User, Phone, ChevronLeft, ShieldCheck } from 'lucide-react';
 import { validateStrongPassword } from '../../utils/inputValidation';
 
 export default function Register() {

@@ -8,7 +8,7 @@ import useAuthStore from '../../store/authStore';
 import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import logo from '../../assets/LOGO.png';
-import { Car, Mail, Lock, ChevronLeft } from 'lucide-react';
+import { Mail, Lock, ChevronLeft } from 'lucide-react';
 import { setAccessToken } from "../../../src/API/axios"; // عدّل المسار حسب مكان الملف
 
 export default function Login() {
