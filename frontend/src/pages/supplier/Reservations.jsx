@@ -249,9 +249,9 @@ export default function SupplierReservations() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '8px' }}>
                     <h3 style={{ fontWeight: 'bold' }}>{res.make} {res.model} <span style={{ color: '#6c757d', fontWeight: 'normal' }}>({res.customer_name})</span></h3>
                     <span className={`badge`} style={{
-                      background: res.status === 'pending' ? '#b78a22' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#24647d' : res.status === 'active' ? '#0f766e' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#087f68' : ['rejected', 'cancelled', 'disputed'].includes(res.status) ? '#b42318' : '#6c757d',
+                      background: res.status === 'pending' ? '#b78a22' : ['awaiting_pickup', 'approved'].includes(res.status) ? '#24647d' : res.status === 'active' ? '#0f766e' : res.status === 'returned' ? '#8b5cf6' : res.status === 'completed' ? '#087f68' : res.status === 'disputed' ? '#b42318' : '#6c757d',
                       color: 'white', padding: '2px 8px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold'
-                    }}>{res.status === 'pending' ? 'طلب مدفوع بانتظار المراجعة' : res.status === 'approved' ? 'تمت الموافقة — بانتظار الدفع' : res.status === 'awaiting_pickup' ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'cancelled' ? 'ملغي' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
+                    }}>{res.status === 'pending' ? 'طلب مدفوع بانتظار المراجعة' : ['approved', 'awaiting_pickup'].includes(res.status) ? 'بانتظار استلام العميل' : res.status === 'active' ? 'السيارة مع العميل' : res.status === 'returned' ? 'تم استلام السيارة' : res.status === 'completed' ? 'مغلق ومكتمل' : res.status === 'rejected' ? 'مرفوض' : res.status === 'disputed' ? 'في نزاع' : res.status}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: '#6c757d', marginBottom: '8px' }}>
