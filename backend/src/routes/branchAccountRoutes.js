@@ -169,7 +169,7 @@ router.post('/verification/send-otp', async (req, res) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
     await query('DELETE FROM email_verifications WHERE LOWER(email) = $1', [account.email]);
-    await query(`INSERT INTO email_verifications (email, otp, expires_at, user_data) VALUES ($1, $2, $3, $4]`, [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]);
+    await query(`INSERT INTO email_verifications (email, otp, expires_at, user_data) VALUES ($1, $2, $3, $4)`, [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]);
     await sendEmail(account.email, 'رمز التحقق لتفعيل حساب المعرض', `<h2>مرحباً ${account.name || ''}</h2><p>رمز التحقق الخاص بتفعيل حساب المعرض هو:</p><h1>${otp}</h1><p>الرمز صالح لمدة 5 دقائق فقط.</p>`);
     return res.json({ success: true, message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
   } catch (error) {
