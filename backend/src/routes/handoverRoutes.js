@@ -259,7 +259,7 @@ router.put('/:reservationId/:stage/:verificationId/decision', protect, authorize
   if (!['accepted', 'rejected'].includes(decision)) return next(new AppError('القرار يجب أن يكون accepted أو rejected', 400));
 
   const reservationResult = await query(
-    'SELECT r.id, r.customer_id, r.supplier_id, r.status, r.handover_state, c.location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::text IS NULL OR c.location_id = $3)',
+    'SELECT r.id, r.customer_id, r.supplier_id, r.status, r.handover_state, c.location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::uuid IS NULL OR c.location_id = $3::uuid)',
     [reservationId, getSupplierId(req.user), getBranchId(req.user)]
   );
   if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود أو غير تابع لك', 404));
