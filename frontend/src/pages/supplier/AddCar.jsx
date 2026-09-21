@@ -8,11 +8,14 @@ import toast from 'react-hot-toast';
 import { Car, LayoutDashboard, Plus, Calendar, Save, Upload, Image, X, Fuel, Palette, DoorOpen, Gauge, User } from 'lucide-react';
 import { sanitizeFieldValue } from '../../utils/inputValidation';
 import { VEHICLE_CATALOG, VEHICLE_MAKES } from '../../data/vehicleCatalog';
+import useAuthStore from '../../store/authStore';
 
 export default function AddCar() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   const vehicleYears = Array.from({ length: currentYear + 1 - 1980 }, (_, index) => currentYear + 1 - index);
+  const { user } = useAuthStore();
+  const isBranch = user?.account_type === 'branch';
   const { options: showrooms } = useSupplierShowroom();
   const [selectedShowroomId, setSelectedShowroomId] = useState('');
   const defaultShowroom = showrooms.find((item) => item.is_main) || showrooms[0] || null;
@@ -108,7 +111,8 @@ export default function AddCar() {
     try {
       // Step 1: Create car
       // إذا لم يُحدّد فرع يدويًا، يختار الخادم أقدم فرع نشط باعتباره الفرع الرئيسي.
-      const carRes = await carsAPI.create({ ...formData, ...(activeShowroom?.id ? { location_id: activeShowroom.id } : {}) });
+      const carPayload = isBranch ? { ...formData } : { ...formData, ...(activeShowroom?.id ? { location_id: activeShowroom.id } : {}) };
+      const carRes = await carsAPI.create(carPayload);
       const carId = carRes.data.data.id;
 
       // Step 2: Upload images
@@ -174,7 +178,11 @@ export default function AddCar() {
               </div>
               <div style={{ color: '#52636d', fontSize: '0.9rem' }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#173a52' }}>الفرع الحالي</label>
-                {showrooms.length > 0 ? <select
+                {isBranch ? (
+                  <div style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', border: '1px solid #cfe7e0', borderRadius: '6px', background: '#f2f9f7', color: '#173a52', fontWeight: 700 }}>
+                    {activeShowroom?.showroom_name || user?.branch_name || 'فرعك'}{activeShowroom?.city ? ` — ${activeShowroom.city}` : ''}
+                  </div>
+                ) : showrooms.length > 0 ? <select
                   value={activeShowroom?.id || ''}
                   onChange={handleShowroomChange}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px', background: '#fff' }}
