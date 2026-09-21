@@ -7,27 +7,28 @@ const { query } = require('../config/database');
 router.use(protect, authorize('supplier'));
 
 router.get('/summary', asyncHandler(async (req, res) => {
-  const supplierId = req.user.id;
+  const supplierId = req.user.supplier_id || req.user.id;
+  const branchId = req.user.account_type === 'branch' ? req.user.branch_id : null;
 
   // Financial balances are grouped by currency. Never add USD/SAR/YER together.
   const balancesResult = await query(`
     WITH currencies AS (
       SELECT DISTINCT currency FROM ledger_entries
-      WHERE supplier_id=$1 AND entry_type IN ('supplier_pending','supplier_payable','payout')
+      WHERE supplier_id=$1 AND entry_type IN ('supplier_pending','supplier_payable','payout') AND ($2::text IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2))
       UNION
-      SELECT DISTINCT currency FROM supplier_payouts WHERE supplier_id=$1
+      SELECT DISTINCT currency FROM supplier_payouts WHERE supplier_id=$1 AND $2::text IS NULL
     ),
     payable AS (
       SELECT currency, COALESCE(SUM(amount),0) AS total_payable
       FROM ledger_entries
-      WHERE supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit'
+      WHERE supplier_id=$1 AND entry_type='supplier_payable' AND ($2::text IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2)) AND direction='credit'
       GROUP BY currency
     ),
     pending AS (
       SELECT currency,
              COALESCE(SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit'),0) AS held_amount
       FROM ledger_entries
-      WHERE supplier_id=$1 AND entry_type='supplier_pending'
+      WHERE supplier_id=$1 AND entry_type='supplier_pending' AND ($2::text IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2))
       GROUP BY currency
     ),
     payouts AS (
@@ -35,7 +36,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
              COALESCE(SUM(amount) FILTER (WHERE status='paid'),0) AS paid_out,
              COALESCE(SUM(amount) FILTER (WHERE status IN ('pending','processing')),0) AS pending_payout
       FROM supplier_payouts
-      WHERE supplier_id=$1
+      WHERE supplier_id=$1 AND $2::text IS NULL
       GROUP BY currency
     ),
     gross AS (
@@ -65,7 +66,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
     LEFT JOIN pending h ON h.currency=c.currency
     LEFT JOIN payouts po ON po.currency=c.currency
     ORDER BY c.currency
-  `, [supplierId]);
+  `, [supplierId, branchId]);
 
   const transactionsResult = await query(`
     SELECT p.id,p.reservation_id,p.amount AS gross_amount,p.currency,p.status,p.paid_at,p.created_at,
@@ -89,14 +90,14 @@ router.get('/summary', asyncHandler(async (req, res) => {
       WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit'
       ORDER BY created_at DESC LIMIT 1
     ) payable ON TRUE
-    WHERE p.supplier_id=$1 AND p.reservation_id IS NOT NULL
+    WHERE p.supplier_id=$1 AND p.reservation_id IS NOT NULL AND ($2::text IS NULL OR c.location_id=$2)
     ORDER BY p.created_at DESC LIMIT 100
-  `, [supplierId]);
+  `, [supplierId, branchId]);
 
   const payoutsResult = await query(`
     SELECT id,amount,currency,mode,status,notes,external_reference,processed_at,created_at
-    FROM supplier_payouts WHERE supplier_id=$1 ORDER BY created_at DESC LIMIT 100
-  `, [supplierId]);
+    FROM supplier_payouts WHERE supplier_id=$1 AND $2::text IS NULL ORDER BY created_at DESC LIMIT 100
+  `, [supplierId, branchId]);
 
   const settingsResult = await query(`SELECT currency,commission_rate,settlement_mode FROM finance_settings WHERE id=1`);
   const settings = settingsResult.rows[0] || { currency:'YER', commission_rate:10, settlement_mode:'manual' };
