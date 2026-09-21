@@ -42,13 +42,13 @@ router.get('/summary', asyncHandler(async (req, res) => {
     gross AS (
       SELECT currency, COALESCE(SUM(amount),0) AS gross_revenue
       FROM payments
-      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND status='paid'
+      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND status='paid' AND ($2::text IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2))
       GROUP BY currency
     ),
     fees AS (
       SELECT currency, COALESCE(SUM(amount),0) AS total_commission
       FROM ledger_entries
-      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND entry_type='platform_fee' AND direction='credit'
+      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND entry_type='platform_fee' AND direction='credit' AND ($2::text IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2))
       GROUP BY currency
     )
     SELECT c.currency,
