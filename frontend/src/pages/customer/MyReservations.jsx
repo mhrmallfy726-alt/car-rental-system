@@ -8,6 +8,7 @@
 // import '../../styles/customer-reservations.css';
 
 // import { getImageUrl } from '../../utils/imageUtils';
+import { formatCurrency } from '../../utils/currency';
 
 // const getCancellationPolicy = (reservation) => {
 //   const pickupAt = reservation.pickup_at
@@ -285,7 +286,7 @@
 //                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', fontSize: '0.8rem', color: '#6c757d' }}>
 //                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> الاستلام: {format(new Date(res.start_date), 'yyyy-MM-dd')} {res.pickup_time || '09:00'}</span>
 //                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> الإرجاع: {format(new Date(res.end_date), 'yyyy-MM-dd')} {res.return_time || '18:00'}</span>
-//                     <span style={{ fontWeight: 'bold' }}>المجموع: ${res.total_price}</span>
+//                     <span style={{ fontWeight: 'bold' }}>المجموع: {formatCurrency(res.total_price, res.currency || 'YER')}</span>
 //                   </div>
 //                 </div>
 
