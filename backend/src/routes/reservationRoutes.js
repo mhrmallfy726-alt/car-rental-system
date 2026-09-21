@@ -113,8 +113,7 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
     return next(new AppError('وقت الإرجاع يجب أن يكون بعد وقت الاستلام', 400));
   }
 
-  // لا تسمح بوقت استلام مضى إذا كان تاريخ الاستلام هو اليوم.
-  // يعتمد التحقق على توقيت اليمن (UTC+03:00) حتى لا يتأثر بتوقيت خادم الاستضافة.
+  // Reject pickup times that have already passed when the pickup date is today (Yemen time).
   const nowYemen = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Aden' }));
   const todayYemen = `${nowYemen.getFullYear()}-${String(nowYemen.getMonth() + 1).padStart(2, '0')}-${String(nowYemen.getDate()).padStart(2, '0')}`;
   if (start_date === todayYemen) {
@@ -250,3 +249,114 @@ router.put('/:id/reject', protect, authorize('supplier'), asyncHandler(async (re
   if (reservation.rows[0].status !== 'pending') return next(new AppError('لا يمكن رفض هذا الحجز', 400));
 
   const refund = await refundReservationPayment(id, supplier_notes || 'تم رفض الحجز من قبل المورد');
+  const result = await query(`UPDATE reservations SET status = 'rejected', supplier_notes = $1 WHERE id = $2 RETURNING *`, [supplier_notes, id]);
+
+  const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تم رفض حجزك', $2, 'reservation', $3, 'reservation') RETURNING *`,
+    [reservation.rows[0].customer_id, supplier_notes || 'تم رفض طلب الحجز من قبل المورد', id]);
+
+  const io = req.app.get('io');
+  if (io && notificationResult.rows[0]) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', notificationResult.rows[0]);
+
+  void notifyReservationWhatsApp(id, 'rejected', supplier_notes || null);
+
+  res.json({ success: true, data: result.rows[0], refund: refund ? { status: 'refunded', amount: refund.amount, currency: refund.currency } : { status: 'not_required' } });
+}));
+
+// ========================
+// @desc    Cancel reservation
+// @route   PUT /api/reservations/:id/cancel
+// @access  Customer/Supplier
+// ========================
+router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const { cancellation_reason } = req.body;
+
+  const reservation = await query(`SELECT r.*, c.location_id AS car_location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1`, [id]);
+  if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
+
+  const r = reservation.rows[0];
+  const supplierOwnsReservation = String(r.supplier_id) === String(getSupplierId(req)) && (!getBranchId(req) || String(r.car_location_id) === String(getBranchId(req)));
+  if (r.customer_id !== req.user.id && !supplierOwnsReservation) return next(new AppError('غير مصرح لك', 403));
+  if (!['pending', 'approved', 'awaiting_pickup'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز بعد بدء الاستلام أو الإرجاع', 400));
+
+  const policy = r.customer_id === req.user.id ? getCancellationPolicy(r) : { refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
+  if (!policy.canCancel) return next(new AppError('لا يمكن إلغاء الحجز بعد موعد الاستلام', 400));
+  const policyReason = `${cancellation_reason || 'تم إلغاء الحجز'} — سياسة الإلغاء: استرداد ${policy.refundPercent}% وخصم ${policy.feePercent}%`;
+  const refund = await refundReservationPayment(id, policyReason, policy.refundRate);
+  const result = await query(`UPDATE reservations SET status = 'cancelled', cancellation_reason = $1, cancelled_by = $2, cancelled_at = NOW() WHERE id = $3 RETURNING *`,
+    [policyReason, req.user.id, id]);
+  const recipientId = r.customer_id === req.user.id ? r.supplier_id : r.customer_id;
+  if (r.customer_id === req.user.id) {
+    const io = req.app.get('io');
+    await notifyReservationStaff(id, 'تم إلغاء الحجز', 'تم إلغاء الحجز من قبل العميل.', io);
+  }
+  const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+    VALUES ($1, 'تم إلغاء الحجز', $2, 'reservation', $3, 'reservation') RETURNING *`,
+    [recipientId, `تم إلغاء الحجز. سياسة الإلغاء: استرداد ${policy.refundPercent}% وخصم ${policy.feePercent}%.${refund ? ` مبلغ الاسترداد: ${refund.refund_amount} ${refund.currency}.` : ''}`, id]);
+  const io = req.app.get('io');
+  if (io && notificationResult.rows[0]) io.to(`user_${recipientId}`).emit('new_notification', notificationResult.rows[0]);
+
+  void notifyReservationWhatsApp(id, 'cancelled', policyReason);
+
+  res.json({ success: true, data: result.rows[0], cancellation_policy: policy, refund: refund ? { status: refund.refund_rate === 1 ? 'refunded' : 'partially_refunded', amount: refund.refund_amount, currency: refund.currency } : { status: 'not_required' } });
+}));
+
+// ========================
+// @desc    Complete reservation
+// @route   PUT /api/reservations/:id/complete
+// @access  Supplier
+// ========================
+router.put('/:id/complete', protect, authorize('supplier'), asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND supplier_id = $2', [id, getSupplierId(req)]);
+  if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
+  if (!['returned', 'active'].includes(reservation.rows[0].status)) return next(new AppError('لا يمكن إغلاق الحجز قبل استلام السيارة', 400));
+  if (reservation.rows[0].status === 'active' && reservation.rows[0].handover_state !== 'returned') {
+    return next(new AppError('يجب توثيق استرجاع السيارة أولاً', 400));
+  }
+
+  const result = await query(`UPDATE reservations SET status = 'completed', handover_state = 'closed', completed_at = NOW() WHERE id = $1 RETURNING *`, [id]);
+
+  // Update car only after the return is documented and the reservation is closed.
+  await query('UPDATE cars SET total_trips = total_trips + 1, status = $1 WHERE id = $2', ['available', reservation.rows[0].car_id]);
+
+  void notifyReservationWhatsApp(id, 'completed');
+
+  res.json({ success: true, data: result.rows[0] });
+}));
+
+// ========================
+// @desc    Get single reservation
+// @route   GET /api/reservations/:id
+// @access  Private
+// ========================
+router.get('/:id', protect, asyncHandler(async (req, res, next) => {
+  const result = await query(`
+    SELECT r.*, c.location_id AS car_location_id, c.make, c.model, c.year, c.color, c.license_plate,
+      cu.name as customer_name, cu.phone as customer_phone,
+      su.name as supplier_name, su.phone as supplier_phone,
+      COALESCE((SELECT p.status FROM payments p WHERE p.reservation_id = r.id ORDER BY p.created_at DESC LIMIT 1), 'unpaid') AS payment_status,
+      (SELECT image_url FROM car_images WHERE car_id = c.id AND is_primary = true LIMIT 1) as car_image
+    FROM reservations r
+    JOIN cars c ON r.car_id = c.id
+    JOIN users cu ON r.customer_id = cu.id
+    JOIN users su ON r.supplier_id = su.id
+    WHERE r.id = $1
+  `, [req.params.id]);
+
+  if (result.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
+
+  const r = result.rows[0];
+  const supplierCanView = String(r.supplier_id) === String(getSupplierId(req)) && (!getBranchId(req) || String(r.car_location_id) === String(getBranchId(req)));
+  if (r.customer_id !== req.user.id && !supplierCanView && req.user.role !== 'admin') {
+    return next(new AppError('غير مصرح لك', 403));
+  }
+  if (supplierCanView && r.customer_id !== req.user.id && r.payment_status !== 'paid' && req.user.role !== 'admin') {
+    return next(new AppError('الحجز غير متاح للمورد قبل إتمام الدفع', 404));
+  }
+
+  res.json({ success: true, data: r });
+}));
+
+module.exports = router;
