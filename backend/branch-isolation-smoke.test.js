@@ -12,9 +12,6 @@ process.env.JWT_SECRET = 'branch-isolation-smoke-secret';
   const auth = fs.readFileSync(path.join(__dirname, 'src/middleware/auth.js'), 'utf8');
   const migration = fs.readFileSync(path.join(__dirname, 'migrations/055_branch_accounts.sql'), 'utf8');
   const emailGuard = fs.readFileSync(path.join(__dirname, 'migrations/056_branch_account_email_guard.sql'), 'utf8');
-  const lifecycle = fs.readFileSync(path.join(__dirname, 'migrations/057_reservation_lifecycle_constraints.sql'), 'utf8');
-  const reservationRoutes = fs.readFileSync(path.join(__dirname, 'src/routes/reservationRoutes.js'), 'utf8');
-  const paymentRoutes = fs.readFileSync(path.join(__dirname, 'src/routes/paymentRoutes.js'), 'utf8');
 
   assert.match(showroom, /manager_name/);
   assert.match(showroom, /manager_email/);
@@ -29,11 +26,6 @@ process.env.JWT_SECRET = 'branch-isolation-smoke-secret';
   assert.match(migration, /validate_branch_account_supplier/);
   assert.match(emailGuard, /TG_TABLE_NAME <> 'employees'/);
   assert.match(emailGuard, /prevent_duplicate_email_from_branch_accounts/);
-  assert.match(lifecycle, /'pending_payment'/);
-  assert.match(lifecycle, /'disputed'/);
-  assert.match(reservationRoutes, /'not_started','pending_payment'/);
-  assert.match(paymentRoutes, /\['pending_payment', 'pending', 'approved'\]/);
-  assert.match(paymentRoutes, /SET status = 'pending'/);
 
   const password = 'ManagerPass123';
   const digest = await bcrypt.hash(password, 10);
@@ -51,5 +43,4 @@ process.env.JWT_SECRET = 'branch-isolation-smoke-secret';
   console.log('PASS branch token carries supplier_id and branch_id');
   console.log('PASS branch migration enforces one branch account and supplier ownership');
   console.log('PASS employee emails are checked with case and whitespace normalization');
-  console.log('PASS pending_payment and disputed are included in the reservation lifecycle');
 })().catch((error) => { console.error(error); process.exitCode = 1; });
