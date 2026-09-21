@@ -300,9 +300,12 @@ router.post('/:id/images', protect, authorize('supplier'), uploadCarImages, asyn
   const { id } = req.params;
 
   // Check ownership
-  const car = await query('SELECT supplier_id FROM cars WHERE id = $1', [id]);
+  const car = await query('SELECT supplier_id, location_id FROM cars WHERE id = $1', [id]);
   if (car.rows.length === 0) return next(new AppError('السيارة غير موجودة', 404));
-  if (car.rows[0].supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
+  const supplierId = req.user.supplier_id || req.user.id;
+  const ownsCar = String(car.rows[0].supplier_id) === String(supplierId);
+  const ownsBranch = req.user.account_type !== 'branch' || String(car.rows[0].location_id) === String(req.user.branch_id);
+  if (!ownsCar || !ownsBranch) return next(new AppError('غير مصرح لك بهذه السيارة أو أنها تتبع فرعاً آخر', 403));
 
   if (!req.files || req.files.length === 0) return next(new AppError('الرجاء إرفاق صور', 400));
 
@@ -361,9 +364,12 @@ router.put('/:id', protect, authorize('supplier'), asyncHandler(async (req, res,
 // ========================
 router.delete('/:id', protect, authorize('supplier', 'admin'), asyncHandler(async (req, res, next) => {
   const { id } = req.params;
-  const car = await query('SELECT supplier_id FROM cars WHERE id = $1', [id]);
+  const car = await query('SELECT supplier_id, location_id FROM cars WHERE id = $1', [id]);
   if (car.rows.length === 0) return next(new AppError('السيارة غير موجودة', 404));
-  if (req.user.role !== 'admin' && car.rows[0].supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
+  const supplierId = req.user.supplier_id || req.user.id;
+  const ownsCar = String(car.rows[0].supplier_id) === String(supplierId);
+  const ownsBranch = req.user.account_type !== 'branch' || String(car.rows[0].location_id) === String(req.user.branch_id);
+  if (req.user.role !== 'admin' && (!ownsCar || !ownsBranch)) return next(new AppError('غير مصرح لك بهذه السيارة أو أنها تتبع فرعاً آخر', 403));
 
   await query('DELETE FROM cars WHERE id = $1', [id]);
   res.json({ success: true, message: 'تم حذف السيارة بنجاح' });
