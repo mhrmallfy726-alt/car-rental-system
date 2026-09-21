@@ -5,6 +5,15 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { query } = require('../config/database');
 const { uploadComplaintAttachment } = require('../middleware/upload');
 
+const createUserNotification = async (userId, title, message, type, referenceId) => {
+  const result = await query(
+    `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+     VALUES ($1, $2, $3, $4, $5, 'complaint', $6) RETURNING *`,
+    [userId, title, message, type, referenceId, `/complaints/${referenceId}`]
+  );
+  return result.rows[0];
+};
+
 // Create complaint or chat (One Thread Per Reservation)
 router.post('/', protect, asyncHandler(async (req, res, next) => {
   const { reservation_id, against_id: provided_against_id, type, title, description, is_chat } = req.body;
@@ -45,14 +54,9 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
       );
       await query(`UPDATE reservations SET status = 'disputed', disputed_at = COALESCE(disputed_at, NOW()) WHERE id = $1`, [reservation_id]);
       
+      const notification = await createUserNotification(against_id, 'تم تصعيد المحادثة إلى نزاع', `تم تصعيد المحادثة إلى نزاع للحجز #${reservation_id}`, 'complaint', comp.id);
       const io = req.app.get('io');
-      if (io) {
-        io.to(`user_${against_id}`).emit('notification', {
-          type: 'dispute_opened',
-          complaint_id: comp.id,
-          message: `تم تصعيد المحادثة إلى نزاع للحجز #${reservation_id}`
-        });
-      }
+      if (io && notification) io.to(`user_${against_id}`).emit('new_notification', notification);
       return res.status(200).json({ success: true, data: updated.rows[0] });
     }
     // Return existing thread
@@ -69,14 +73,9 @@ router.post('/', protect, asyncHandler(async (req, res, next) => {
   if (is_chat === false) {
     await query(`UPDATE reservations SET status = 'disputed', disputed_at = COALESCE(disputed_at, NOW()) WHERE id = $1`, [reservation_id]);
 
+    const notification = await createUserNotification(against_id, 'تم فتح نزاع', `تم فتح نزاع بخصوص الحجز #${reservation_id}`, 'complaint', result.rows[0].id);
     const io = req.app.get('io');
-    if (io) {
-      io.to(`user_${against_id}`).emit('notification', {
-        type: 'dispute_opened',
-        complaint_id: result.rows[0].id,
-        message: `تم فتح نزاع بخصوص الحجز #${reservation_id}`
-      });
-    }
+    if (io && notification) io.to(`user_${against_id}`).emit('new_notification', notification);
   }
 
   res.status(201).json({ success: true, data: result.rows[0] });
@@ -163,20 +162,13 @@ router.post('/:id/message', protect, uploadComplaintAttachment, asyncHandler(asy
   };
 
   const io = req.app.get('io');
-  if (io) {
-    io.to(`complaint_${id}`).emit('receive_message', newMessageObj);
-    // Notify the other party (if not the sender) that a new message arrived
-    if (req.user.role === 'admin') {
-      io.to(`user_${complaint.rows[0].complainant_id}`).emit('notification', { type: 'new_message', complaint_id: id, message: `رسالة جديدة من الإدارة في النزاع` });
-      io.to(`user_${complaint.rows[0].against_id}`).emit('notification', { type: 'new_message', complaint_id: id, message: `رسالة جديدة من الإدارة في النزاع` });
-    } else {
-      const otherPartyId = complaint.rows[0].complainant_id === req.user.id ? complaint.rows[0].against_id : complaint.rows[0].complainant_id;
-      io.to(`user_${otherPartyId}`).emit('notification', {
-        type: 'new_message',
-        complaint_id: id,
-        message: `رسالة جديدة في المحادثة: ${complaint.rows[0].title}`
-      });
-    }
+  if (io) io.to(`complaint_${id}`).emit('receive_message', newMessageObj);
+  const recipients = req.user.role === 'admin'
+    ? [complaint.rows[0].complainant_id, complaint.rows[0].against_id]
+    : [complaint.rows[0].complainant_id === req.user.id ? complaint.rows[0].against_id : complaint.rows[0].complainant_id];
+  for (const recipientId of [...new Set(recipients.map(String))]) {
+    const notification = await createUserNotification(recipientId, 'رسالة جديدة في الشكوى', `رسالة جديدة في المحادثة: ${complaint.rows[0].title}`, 'complaint', id);
+    if (io && notification) io.to(`user_${recipientId}`).emit('new_notification', notification);
   }
 
   res.status(201).json({ success: true, data: newMessageObj });
@@ -243,17 +235,12 @@ router.put('/:id/resolve', protect, authorize('admin'), asyncHandler(async (req,
       sender_role: req.user.role
     });
     io.to(`complaint_${req.params.id}`).emit('complaint_status_changed', newStatus);
-    // Notify both parties
-    io.to(`user_${complaint.complainant_id}`).emit('notification', {
-      type: 'complaint_resolved',
-      complaint_id: req.params.id,
-      message: `تم ${newStatus === 'resolved' ? 'حل' : 'تحديث'} النزاع`
-    });
-    io.to(`user_${complaint.against_id}`).emit('notification', {
-      type: 'complaint_resolved',
-      complaint_id: req.params.id,
-      message: `تم ${newStatus === 'resolved' ? 'حل' : 'تحديث'} النزاع`
-    });
+  }
+  const statusTitle = newStatus === 'resolved' ? 'تم حل النزاع' : 'تم تحديث حالة النزاع';
+  const statusMessage = `تم ${newStatus === 'resolved' ? 'حل' : 'تحديث'} النزاع`;
+  for (const recipientId of [...new Set([complaint.complainant_id, complaint.against_id].map(String))]) {
+    const notification = await createUserNotification(recipientId, statusTitle, statusMessage, 'complaint', req.params.id);
+    if (io && notification) io.to(`user_${recipientId}`).emit('new_notification', notification);
   }
 
   res.json({ success: true, data: result.rows[0] });
