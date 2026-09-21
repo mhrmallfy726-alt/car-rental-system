@@ -723,8 +723,9 @@ export default function MyReservations() {
 
   const getStatusBadge = (status) => {
     const map = {
-      pending: { label: 'بانتظار الدفع أو مراجعة المورد', bg: '#b78a22', color: '#212529' },
-      approved: { label: 'بانتظار مراجعة المورد', bg: '#24647d', color: 'white' },
+      pending_payment: { label: 'بانتظار الدفع', bg: '#b78a22', color: '#212529' },
+      pending: { label: 'مدفوع بانتظار مراجعة المورد', bg: '#b78a22', color: '#212529' },
+      approved: { label: 'تمت موافقة المورد', bg: '#24647d', color: 'white' },
       awaiting_pickup: { label: 'بانتظار استلام العميل', bg: '#24647d', color: 'white' },
       returned: { label: 'تم استلام السيارة', bg: '#8b5cf6', color: 'white' },
       active: { label: 'نشط', bg: '#0f766e', color: 'white' },
@@ -737,7 +738,7 @@ export default function MyReservations() {
     return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{s.label}</span>;
   };
 
-  const canPay = (reservation) => ['pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
+  const canPay = (reservation) => ['pending_payment', 'pending', 'approved'].includes(reservation.status) && reservation.payment_status !== 'paid';
   const getCancellationPolicy = (reservation) => {
     const pickupAt = reservation.pickup_at ? new Date(reservation.pickup_at) : new Date(`${reservation.start_date}T${reservation.pickup_time || '09:00'}:00`);
     const hours = (pickupAt.getTime() - now) / (60 * 60 * 1000);
@@ -746,10 +747,10 @@ export default function MyReservations() {
     if (hours >= 24) return { refund: 75, fee: 25, canCancel: true };
     return { refund: 50, fee: 50, canCancel: true };
   };
-  const canCancel = (reservation) => ['pending', 'approved', 'awaiting_pickup'].includes(reservation.status) && getCancellationPolicy(reservation).canCancel;
+  const canCancel = (reservation) => ['pending_payment', 'pending', 'approved', 'awaiting_pickup'].includes(reservation.status) && getCancellationPolicy(reservation).canCancel;
   const canReview = (status) => status === 'completed';
   // Allow chat for all statuses except cancelled, rejected, disputed, pending? We'll allow active, completed, approved, pending
-  const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'awaiting_pickup', 'disputed'].includes(status);
+  const canMessage = (status) => ['active', 'completed', 'approved', 'pending', 'pending_payment', 'awaiting_pickup', 'disputed'].includes(status);
   // Dispute allowed only for active or completed (not if already disputed)
   const canDispute = (status) => ['active', 'completed'].includes(status);
 

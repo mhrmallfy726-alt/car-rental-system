@@ -87,7 +87,7 @@ router.post('/', asyncHandler(async (req, res, next) => {
   await assertLocationInYemenCity(cleanCity,latitude,longitude);
   const duplicate=await query('SELECT id FROM locations WHERE supplier_id=$1 AND LOWER(TRIM(showroom_name))=LOWER(TRIM($2))',[req.user.id,cleanName]);
   if (duplicate.rows.length) return next(new AppError('لديك معرض بنفس الاسم بالفعل',409));
-  const managerEmailOwner=await query(`SELECT 1 FROM users WHERE LOWER(email)=$1 UNION ALL SELECT 1 FROM employees WHERE LOWER(email)=$1 UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(email)=$1`,[cleanManagerEmail]);
+  const managerEmailOwner=await query(`SELECT 1 FROM users WHERE LOWER(TRIM(email))=$1 UNION ALL SELECT 1 FROM employees WHERE LOWER(TRIM(email))=$1 UNION ALL SELECT 1 FROM branch_accounts WHERE LOWER(TRIM(email))=$1`,[cleanManagerEmail]);
   if (managerEmailOwner.rows.length) return next(new AppError('بريد مدير الفرع مستخدم مسبقاً، أدخل بريداً مختلفاً',409));
 
   const amount=Number(plan==='annual'?pricing.annual_price:pricing.monthly_price);

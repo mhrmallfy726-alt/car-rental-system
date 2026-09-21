@@ -102,7 +102,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   const reservation = await query('SELECT * FROM reservations WHERE id = $1 AND customer_id = $2', [reservation_id, req.user.id]);
   if (reservation.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
-  if (!['pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن الدفع لهذا الحجز في حالته الحالية', 400));
+  if (!['pending_payment', 'pending', 'approved'].includes(r.status)) return next(new AppError('لا يمكن الدفع لهذا الحجز في حالته الحالية', 400));
   if (with_driver !== undefined && typeof with_driver !== 'boolean') return next(new AppError('اختيار السائق غير صالح', 400));
   const existingPaid = await query(
     `SELECT id FROM payments WHERE reservation_id = $1 AND status = 'paid' LIMIT 1`,
@@ -131,7 +131,14 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
 
   // Payment-first flow: payment never marks a reservation active.
   // The supplier must approve it first, then the handover report moves it to active.
-  if (r.status === 'approved') {
+  if (r.status === 'pending_payment') {
+    await query(
+      `UPDATE reservations
+       SET status = 'pending'
+       WHERE id = $1 AND status = 'pending_payment'`,
+      [reservation_id]
+    );
+  } else if (r.status === 'approved') {
     await query(
       `UPDATE reservations
        SET status = 'awaiting_pickup', handover_state = 'awaiting_pickup'
@@ -149,7 +156,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     [reservation_id]
   );
   const supplier = supplierInfo.rows[0];
-  if (r.status === 'pending' && supplier) {
+  if (['pending_payment', 'pending'].includes(r.status) && supplier) {
     const notificationResult = await query(
       `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
        VALUES ($1, $2, $3, 'reservation', $4, 'reservation') RETURNING *`,
