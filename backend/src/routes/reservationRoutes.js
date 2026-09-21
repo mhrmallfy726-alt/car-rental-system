@@ -114,8 +114,8 @@ router.post('/', protect, authorize('customer'), asyncHandler(async (req, res, n
   if (!policy.rows.length) return next(new AppError('نسخة السياسة غير متاحة أو غير فعالة', 400));
   const result = await query(`
     INSERT INTO reservations (customer_id, car_id, supplier_id, start_date, end_date, pickup_time, return_time, pickup_at, return_at, total_days, price_per_day, total_price, price_per_day_yer, total_price_yer, exchange_rate_used, pickup_location, dropoff_location, customer_notes, with_driver, handover_state, status, policy_version, policy_accepted_at)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$11,$12,1,$13,$14,$15,$16,'not_started','pending_payment',$17,NOW()) RETURNING *
-  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, pricePerDayYER, total_price, pickup_location, dropoff_location, customer_notes, Boolean(with_driver), policy.rows[0].version]);
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$11,$12,1,$13,$14,$15,$16,$17,$18,$19,NOW()) RETURNING *
+  `, [req.user.id, car_id, car.supplier_id, start_date, end_date, pickup_time, return_time, pickupAt.toISOString(), returnAt.toISOString(), total_days, pricePerDayYER, total_price, pickup_location, dropoff_location, customer_notes, Boolean(with_driver), 'not_started', 'pending', policy.rows[0].version]);
   await query(`INSERT INTO policy_acceptances (policy_version_id, user_id, account_type, context_type, context_id, ip_address, user_agent) VALUES ($1,$2,$3,'reservation',$4,$5,$6)`, [policy.rows[0].id, req.user.id, req.user.role, result.rows[0].id, req.ip || null, req.get('user-agent') || null]);
   await query(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, new_data, ip_address, user_agent) VALUES ($1,'policy_accepted_and_reservation_created','reservation',$2,$3,$4,$5)`, [req.user.id, result.rows[0].id, JSON.stringify({ policy_version: policy.rows[0].version }), req.ip || null, req.get('user-agent') || null]);
 
@@ -238,7 +238,7 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
 
   const r = reservation.rows[0];
   if (r.customer_id !== req.user.id && r.supplier_id !== req.user.id) return next(new AppError('غير مصرح لك', 403));
-  if (!['pending_payment', 'pending', 'approved', 'awaiting_pickup'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز بعد بدء الاستلام أو الإرجاع', 400));
+  if (!['pending', 'approved', 'awaiting_pickup'].includes(r.status)) return next(new AppError('لا يمكن إلغاء هذا الحجز بعد بدء الاستلام أو الإرجاع', 400));
 
   const policy = r.customer_id === req.user.id ? getCancellationPolicy(r) : { refundRate: 1, refundPercent: 100, feePercent: 0, canCancel: true };
   if (!policy.canCancel) return next(new AppError('لا يمكن إلغاء الحجز بعد موعد الاستلام', 400));
