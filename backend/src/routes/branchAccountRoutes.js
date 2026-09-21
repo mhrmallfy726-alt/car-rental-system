@@ -169,7 +169,7 @@ router.post('/verification/send-otp', async (req, res) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
     await query('DELETE FROM email_verifications WHERE LOWER(email) = $1', [account.email]);
-    await query(`INSERT INTO email_verifications (email, otp, expires_at, user_data) VALUES ($1, $2, $3, $4)`, [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]);
+    await query(`INSERT INTO email_verifications (email, otp, expires_at, user_data) VALUES ($1, $2, $3, $4]`, [account.email, otp, expiresAt, { account_type: 'branch_account', account_id: account.id }]);
     await sendEmail(account.email, 'رمز التحقق لتفعيل حساب المعرض', `<h2>مرحباً ${account.name || ''}</h2><p>رمز التحقق الخاص بتفعيل حساب المعرض هو:</p><h1>${otp}</h1><p>الرمز صالح لمدة 5 دقائق فقط.</p>`);
     return res.json({ success: true, message: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني' });
   } catch (error) {
@@ -181,7 +181,7 @@ router.post('/verification/send-otp', async (req, res) => {
 // Verify OTP, activate the account, and issue the normal branch session.
 router.post('/verification/verify-otp', async (req, res) => {
   try {
-    const pending = readPendingToken(req);
+    const pending = readPendingToken(req, 'branch-email-verification');
     const otp = String(req.body?.otp || '').trim();
     if (!pending || !otp) return res.status(400).json({ success: false, message: 'جلسة التحقق ورمز OTP مطلوبان' });
 
@@ -227,7 +227,7 @@ router.post('/password/change-first-login', async (req, res) => {
     if (!account.must_change_password) return res.status(400).json({ success: false, message: 'لا يوجد تغيير أولي لكلمة المرور مطلوب لهذا الحساب' });
     if (account.branch_active === false || ['suspended', 'expired'].includes(account.subscription_status)) return res.status(403).json({ success: false, message: 'حساب الفرع أو اشتراكه غير فعال' });
     const hashed = await hashPassword(password);
-    const updated = await query('UPDATE branch_accounts SET password = $1, must_change_password = FALSE, last_login_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password', [hashed, account.id]);
+    const updated = await query('UPDATE branch_accounts SET password = $1, status = \'active\', must_change_password = FALSE, last_login_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id, supplier_id, branch_id, name, email, status, must_change_password', [hashed, account.id]);
     const finalAccount = { ...updated.rows[0], showroom_name: account.showroom_name, city: account.city };
     return res.json({ success: true, token: createBranchToken(finalAccount), user: { ...finalAccount, account_type: 'branch', role: 'supplier', onboarding_stage: 'complete' }, message: 'تم تفعيل حساب الفرع وتعيين كلمة المرور بنجاح' });
   } catch (error) {
