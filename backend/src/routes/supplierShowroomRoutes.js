@@ -60,14 +60,15 @@ router.get('/', asyncHandler(async (req, res) => {
                                      'reviewed_at',ss.reviewed_at,'starts_at',ss.starts_at,'expires_at',ss.expires_at)
             FROM showroom_subscriptions ss WHERE ss.showroom_id=l.id ORDER BY ss.created_at DESC LIMIT 1) AS subscription
     FROM locations l LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1
-    WHERE l.supplier_id=$1 GROUP BY l.id ORDER BY l.is_main DESC, LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
-  `, [req.user.id]);
+    WHERE l.supplier_id=$1 AND ($2::text IS NULL OR l.id=$2) GROUP BY l.id ORDER BY l.is_main DESC, LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
+  `, [req.user.supplier_id || req.user.id, req.user.account_type === 'branch' ? req.user.branch_id : null]);
   res.json({ success: true, data: result.rows });
 }));
 
 router.get('/:id', asyncHandler(async (req, res, next) => {
+  if (req.user.account_type === 'branch' && String(req.params.id) !== String(req.user.branch_id)) return next(new AppError('غير مصرح لك بهذا الفرع',403));
   const result = await query(`SELECT l.*, l.showroom_name AS name, COUNT(c.id)::int AS car_count FROM locations l
-    LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1 WHERE l.id=$2 AND l.supplier_id=$1 GROUP BY l.id`, [req.user.id, req.params.id]);
+    LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1 WHERE l.id=$2 AND l.supplier_id=$1 GROUP BY l.id`, [req.user.supplier_id || req.user.id, req.params.id]);
   if (!result.rows.length) return next(new AppError('المعرض غير موجود',404));
   res.json({ success:true, data:result.rows[0] });
 }));
@@ -136,6 +137,7 @@ router.post('/', asyncHandler(async (req, res, next) => {
 }));
 
 router.put('/:id', asyncHandler(async (req,res,next)=>{
+  if (req.user.account_type === 'branch') return next(new AppError('مدير الفرع لا يستطيع تعديل بيانات الفروع',403));
   const current=await query('SELECT * FROM locations WHERE id=$1 AND supplier_id=$2',[req.params.id,req.user.id]);
   if(!current.rows.length) return next(new AppError('المعرض غير موجود',404));
   const showroom=current.rows[0];
@@ -152,6 +154,7 @@ router.put('/:id', asyncHandler(async (req,res,next)=>{
 }));
 
 router.delete('/:id', asyncHandler(async(req,res,next)=>{
+  if (req.user.account_type === 'branch') return next(new AppError('مدير الفرع لا يستطيع تعطيل الفروع',403));
   const result=await query(`UPDATE locations SET is_active=FALSE,subscription_status='suspended',updated_at=NOW() WHERE id=$1 AND supplier_id=$2 RETURNING id`,[req.params.id,req.user.id]);
   if(!result.rows.length) return next(new AppError('المعرض غير موجود',404));
   res.json({success:true,message:'تم تعطيل المعرض بدون حذف سياراته'});
