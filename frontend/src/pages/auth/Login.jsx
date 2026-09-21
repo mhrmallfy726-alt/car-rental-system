@@ -426,7 +426,11 @@ export default function Login() {
         {/* رابط التسجيل */}
         <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '0.85rem', color: '#6c757d' }}>
           ليس لديك حساب؟{' '}
-          <Link to="/register" style={{ color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}>إنشاء حساب جديد</Link>
+          <Link
+            to="/register"
+            state={location.state?.from ? { from: location.state.from } : undefined}
+            style={{ color: '#087f68', fontWeight: 'bold', textDecoration: 'none' }}
+          >إنشاء حساب جديد</Link>
         </div>
       </div>
 

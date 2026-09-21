@@ -269,7 +269,7 @@
 
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import { authAPI } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -294,8 +294,9 @@ export default function Register() {
     phone: '',
     role: 'customer' // customer or supplier
   });
-  const { register, isLoading } = useAuthStore();
+  const { register, login, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -350,7 +351,22 @@ export default function Register() {
   
       if (data.success) {
         toast.success(data.message || "تم التحقق من البريد الإلكتروني ✅");
-        navigate("/");
+        // سجّل العميل دخولًا مباشرة حتى يعود إلى نموذج الحجز دون إعادة إدخال البيانات.
+        const loginResult = await login({
+          email: formData.email,
+          password: formData.password,
+        });
+        const requestedPath = location.state?.from;
+        if (loginResult.success && requestedPath && requestedPath !== '/login') {
+          navigate(requestedPath, { replace: true });
+        } else if (loginResult.success) {
+          navigate('/', { replace: true });
+        } else {
+          navigate('/login', {
+            replace: true,
+            state: requestedPath ? { from: requestedPath } : undefined,
+          });
+        }
       } else {
         toast.error(data.message || "رمز التحقق غير صحيح");
       }

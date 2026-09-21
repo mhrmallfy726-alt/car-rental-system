@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   CalendarDays,
@@ -41,6 +41,8 @@ export default function CarDetail() {
     }
   })();
   const { isAuthenticated, isCustomer } = useAuthStore();
+  const bookingDraftKey = `car-rental-booking-draft:${id}`;
+  const bookingHydrated = useRef(false);
 
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -148,6 +150,39 @@ export default function CarDetail() {
     setBooking((current) => ({ ...current, with_driver: searchParams.withDriver === 'true' }));
   }, [searchParams.withDriver]);
 
+  // احتفظ ببيانات الحجز عند انتقال المستخدم لتسجيل الدخول أو إنشاء الحساب.
+  // تُستخدم sessionStorage حتى تبقى البيانات في نفس التبويب فقط ولا تُحفظ بشكل دائم.
+  useEffect(() => {
+    let draft = null;
+    try {
+      draft = JSON.parse(window.sessionStorage.getItem(bookingDraftKey) || 'null');
+    } catch {
+      draft = null;
+    }
+
+    setBooking((current) => ({
+      ...current,
+      start_date: draft?.start_date || searchParams.startDate || current.start_date,
+      end_date: draft?.end_date || searchParams.endDate || current.end_date,
+      pickup_time: draft?.pickup_time || searchParams.pickupTime || current.pickup_time,
+      return_time: draft?.return_time || searchParams.returnTime || current.return_time,
+      pickup_location: draft?.pickup_location || searchParams.location || current.pickup_location,
+      with_driver: typeof draft?.with_driver === 'boolean'
+        ? draft.with_driver
+        : searchParams.withDriver === 'true',
+    }));
+    bookingHydrated.current = true;
+  }, [bookingDraftKey]);
+
+  useEffect(() => {
+    if (!bookingHydrated.current) return;
+    try {
+      window.sessionStorage.setItem(bookingDraftKey, JSON.stringify(booking));
+    } catch {
+      // تجاهل امتلاء التخزين؛ يبقى الحجز قابلاً للإكمال داخل الصفحة الحالية.
+    }
+  }, [booking, bookingDraftKey]);
+
   const images = car?.images?.length
     ? car.images.map((img) => getImageUrl(img))
     : [
@@ -176,7 +211,14 @@ export default function CarDetail() {
     e.preventDefault();
 
     if (!isAuthenticated()) {
-      navigate('/login');
+      try {
+        window.sessionStorage.setItem(bookingDraftKey, JSON.stringify(booking));
+      } catch {
+        // لا تمنع المستخدم من تسجيل الدخول إذا تعذر التخزين.
+      }
+      navigate('/login', {
+        state: { from: `${routerLocation.pathname}${routerLocation.search}` },
+      });
       return;
     }
 
@@ -235,6 +277,7 @@ export default function CarDetail() {
       }
 
       toast.success('تم إنشاء الحجز، انتقل الآن إلى الدفع');
+      window.sessionStorage.removeItem(bookingDraftKey);
       navigate(`/checkout/${createdReservation.id}`);
     } catch (err) {
       toast.error(
