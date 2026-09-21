@@ -141,7 +141,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
   }
 
   const supplierInfo = await query(
-    `SELECT r.supplier_id, c.make, c.model, u.phone AS supplier_phone
+    `SELECT r.supplier_id, c.location_id, c.make, c.model, u.phone AS supplier_phone
      FROM reservations r
      JOIN cars c ON c.id = r.car_id
      JOIN users u ON u.id = r.supplier_id
@@ -157,6 +157,20 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     );
     const io = req.app.get('io');
     if (io && notificationResult.rows[0]) io.to(`user_${supplier.supplier_id}`).emit('new_notification', notificationResult.rows[0]);
+    const branchManagers = await query(
+      `SELECT id FROM users
+        WHERE account_type = 'branch' AND branch_id = $1 AND supplier_id = $2
+          AND COALESCE(status, 'active') = 'active'`,
+      [supplier.location_id, supplier.supplier_id]
+    );
+    for (const manager of branchManagers.rows) {
+      const branchNotification = await query(
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+         VALUES ($1, 'طلب حجز مدفوع', $2, 'reservation', $3, 'reservation') RETURNING *`,
+        [manager.id, `تم دفع حجز سيارة ${supplier.make} ${supplier.model}. يرجى مراجعته.`, reservation_id]
+      );
+      if (io && branchNotification.rows[0]) io.to(`user_${manager.id}`).emit('new_notification', branchNotification.rows[0]);
+    }
     if (supplier.supplier_phone) {
       void sendTextMessage({
         to: supplier.supplier_phone,
@@ -189,7 +203,19 @@ router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
   );
   if (!result.rows.length) return next(new AppError('عملية الدفع غير موجودة', 404));
   const payment = result.rows[0];
-  const allowed = req.user.role === 'admin' || req.user.id === payment.customer_id || req.user.id === payment.supplier_id;
+  const branchAccess = req.user.account_type === 'branch'
+    ? (await query(
+        `SELECT 1 FROM reservations r2
+          JOIN cars c ON c.id = r2.car_id
+         WHERE r2.id = $1 AND r2.supplier_id = $2 AND c.location_id = $3
+         LIMIT 1`,
+        [payment.reservation_id, payment.supplier_id, req.user.branch_id]
+      )).rows.length > 0
+    : false;
+  const allowed = req.user.role === 'admin'
+    || req.user.id === payment.customer_id
+    || req.user.id === payment.supplier_id
+    || branchAccess;
   if (!allowed) return next(new AppError('غير مصرح لك بالتحقق من عملية الدفع', 403));
   const supplierPayable = Number(payment.supplier_payable) || 0;
   const supplierPending = Number(payment.supplier_pending) || 0;
