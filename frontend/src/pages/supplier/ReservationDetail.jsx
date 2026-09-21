@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 import { format } from 'date-fns';
+import { formatCurrency } from '../../utils/currency';
 // import  reservatio} from './Reservations';
 
 export default function SupplierReservationDetail() {
@@ -97,7 +98,7 @@ export default function SupplierReservationDetail() {
                 </div>
                 <div>
                   <p style={{ color: '#6c757d', fontSize: '0.85rem', marginBottom: '4px' }}>إجمالي المبلغ</p>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f766e' }}>${reservation.total_price}</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#0f766e' }}>{formatCurrency(reservation.total_price, reservation.currency || 'YER')}</div>
                 </div>
               </div>
             </div>
