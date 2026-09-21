@@ -259,7 +259,7 @@ export default function CarDetail() {
       return;
     }
 
-    if (booking.start_date === new Date().toISOString().slice(0, 10)) {
+    if (booking.start_date === (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })()) {
       const now = new Date();
       const [hours, minutes] = String(booking.pickup_time).split(':').map(Number);
       const pickupMinutes = hours * 60 + minutes;
@@ -738,7 +738,7 @@ radius: 10,
                 <input
                   required
                   type="time"
-                  min={booking.start_date === new Date().toISOString().slice(0, 10)
+                  min={booking.start_date === (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })()
                     ? new Date().toTimeString().slice(0, 5)
                     : undefined}
                   value={booking.pickup_time}
