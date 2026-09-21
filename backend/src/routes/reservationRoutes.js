@@ -11,6 +11,32 @@ const { refundReservationPayment } = require('../services/financeService');
 const getSupplierId = (req) => req.user.supplier_id || req.user.id;
 const getBranchId = (req) => req.user.account_type === 'branch' ? req.user.branch_id : null;
 
+async function notifyReservationStaff(reservationId, title, message, io) {
+  const result = await query(
+    `SELECT r.supplier_id, ARRAY_REMOVE(ARRAY_AGG(DISTINCT CASE WHEN u.account_type = 'branch' THEN u.id END), NULL) AS branch_manager_ids
+       FROM reservations r
+       JOIN cars c ON c.id = r.car_id
+       LEFT JOIN users u
+         ON u.account_type = 'branch'
+        AND u.branch_id = c.location_id
+        AND u.supplier_id = r.supplier_id
+        AND COALESCE(u.status, 'active') = 'active'
+      WHERE r.id = $1
+      GROUP BY r.supplier_id`,
+    [reservationId]
+  );
+  if (!result.rows.length) return;
+  const recipients = [...new Set([result.rows[0].supplier_id, ...(result.rows[0].branch_manager_ids || [])].map(String))];
+  for (const userId of recipients) {
+    const notification = await query(
+      `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
+       VALUES ($1, $2, $3, 'reservation', $4, 'reservation') RETURNING *`,
+      [userId, title, message, reservationId]
+    );
+    if (io && notification.rows[0]) io.to(`user_${userId}`).emit('new_notification', notification.rows[0]);
+  }
+}
+
 async function notifyReservationWhatsApp(reservationId, status, reason = null) {
   try {
     const result = await query(
@@ -192,6 +218,7 @@ router.put('/:id/approve', protect, authorize('supplier'), asyncHandler(async (r
 
   const io = req.app.get('io');
   if (io && notificationResult.rows[0]) io.to(`user_${reservation.rows[0].customer_id}`).emit('new_notification', notificationResult.rows[0]);
+  await notifyReservationStaff(id, 'تمت الموافقة على الحجز', 'تمت الموافقة على الحجز وأصبح بانتظار استلام العميل.', io);
 
   void notifyReservationWhatsApp(id, 'awaiting_pickup');
 
@@ -249,6 +276,10 @@ router.put('/:id/cancel', protect, asyncHandler(async (req, res, next) => {
   const result = await query(`UPDATE reservations SET status = 'cancelled', cancellation_reason = $1, cancelled_by = $2, cancelled_at = NOW() WHERE id = $3 RETURNING *`,
     [policyReason, req.user.id, id]);
   const recipientId = r.customer_id === req.user.id ? r.supplier_id : r.customer_id;
+  if (r.customer_id === req.user.id) {
+    const io = req.app.get('io');
+    await notifyReservationStaff(id, 'تم إلغاء الحجز', 'تم إلغاء الحجز من قبل العميل.', io);
+  }
   const notificationResult = await query(`INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type)
     VALUES ($1, 'تم إلغاء الحجز', $2, 'reservation', $3, 'reservation') RETURNING *`,
     [recipientId, `تم إلغاء الحجز. سياسة الإلغاء: استرداد ${policy.refundPercent}% وخصم ${policy.feePercent}%.${refund ? ` مبلغ الاسترداد: ${refund.refund_amount} ${refund.currency}.` : ''}`, id]);
