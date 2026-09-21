@@ -20,6 +20,9 @@ function isReportWindowOpen(reservation, type) {
   return Date.now() >= scheduledAt.getTime() - REPORT_WINDOW_MS;
 }
 
+const getSupplierId = (user) => user?.supplier_id || user?.id;
+const getBranchId = (user) => user?.account_type === 'branch' ? user?.branch_id : null;
+
 async function canEmployeeManageHandover(user, reservation) {
   if (user?.account_type !== 'employee' || String(user.supplier_id) !== String(reservation.supplier_id)) return false;
   const result = await query(
@@ -43,7 +46,7 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   if (!Number.isFinite(mil) || mil < 0) return next(new AppError('قراءة العداد غير صحيحة', 400));
 
   const reservationResult = await query(
-    `SELECT r.*, c.make, c.model
+    `SELECT r.*, c.location_id, c.make, c.model
      FROM reservations r JOIN cars c ON c.id = r.car_id
      WHERE r.id = $1`,
     [reservationId]
@@ -51,7 +54,8 @@ router.post('/:reservationId/:type', protect, uploadHandoverImages, asyncHandler
   if (reservationResult.rows.length === 0) return next(new AppError('الحجز غير موجود', 404));
 
   const reservation = reservationResult.rows[0];
-  const isOwner = reservation.supplier_id === req.user.id || req.user.role === 'admin' || await canEmployeeManageHandover(req.user, reservation);
+  const supplierOwns = String(reservation.supplier_id) === String(getSupplierId(req.user)) && (!getBranchId(req.user) || String(reservation.location_id) === String(getBranchId(req.user)));
+  const isOwner = supplierOwns || req.user.role === 'admin' || await canEmployeeManageHandover(req.user, reservation);
   if (!isOwner) return next(new AppError('غير مصرح لك بتوثيق هذا الحجز', 403));
 
   const expectedStatus = type === 'before' ? ['approved', 'awaiting_pickup'] : ['active'];
@@ -235,7 +239,7 @@ router.put('/:reservationId/:stage/:verificationId/decision', protect, authorize
   if (!['accepted', 'rejected'].includes(decision)) return next(new AppError('القرار يجب أن يكون accepted أو rejected', 400));
 
   const reservationResult = await query(
-    'SELECT id, customer_id, supplier_id, status, handover_state FROM reservations WHERE id = $1 AND supplier_id = $2',
+    'SELECT r.id, r.customer_id, r.supplier_id, r.status, r.handover_state, c.location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::text IS NULL OR c.location_id = $3)',
     [reservationId, req.user.id]
   );
   if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود أو غير تابع لك', 404));
@@ -306,11 +310,12 @@ router.put('/:reservationId/:stage/:verificationId/decision', protect, authorize
 }));
 
 router.get('/:reservationId', protect, asyncHandler(async (req, res, next) => {
-  const reservation = await query('SELECT customer_id, supplier_id FROM reservations WHERE id = $1', [req.params.reservationId]);
+  const reservation = await query('SELECT r.customer_id, r.supplier_id, c.location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1', [req.params.reservationId]);
   if (!reservation.rows.length) return next(new AppError('الحجز غير موجود', 404));
   const r = reservation.rows[0];
   const employeeCanView = await canEmployeeManageHandover(req.user, r);
-  if (![r.customer_id, r.supplier_id].includes(req.user.id) && req.user.role !== 'admin' && !employeeCanView) return next(new AppError('غير مصرح لك', 403));
+  const supplierCanView = String(r.supplier_id) === String(getSupplierId(req.user)) && (!getBranchId(req.user) || String(r.location_id) === String(getBranchId(req.user)));
+  if (String(r.customer_id) !== String(req.user.id) && !supplierCanView && req.user.role !== 'admin' && !employeeCanView) return next(new AppError('غير مصرح لك', 403));
 
   const logs = await query('SELECT * FROM handover_logs WHERE reservation_id = $1 ORDER BY created_at', [req.params.reservationId]);
   for (const log of logs.rows) {
