@@ -34,6 +34,33 @@ async function completeReminder(id, status, details = {}) {
   );
 }
 
+async function getReservationStaffRecipients(reservationId) {
+  const result = await query(
+    `SELECT r.supplier_id, c.location_id,
+            ARRAY_REMOVE(ARRAY_AGG(DISTINCT CASE WHEN u.account_type = 'branch' THEN u.id END), NULL) AS branch_manager_ids
+       FROM reservations r
+       JOIN cars c ON c.id = r.car_id
+       LEFT JOIN users u
+         ON u.account_type = 'branch'
+        AND u.branch_id = c.location_id
+        AND u.supplier_id = r.supplier_id
+        AND COALESCE(u.status, 'active') = 'active'
+      WHERE r.id = $1
+      GROUP BY r.supplier_id, c.location_id`,
+    [reservationId]
+  );
+  if (!result.rows.length) return [];
+  const row = result.rows[0];
+  return [...new Set([row.supplier_id, ...(row.branch_manager_ids || [])].map(String))];
+}
+
+async function notifyReservationStaff(reservationId, title, message, io) {
+  const recipients = await getReservationStaffRecipients(reservationId);
+  for (const userId of recipients) {
+    await createInAppNotification({ userId, title, message, referenceId: reservationId, io });
+  }
+}
+
 async function sendWhatsAppReminder(reservation, kind) {
   const reminderId = await claimReminder(reservation.id, kind, 'whatsapp');
   if (!reminderId) return { sent: false, duplicate: true };
@@ -117,13 +144,12 @@ const initCronJobs = (io) => {
           referenceId: reservation.id,
           io
         });
-        await createInAppNotification({
-          userId: reservation.supplier_id,
-          title: 'انتهت مهلة الموافقة على الحجز',
-          message: 'تم إلغاء الحجز تلقائياً لعدم الموافقة عليه خلال 24 ساعة.',
-          referenceId: reservation.id,
+        await notifyReservationStaff(
+          reservation.id,
+          'انتهت مهلة الموافقة على الحجز',
+          'تم إلغاء الحجز تلقائياً لعدم الموافقة عليه خلال 24 ساعة.',
           io
-        });
+        );
       }
 
       const pickupTomorrow = await query(`
@@ -163,13 +189,12 @@ const initCronJobs = (io) => {
           referenceId: reservation.id,
           io
         });
-        await createInAppNotification({
-          userId: reservation.supplier_id,
-          title: 'حجز متأخر عن الإرجاع',
-          message: `الحجز لسيارة ${reservation.make} ${reservation.model} تجاوز موعد الإرجاع.`,
-          referenceId: reservation.id,
+        await notifyReservationStaff(
+          reservation.id,
+          'حجز متأخر عن الإرجاع',
+          `الحجز لسيارة ${reservation.make} ${reservation.model} تجاوز موعد الإرجاع.`,
           io
-        });
+        );
         await completeReminder(reminderId, 'sent');
       }
 
