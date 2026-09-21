@@ -214,6 +214,26 @@ router.post('/:reservationId/before/review', protect, uploadHandoverImages, asyn
     if (io && notificationResult.rows[0]) {
       io.to(`user_${reservation.supplier_id}`).emit('new_notification', notificationResult.rows[0]);
     }
+
+    const branchManagers = await query(
+      `SELECT u.id
+         FROM users u
+        WHERE u.account_type = 'branch'
+          AND u.branch_id = $1
+          AND u.supplier_id = $2
+          AND COALESCE(u.status, 'active') = 'active'`,
+      [reservation.location_id, reservation.supplier_id]
+    );
+    for (const manager of branchManagers.rows) {
+      const branchNotification = await query(
+        `INSERT INTO notifications (user_id, title, message, type, reference_id, reference_type, action_url)
+         VALUES ($1, $2, $3, 'reservation', $4, 'reservation', $5) RETURNING *`,
+        [manager.id, 'اختلاف جديد في تقرير تسليم السيارة', `أبلغ العميل عن اختلاف في الحجز. التفاصيل: ${details}`, reservationId, `/supplier/reservations/${reservationId}`]
+      );
+      if (io && branchNotification.rows[0]) {
+        io.to(`user_${manager.id}`).emit('new_notification', branchNotification.rows[0]);
+      }
+    }
   }
 
   const io = req.app.get('io');
@@ -240,7 +260,7 @@ router.put('/:reservationId/:stage/:verificationId/decision', protect, authorize
 
   const reservationResult = await query(
     'SELECT r.id, r.customer_id, r.supplier_id, r.status, r.handover_state, c.location_id FROM reservations r JOIN cars c ON c.id = r.car_id WHERE r.id = $1 AND r.supplier_id = $2 AND ($3::text IS NULL OR c.location_id = $3)',
-    [reservationId, req.user.id]
+    [reservationId, getSupplierId(req.user), getBranchId(req.user)]
   );
   if (!reservationResult.rows.length) return next(new AppError('الحجز غير موجود أو غير تابع لك', 404));
 
