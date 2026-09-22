@@ -56,9 +56,9 @@ export default function AdminSettings() {
 
       {/* المحتوى الرئيسي */}
       <div className="admin-settings-content" style={{ flex: 1, padding: '30px 24px' }}>
-        <h1 style={{ fontSize: '1.8rem', marginBottom: '32px' }}>إعدادات المنصة</h1>
+        <h1 className="admin-settings-title" style={{ fontSize: '1.8rem', marginBottom: '32px' }}>إعدادات المنصة</h1>
 
-        <div style={{ background: 'white', borderRadius: '12px', padding: '32px', maxWidth: '800px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div className="admin-settings-card" style={{ background: 'white', borderRadius: '12px', padding: '32px', maxWidth: '800px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* العمولات والرسوم */}
@@ -141,12 +141,12 @@ export default function AdminSettings() {
 
       <style>{`
         @media (max-width: 900px) {
-          .admin-settings-content { width: 100%; padding: 22px 14px 48px !important; padding-top: 132px !important; }
-          .admin-settings-content > div { max-width: none !important; }
+          .admin-settings-content { width: 100%; box-sizing: border-box; padding: 92px 14px 48px !important; }
+          .admin-settings-card { max-width: none !important; }
         }
         @media (max-width: 520px) {
-          .admin-settings-content h1 { font-size: 1.45rem !important; margin-bottom: 20px !important; }
-          .admin-settings-content > div { padding: 20px !important; }
+          .admin-settings-title { font-size: 1.45rem !important; margin-bottom: 20px !important; }
+          .admin-settings-card { padding: 20px !important; }
           .admin-settings-content h3 { font-size: 1rem; line-height: 1.5; }
         }
       `}</style>
