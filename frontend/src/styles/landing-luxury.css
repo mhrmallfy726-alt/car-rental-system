@@ -70,3 +70,47 @@
 @keyframes cardFloat{0%,100%{transform:translateY(0) rotateX(0) rotateY(0)}50%{transform:translateY(-10px) rotateX(1deg) rotateY(-1deg)}}
 @keyframes lightSweep{0%,45%{transform:translateX(-90%) rotate(12deg)}70%,100%{transform:translateX(90%) rotate(12deg)}}
 @media(max-width:700px){.landing-luxury > section:first-of-type{min-height:auto!important}.landing-luxury .hero-original-title{font-size:clamp(1.9rem,9vw,2.8rem)!important}.landing-luxury .hero-original-actions{justify-content:flex-start}.landing-luxury .hero-original-primary,.landing-luxury .hero-original-secondary{padding:12px 20px;font-size:.9rem}}
+
+/* Previous system palette — visual palette only; keep the current design, motion and copy. */
+
+:root{
+  --lux-gold:#febb02;
+  --lux-gold-light:#ffd45a;
+  --lux-navy:#173a52;
+  --lux-blue:#006ce4;
+  --lux-ink:#173a52;
+  --lux-muted:#64748b;
+  --lux-line:rgba(23,58,82,.10);
+  --lux-bg:#f7fafb;
+}
+.landing-luxury{background:var(--lux-bg);color:var(--lux-ink)}
+.landing-luxury .hero-original-title span{
+  background:linear-gradient(135deg,#febb02,#ffe08a);
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.landing-luxury .hero-original-primary{
+  background:linear-gradient(135deg,#008009,#00a63c);
+  box-shadow:0 12px 30px rgba(0,128,9,.28)
+}
+.landing-luxury .hero-original-secondary{
+  background:rgba(255,255,255,.09);
+  border-color:rgba(255,255,255,.18)
+}
+.landing-luxury .lux-btn-primary{background:linear-gradient(135deg,#173a52,#006ce4)}
+.landing-luxury .lux-btn-ghost{color:#173a52}
+.landing-luxury .section-kicker,
+.landing-luxury .hero-trust svg,
+.landing-luxury .journey-label,
+.landing-luxury .testimonial-stars{color:#febb02}
+.landing-luxury .section-heading h2,
+.landing-luxury .journey-step h3,
+.landing-luxury .car-card-info h3,
+.landing-luxury .dealer-list-item,
+.landing-luxury .trust-number strong{color:#173a52}
+.landing-luxury .lux-section:nth-of-type(even),
+.landing-luxury .how-section,
+.landing-luxury .dealers-section,
+.landing-luxury .testimonials-section{background:#f7fafb}
+.landing-luxury .lux-cta{background:linear-gradient(135deg,#173a52,#003580)}
+.landing-luxury .cta-content h2 span{color:#febb02}
+.landing-luxury .lux-footer{background:#102f43}
