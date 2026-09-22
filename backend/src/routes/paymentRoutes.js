@@ -193,10 +193,10 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
 router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
   const result = await query(
     `SELECT p.*, r.customer_id, r.supplier_id,
-            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee' AND direction='credit'),0) AS commission,
-            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable' AND direction='credit'),0) AS supplier_payable,
+            COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE payment_id=p.id AND entry_type='platform_fee'),0) AS commission,
+            COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_payable'),0) AS supplier_payable,
             COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE payment_id=p.id AND entry_type='supplier_pending'),0) AS supplier_pending,
-            COALESCE((SELECT SUM(amount) FROM ledger_entries WHERE payment_id=p.id AND direction='credit'),0) AS ledger_total
+            COALESCE((SELECT SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit') FROM ledger_entries WHERE payment_id=p.id),0) AS ledger_total
        FROM payments p JOIN reservations r ON r.id=p.reservation_id
       WHERE p.id=$1`,
     [req.params.id]
