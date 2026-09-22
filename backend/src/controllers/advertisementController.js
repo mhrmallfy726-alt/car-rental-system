@@ -220,8 +220,8 @@ const advertisementController = {
     try {
       const image_url = uploadedImagePath(req);
       const request = await advertisementService.createAdvertisementRequest(
-        req.user.id,
-        image_url ? { ...req.body, image_url } : req.body
+        req.user.supplier_id || req.user.id,
+        image_url ? { ...req.body, image_url, branch_id: req.user.branch_id || null } : { ...req.body, branch_id: req.user.branch_id || null }
       );
       res.status(201).json({ success: true, data: request, message: 'تم إرسال طلب الإعلان للمراجعة' });
     } catch (error) {
@@ -231,7 +231,7 @@ const advertisementController = {
 
   getMyAdvertisementRequests: async (req, res) => {
     try {
-      const requests = await advertisementService.getMyAdvertisementRequests(req.user.id);
+      const requests = await advertisementService.getMyAdvertisementRequests(req.user.supplier_id || req.user.id, req.user.branch_id || null);
       res.json({ success: true, data: requests });
     } catch (error) {
       handleError(res, error, 'فشل جلب طلبات الإعلانات');
