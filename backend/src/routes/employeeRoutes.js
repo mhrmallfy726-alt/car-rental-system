@@ -18,6 +18,12 @@ const ensureSupplierScope = (reqSupplierId, reqUser) => {
   return true;
 };
 
+const ensureEmployeeScope = (employee, reqUser) => {
+  if (!ensureSupplierScope(employee.supplier_id, reqUser)) return false;
+  if (reqUser?.account_type === 'branch') return String(employee.branch_id || '') === String(reqUser.branch_id || '');
+  return true;
+};
+
 const JOB_ROLES = {
   team_manager: 'مدير فريق',
   advertisements: 'موظف إدارة الإعلانات والأداء',
@@ -97,6 +103,7 @@ router.post('/login', async (req, res) => {
         job_role: jobRole,
         job_role_label: JOB_ROLES[jobRole],
         supplier_id: employee.supplier_id,
+      branch_id: employee.branch_id,
         must_change_password: employee.must_change_password,
         is_online: true,
         is_accepting_orders: employee.is_accepting_orders,
@@ -163,7 +170,7 @@ router.get('/', async (req, res) => {
       ? getAuthenticatedSupplierId(req.user)
       : (req.query.supplier_id ? String(req.query.supplier_id) : null);
     if (!supplier_id) return res.status(400).json({ success: false, message: 'supplier_id مطلوب للأدمن عند اختيار المورد' });
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const result = await query(
       'SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
@@ -196,10 +203,10 @@ router.get('/permissions/list', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const result = await query('SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE id = $1', [id]);
+    const result = await query('SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, branch_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE id = $1', [id]);
     if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const emp = result.rows[0];
-    if (!ensureSupplierScope(emp.supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope(emp, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
     res.json({ success: true, data: emp });
   } catch (err) {
     console.error(err);
@@ -213,6 +220,7 @@ router.post('/', async (req, res) => {
     const supplier_id = req.user.role === 'supplier'
       ? getAuthenticatedSupplierId(req.user)
       : (req.body.supplier_id ? String(req.body.supplier_id) : null);
+    const branch_id = req.user.account_type === 'branch' ? String(req.user.branch_id) : (req.body.branch_id ? String(req.body.branch_id) : null);
     const cleanName = String(full_name || '').trim();
     const cleanEmail = String(email || '').trim().toLowerCase();
     const normalizedPhone = normalizePhoneNumber(phone_number);
@@ -221,7 +229,7 @@ router.post('/', async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
     if (phoneDigits.length < 7 || phoneDigits.length > 15) return res.status(400).json({ success: false, message: 'رقم الهاتف يجب أن يحتوي على 7 إلى 15 رقماً' });
     if (String(password).length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const existingAccount = await findEmailOwner(cleanEmail, query);
     if (existingAccount) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل في حساب آخر' });
@@ -234,10 +242,10 @@ router.post('/', async (req, res) => {
     const hashed = await hashPassword(password);
 
     const insert = await query(
-      `INSERT INTO employees (full_name, phone_number, email, password, role, job_role, supplier_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING id, full_name, email, role, job_role, supplier_id, status, created_at`,
-      [cleanName, normalizedPhone, cleanEmail, hashed, technicalRole, normalizedJobRole, supplier_id]
+      `INSERT INTO employees (full_name, phone_number, email, password, role, job_role, supplier_id, branch_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       RETURNING id, full_name, email, role, job_role, supplier_id, branch_id, status, created_at`,
+      [cleanName, normalizedPhone, cleanEmail, hashed, technicalRole, normalizedJobRole, supplier_id, branch_id]
     );
 
     const requestedPermissionIds = Array.isArray(permission_ids)
@@ -280,7 +288,7 @@ router.put('/:id', async (req, res) => {
     const normalizedStatus = status === undefined ? undefined : String(status).trim().toLowerCase();
     if (normalizedStatus !== undefined && !['active', 'inactive'].includes(normalizedStatus)) return res.status(400).json({ success: false, message: 'حالة الموظف غير صالحة' });
 
-    const found = await query('SELECT supplier_id, job_role FROM employees WHERE id = $1', [id]);
+    const found = await query('SELECT supplier_id, branch_id, job_role FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
@@ -312,7 +320,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const id = req.params.id;
-    const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
+    const found = await query('SELECT supplier_id, branch_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
     if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
