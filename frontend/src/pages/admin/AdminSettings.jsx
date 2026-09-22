@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Save } from 'lucide-react';
 import AdminSidebar from '../../components/AdminSidebar';
+import { financeAPI } from '../../services/api';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
@@ -13,6 +14,28 @@ export default function AdminSettings() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadSettings = async () => {
+      try {
+        const response = await financeAPI.getSettings();
+        if (mounted && response.data?.data) {
+          setSettings((current) => ({
+            ...current,
+            platform_fee_percentage: Number(response.data.data.commission_rate ?? 0),
+          }));
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'تعذر تحميل إعدادات العمولة');
+      } finally {
+        if (mounted) setLoadingSettings(false);
+      }
+    };
+    loadSettings();
+    return () => { mounted = false; };
+  }, []);
 
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -42,12 +65,16 @@ export default function AdminSettings() {
     }
 
     setLoading(true);
-    // TODO: استبدل هذا الاستدعاء بـ API حقيقي
-    // await adminAPI.updateSettings(settings);
-    setTimeout(() => {
+    try {
+      await financeAPI.updateSettings({
+        commission_rate: parseFloat(settings.platform_fee_percentage),
+      });
+      toast.success('تم حفظ عمولة المنصة وتطبيقها على المدفوعات الجديدة');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر حفظ عمولة المنصة');
+    } finally {
       setLoading(false);
-      toast.success('تم حفظ إعدادات المنصة بنجاح'); // بدون إيموجي
-    }, 1000);
+    }
   };
 
   return (
@@ -71,6 +98,7 @@ export default function AdminSettings() {
                   name="platform_fee_percentage"
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #ced4da', borderRadius: '6px' }}
                   value={settings.platform_fee_percentage}
+                  disabled={loadingSettings || loading}
                   onChange={handleChange}
                   min="0"
                   max="100"
@@ -132,7 +160,7 @@ export default function AdminSettings() {
                   gap: '8px'
                 }}
               >
-                {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ التغييرات</>}
+                {loading ? 'جاري الحفظ...' : <><Save size={18} /> حفظ عمولة المنصة</>}
               </button>
             </div>
           </form>
