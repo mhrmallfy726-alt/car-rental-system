@@ -19,7 +19,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
       SELECT DISTINCT currency FROM supplier_payouts WHERE supplier_id=$1 AND $2::uuid IS NULL
     ),
     payable AS (
-      SELECT currency, COALESCE(SUM(amount),0) AS total_payable
+      SELECT currency, COALESCE(SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit'),0) AS total_payable
       FROM ledger_entries
       WHERE supplier_id=$1 AND entry_type='supplier_payable' AND ($2::uuid IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2::uuid))
       GROUP BY currency
@@ -40,13 +40,14 @@ router.get('/summary', asyncHandler(async (req, res) => {
       GROUP BY currency
     ),
     gross AS (
-      SELECT currency, COALESCE(SUM(amount),0) AS gross_revenue
+      SELECT currency,
+             COALESCE(SUM(CASE WHEN status IN ('paid','partially_refunded') THEN amount-COALESCE(refund_amount,0) ELSE 0 END),0) AS gross_revenue
       FROM payments
-      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND status='paid' AND ($2::uuid IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2::uuid))
+      WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND ($2::uuid IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2::uuid))
       GROUP BY currency
     ),
     fees AS (
-      SELECT currency, COALESCE(SUM(amount),0) AS total_commission
+      SELECT currency, COALESCE(SUM(amount) FILTER (WHERE direction='credit') - SUM(amount) FILTER (WHERE direction='debit'),0) AS total_commission
       FROM ledger_entries
       WHERE supplier_id=$1 AND reservation_id IS NOT NULL AND entry_type='platform_fee' AND ($2::uuid IS NULL OR reservation_id IN (SELECT r.id FROM reservations r JOIN cars c ON c.id=r.car_id WHERE r.supplier_id=$1 AND c.location_id=$2::uuid))
       GROUP BY currency
@@ -69,27 +70,45 @@ router.get('/summary', asyncHandler(async (req, res) => {
   `, [supplierId, branchId]);
 
   const transactionsResult = await query(`
-    SELECT p.id,p.reservation_id,p.amount AS gross_amount,p.currency,p.status,p.paid_at,p.created_at,
+    SELECT p.id,p.reservation_id,p.amount AS gross_amount,p.currency,p.status,p.refund_amount,p.paid_at,p.created_at,
            r.start_date,r.end_date,r.with_driver,u.name AS customer_name,
            c.make,c.model,
-           COALESCE(fee.amount,0) AS commission,
-           CASE WHEN p.amount > 0 THEN ROUND((COALESCE(fee.amount,0)/p.amount*100)::numeric,2) ELSE 0 END AS commission_rate,
-           COALESCE(payable.amount,0) AS supplier_amount,
-           CASE WHEN p.status='paid' AND COALESCE(fee.amount,0)+COALESCE(payable.amount,0)=p.amount THEN 'matched' ELSE 'check' END AS reconciliation_status
+           COALESCE(fee.net_amount,0) AS commission,
+           CASE WHEN p.amount > 0 THEN ROUND((COALESCE(fee.net_amount,0)/p.amount*100)::numeric,2) ELSE 0 END AS commission_rate,
+           COALESCE(payable.net_amount,0) AS supplier_amount,
+           COALESCE(pending.net_amount,0) AS pending_amount,
+           GREATEST(0,p.amount-COALESCE(p.refund_amount,0)) AS net_amount,
+           CASE
+             WHEN p.status IN ('paid','partially_refunded') AND (
+               (COALESCE(pending.net_amount,0)>0 AND COALESCE(fee.net_amount,0)=0 AND COALESCE(payable.net_amount,0)=0
+                AND ABS(COALESCE(pending.net_amount,0)-(GREATEST(0,p.amount-COALESCE(p.refund_amount,0))*(1-COALESCE(NULLIF(p.metadata->>'commission_rate','')::numeric,0)/100)))<0.01)
+               OR
+               (COALESCE(fee.net_amount,0)+COALESCE(payable.net_amount,0)=GREATEST(0,p.amount-COALESCE(p.refund_amount,0))
+                AND COALESCE(pending.net_amount,0)=0
+                AND ABS(COALESCE(fee.net_amount,0)+COALESCE(payable.net_amount,0)-GREATEST(0,p.amount-COALESCE(p.refund_amount,0)))<0.01)
+             ) THEN 'matched'
+             WHEN p.status='refunded' AND ABS(COALESCE(fee.net_amount,0)+COALESCE(payable.net_amount,0)+COALESCE(pending.net_amount,0))<0.01 THEN 'matched'
+             ELSE 'check'
+           END AS reconciliation_status
     FROM payments p
     JOIN reservations r ON r.id=p.reservation_id
     JOIN cars c ON c.id=r.car_id
     LEFT JOIN users u ON u.id=r.customer_id
     LEFT JOIN LATERAL (
-      SELECT amount FROM ledger_entries
-      WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='platform_fee' AND direction='credit'
-      ORDER BY created_at DESC LIMIT 1
+      SELECT COALESCE(SUM(amount) FILTER (WHERE direction='credit')-SUM(amount) FILTER (WHERE direction='debit'),0) AS net_amount
+      FROM ledger_entries
+      WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='platform_fee'
     ) fee ON TRUE
     LEFT JOIN LATERAL (
-      SELECT amount FROM ledger_entries
-      WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='supplier_payable' AND direction='credit'
-      ORDER BY created_at DESC LIMIT 1
+      SELECT COALESCE(SUM(amount) FILTER (WHERE direction='credit')-SUM(amount) FILTER (WHERE direction='debit'),0) AS net_amount
+      FROM ledger_entries
+      WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='supplier_payable'
     ) payable ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT COALESCE(SUM(amount) FILTER (WHERE direction='credit')-SUM(amount) FILTER (WHERE direction='debit'),0) AS net_amount
+      FROM ledger_entries
+      WHERE payment_id=p.id AND supplier_id=$1 AND entry_type='supplier_pending'
+    ) pending ON TRUE
     WHERE p.supplier_id=$1 AND p.reservation_id IS NOT NULL AND ($2::uuid IS NULL OR c.location_id=$2::uuid)
     ORDER BY p.created_at DESC LIMIT 100
   `, [supplierId, branchId]);
