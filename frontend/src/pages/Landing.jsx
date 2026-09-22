@@ -60,7 +60,7 @@ export default function Landing() {
       <section
         style={{
           position: 'relative',
-          minHeight: '100vh',
+          minHeight: '86vh',
           background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 40%, var(--primary-deep) 100%)',
           display: 'flex',
           alignItems: 'center',
@@ -96,7 +96,7 @@ export default function Landing() {
           backgroundSize: '40px 40px',
         }} />
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '0 20px', width: '100%' }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '70px 20px', width: '100%' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '60px' }}>
             {/* Text side */}
             <div style={{ flex: '1 1 500px', textAlign: 'right' }}>
@@ -220,7 +220,7 @@ export default function Landing() {
               { num: '4.9', label: 'تقييم العملاء', icon: Star },
             ].map((stat, i) => (
               <div key={i} style={{ color: 'white' }}>
-                <div style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '4px' }}>{stat.num}</div>
+                <div style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '4px' }}>{stat.num}</div>
                 <div style={{ fontSize: '0.90rem', opacity: 0.7 }}>{stat.label}</div>
               </div>
             ))}
