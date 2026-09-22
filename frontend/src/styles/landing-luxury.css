@@ -92,3 +92,77 @@
 .lux-footer{background:#040d14}
 .hero-original-title{font-size:clamp(1.8rem,3.2vw,3rem)!important;line-height:1.28!important;font-weight:850!important;max-width:620px}
 @media(max-width:700px){.hero-original-title{font-size:clamp(1.9rem,9vw,2.8rem)!important}}
+
+
+/* CAR FLIXE visual unification — compact dark system */
+:root{
+  --lux-gold:#d9a62e;
+  --lux-gold-light:#f0c85c;
+  --lux-navy:#e8edf2;
+  --lux-blue:#2f79b5;
+  --lux-ink:#dce4eb;
+  --lux-muted:#8fa0ad;
+  --lux-line:rgba(255,255,255,.09);
+  --lux-bg:#07131d;
+}
+.landing-luxury{
+  background:#07131d;
+  color:#dce4eb;
+}
+.lux-hero{
+  background:
+    radial-gradient(circle at 78% 30%,rgba(217,166,46,.10),transparent 24%),
+    radial-gradient(circle at 8% 80%,rgba(47,121,181,.10),transparent 28%),
+    linear-gradient(135deg,#06111a,#0b1f2d 52%,#07151f)!important;
+}
+.hero-copy h1{
+  font-size:clamp(2.35rem,4.4vw,4.25rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.04em!important;
+}
+.hero-description{font-size:.94rem!important;line-height:1.8!important;color:#9aaab7!important}
+.hero-eyebrow{font-size:.76rem!important;padding:8px 14px!important}
+.hero-actions{margin-top:27px!important}
+.lux-btn{padding:12px 20px!important;font-size:.86rem!important;border-radius:12px!important}
+.hero-trust{margin-top:27px!important;font-size:.76rem!important;gap:20px!important}
+.section-heading{margin-bottom:48px!important}
+.section-heading h2{
+  font-size:clamp(1.65rem,3vw,2.55rem)!important;
+  line-height:1.2!important;
+}
+.section-heading p{font-size:.9rem!important}
+.section-kicker{font-size:.64rem!important}
+.cinematic-car-card{min-height:560px!important;border-radius:24px!important}
+.car-card-image{height:295px!important}
+.car-card-info{padding:0 25px!important}
+.car-card-info h3{font-size:1.45rem!important}
+.car-card-bottom strong{font-size:1.4rem!important}
+.journey-step{min-height:250px!important;padding:28px!important;border-radius:22px!important}
+.journey-step h3{font-size:1.25rem!important}
+.journey-step p{font-size:.82rem!important}
+.trust-number{min-height:195px!important;padding:28px!important}
+.trust-number strong{font-size:2.35rem!important}
+.testimonial-card{width:340px!important;min-height:215px!important;padding:24px!important}
+.lux-cta{padding:100px 0!important}
+.cta-content h2{
+  font-size:clamp(3.1rem,6.5vw,6rem)!important;
+  line-height:.88!important;
+}
+.lux-footer{padding-top:58px!important}
+.floating-spec-card{padding:12px 15px!important;border-radius:15px!important}
+.floating-spec-card strong{font-size:.95rem!important}
+.floating-spec-card span,.floating-spec-card small{font-size:.62rem!important}
+.stat-item strong{font-size:2rem!important}
+.stat-item span{font-size:.74rem!important}
+@media(max-width:900px){
+  .hero-copy h1{font-size:clamp(2.25rem,8vw,3.5rem)!important}
+  .section-heading h2{font-size:clamp(1.55rem,5.5vw,2.2rem)!important}
+}
+@media(max-width:600px){
+  .hero-copy h1{font-size:clamp(2rem,10vw,3rem)!important}
+  .hero-description{font-size:.88rem!important}
+  .lux-section{padding:72px 0!important}
+  .cinematic-car-card{min-height:535px!important}
+  .car-card-image{height:275px!important}
+  .cta-content h2{font-size:clamp(2.8rem,14vw,5rem)!important}
+}
