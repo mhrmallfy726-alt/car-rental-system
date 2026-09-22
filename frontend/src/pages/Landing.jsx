@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link,useLocation  } from 'react-router-dom';
 import LocationSearch from '../components/LocationPicker';
+import '../styles/landing-luxury.css';
 
 import {
   Car, Shield, Star, Clock, Users, TrendingUp, ChevronRight,
@@ -53,7 +54,7 @@ export default function Landing() {
   };
 
   return (
-    <div style={{ overflow: 'hidden' }}>
+    <div className="landing-luxury" style={{ overflow: 'hidden' }}>
 
       {/* ===== HERO SECTION ===== */}
       <section
