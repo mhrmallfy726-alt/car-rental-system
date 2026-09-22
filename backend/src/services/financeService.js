@@ -21,6 +21,8 @@ const getAdvertisementPricing = async () => (await query(`SELECT advertisement_p
 const getSettings = async () => (await query(`SELECT id,currency,commission_rate,settlement_mode,ad_charge_policy,advertisement_price_per_day,advertisement_price_home_per_day,advertisement_price_cars_per_day,advertisement_price_car_detail_per_day,advertisement_price_all_public_per_day,advertisement_start_time,advertisement_end_time,updated_by,updated_at FROM finance_settings WHERE id=1`)).rows[0];
 
 const updateSettings = async (adminId, data = {}) => {
+  const currentSettings = await getSettings();
+  const previousCommissionRate = Number(currentSettings?.commission_rate ?? 0);
   const currency = assertCurrency(data.currency || DEFAULT_CURRENCY);
   const commissionRate = Number(data.commission_rate ?? 10);
   const settlementMode = data.settlement_mode === 'automatic' ? 'automatic' : 'manual';
@@ -37,7 +39,32 @@ const updateSettings = async (adminId, data = {}) => {
   for (const [value, label] of [[homePrice, 'الرئيسية'], [carsPrice, 'السيارات'], [carDetailPrice, 'تفاصيل السيارة'], [allPublicPrice, 'جميع الصفحات']]) {
     if (!Number.isFinite(value) || value <= 0) throw new Error(`سعر إعلان ${label} يجب أن يكون أكبر من صفر`);
   }
-  return (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_price_home_per_day=$5,advertisement_price_cars_per_day=$6,advertisement_price_car_detail_per_day=$7,advertisement_price_all_public_per_day=$8,advertisement_start_time=$9,advertisement_end_time=$10,updated_by=$11,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, homePrice, carsPrice, carDetailPrice, allPublicPrice, adStartTime, adEndTime, adminId])).rows[0];
+  const updated = (await query(`UPDATE finance_settings SET currency=$1,commission_rate=$2,settlement_mode=$3,advertisement_price_per_day=$4,advertisement_price_home_per_day=$5,advertisement_price_cars_per_day=$6,advertisement_price_car_detail_per_day=$7,advertisement_price_all_public_per_day=$8,advertisement_start_time=$9,advertisement_end_time=$10,updated_by=$11,updated_at=NOW() WHERE id=1 RETURNING *`, [currency, commissionRate, settlementMode, adPricePerDay, homePrice, carsPrice, carDetailPrice, allPublicPrice, adStartTime, adEndTime, adminId])).rows[0];
+
+  if (updated && Math.abs(commissionRate - previousCommissionRate) > 0.000001) {
+    const deltaRate = Number((commissionRate - previousCommissionRate).toFixed(2));
+    const direction = deltaRate > 0 ? 'زيادة' : 'نقص';
+    const sign = deltaRate > 0 ? '+' : '';
+    const deltaPerThousand = Number((1000 * deltaRate / 100).toFixed(2));
+    const amountText = deltaPerThousand === 0
+      ? '0 ريال يمني لكل 1,000 ريال'
+      : `${deltaPerThousand > 0 ? '+' : ''}${deltaPerThousand.toLocaleString('ar-YE')} ريال يمني لكل 1,000 ريال من قيمة الحجز`;
+    const message = `تم ${direction} عمولة المنصة من ${previousCommissionRate}% إلى ${commissionRate}%. الفرق ${sign}${deltaRate} نقطة مئوية، أي ${amountText}. هذا التغيير يطبق على المدفوعات الجديدة فقط ولا يغيّر العمولات المسجلة على العمليات السابقة.`;
+    const suppliers = await query(`SELECT id FROM users WHERE role='supplier' AND is_active=true`);
+    if (suppliers.rows.length) {
+      await Promise.all(suppliers.rows.map(async (supplier) => {
+        const notification = await query(
+          `INSERT INTO notifications (user_id,title,message,type,reference_type,action_url)
+           VALUES ($1,$2,$3,'system','finance','/supplier/finance') RETURNING *`,
+          [supplier.id, 'تغيير عمولة المنصة', message]
+        );
+        const io = global.__platformIo;
+        if (io && notification.rows[0]) io.to(`user_${supplier.id}`).emit('new_notification', notification.rows[0]);
+      }));
+    }
+  }
+
+  return updated;
 };
 
 const createReservationCharge = async ({ reservationId, customerId, savedCardId, paymentMethod = 'simulation', currency = DEFAULT_CURRENCY, withDriver }) => {
