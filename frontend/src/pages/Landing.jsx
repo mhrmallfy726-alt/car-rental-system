@@ -60,7 +60,8 @@ export default function Landing() {
       <div className="lux-container hero-container">
         <motion.div className="hero-copy" style={{y:heroY,opacity:heroOpacity}}>
           <motion.div className="hero-eyebrow" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7}}><Sparkles size={15}/> تجربة تأجير سيارات بمستوى مختلف</motion.div>
-          <h1 className="hero-original-title">استأجر السيارة التي تناسب رحلتك<br /><span>بسهولة، سرعة، وثقة.</span></h1>
+          <h1><span className="word-reveal">{['استأجر','السيارة','التي','تناسب','رحلتك'].map((w,i)=><motion.span key={w} initial={{opacity:0,y:30,filter:'blur(8px)'}} animate={{opacity:1,y:0,filter:'blur(0)'}} transition={{delay:.2+i*.075,duration:.65}}>{w}</motion.span>)}</span><motion.span className="hero-gold-line" initial={{opacity:0,x:35}} animate={{opacity:1,x:0}} transition={{delay:.8,duration:.8}}>بسهولة، سرعة، وثقة.</motion.span></h1>
+          <motion.p className="hero-description" initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{delay:1,duration:.75}}>اكتشف سيارات مختارة من معارض موثوقة، قارن العروض، واحجز رحلتك من مكان واحد بتجربة مصممة لتكون بسيطة وفاخرة.</motion.p>
           <div className="hero-actions"><Link className="lux-btn lux-btn-primary" to="/search">استكشف السيارات <ArrowLeft size={19}/></Link><Link className="lux-btn lux-btn-ghost" to="/marketing">سجّل كمعرض <Building2 size={19}/></Link></div>
           <div className="hero-trust">{[[Shield,'معارض موثوقة'],[CheckCircle2,'حجز واضح'],[Headphones,'دعم مباشر']].map(([Icon,text],i)=><motion.div key={text} initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{delay:1.3+i*.12}}><Icon size={17}/><span>{text}</span></motion.div>)}</div>
         </motion.div>
