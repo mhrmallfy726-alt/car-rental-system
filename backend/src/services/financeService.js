@@ -45,11 +45,7 @@ const updateSettings = async (adminId, data = {}, io = null) => {
     const deltaRate = Number((commissionRate - previousCommissionRate).toFixed(2));
     const direction = deltaRate > 0 ? 'زيادة' : 'نقص';
     const sign = deltaRate > 0 ? '+' : '';
-    const deltaPerThousand = Number((1000 * deltaRate / 100).toFixed(2));
-    const amountText = deltaPerThousand === 0
-      ? '0 ريال يمني لكل 1,000 ريال'
-      : `${deltaPerThousand > 0 ? '+' : ''}${deltaPerThousand.toLocaleString('ar-YE')} ريال يمني لكل 1,000 ريال من قيمة الحجز`;
-    const message = `تم ${direction} عمولة المنصة من ${previousCommissionRate}% إلى ${commissionRate}%. الفرق ${sign}${deltaRate} نقطة مئوية، أي ${amountText}. هذا التغيير يطبق على المدفوعات الجديدة فقط ولا يغيّر العمولات المسجلة على العمليات السابقة.`;
+    const message = `تم ${direction} عمولة المنصة من ${previousCommissionRate}% إلى ${commissionRate}%. الفرق ${sign}${deltaRate} نقطة مئوية. عمولة المنصة تُحتسب كنسبة ${commissionRate}% من قيمة الحجز. هذا التغيير يطبق على المدفوعات الجديدة فقط ولا يغيّر العمولات المسجلة على العمليات السابقة.`;
     const suppliers = await query(`SELECT id FROM users WHERE role='supplier' AND is_active=true`);
     if (suppliers.rows.length) {
       await Promise.all(suppliers.rows.map(async (supplier) => {
