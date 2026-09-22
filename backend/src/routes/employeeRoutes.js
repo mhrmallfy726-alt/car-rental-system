@@ -169,12 +169,13 @@ router.get('/', async (req, res) => {
     const supplier_id = req.user.role === 'supplier'
       ? getAuthenticatedSupplierId(req.user)
       : (req.query.supplier_id ? String(req.query.supplier_id) : null);
+    const branch_id = req.user.account_type === 'branch' ? String(req.user.branch_id) : null;
     if (!supplier_id) return res.status(400).json({ success: false, message: 'supplier_id مطلوب للأدمن عند اختيار المورد' });
-    if (!ensureEmployeeScope({ supplier_id, branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const result = await query(
-      'SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at FROM employees WHERE supplier_id = $1 ORDER BY created_at DESC',
-      [supplier_id]
+      `SELECT id, full_name, phone_number, email, role, job_role, status, supplier_id, branch_id, must_change_password, is_online, is_accepting_orders, last_active_at, created_at
+       FROM employees WHERE supplier_id = $1${branch_id ? ' AND branch_id = $2' : ''} ORDER BY created_at DESC`,
+      branch_id ? [supplier_id, branch_id] : [supplier_id]
     );
     res.json({ success: true, data: result.rows });
   } catch (err) {
@@ -229,7 +230,7 @@ router.post('/', async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ success: false, message: 'البريد الإلكتروني غير صالح' });
     if (phoneDigits.length < 7 || phoneDigits.length > 15) return res.status(400).json({ success: false, message: 'رقم الهاتف يجب أن يحتوي على 7 إلى 15 رقماً' });
     if (String(password).length < 8) return res.status(400).json({ success: false, message: 'كلمة المرور يجب ألا تقل عن 8 أحرف' });
-    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (req.user.account_type === 'branch' && String(branch_id || '') !== String(req.user.branch_id || '')) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const existingAccount = await findEmailOwner(cleanEmail, query);
     if (existingAccount) return res.status(409).json({ success: false, message: 'الإيميل مستخدم بالفعل في حساب آخر' });
@@ -291,7 +292,7 @@ router.put('/:id', async (req, res) => {
     const found = await query('SELECT supplier_id, branch_id, job_role FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const sets = [];
     const vals = [];
@@ -304,7 +305,7 @@ router.put('/:id', async (req, res) => {
     if (sets.length === 0) return res.status(400).json({ success: false, message: 'لا حقول للتحديث' });
 
     vals.push(id);
-    const sql = `UPDATE employees SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${idx} RETURNING id, full_name, email, role, job_role, status, supplier_id, created_at`;
+    const sql = `UPDATE employees SET ${sets.join(', ')}, updated_at = NOW() WHERE id = $${idx} RETURNING id, full_name, email, role, job_role, status, supplier_id, branch_id, created_at`;
     const updated = await query(sql, vals);
     let permissionIds;
     if (job_role !== undefined && job_role !== found.rows[0].job_role) {
@@ -323,7 +324,7 @@ router.delete('/:id', async (req, res) => {
     const found = await query('SELECT supplier_id, branch_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
     if (req.user.id === id) return res.status(400).json({ success: false, message: 'لا يمكنك حذف نفسك' });
     await query('DELETE FROM employees WHERE id = $1', [id]);
     res.json({ success: true, message: 'تم حذف الموظف' });
@@ -336,10 +337,10 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/permissions', async (req, res) => {
   try {
     const id = req.params.id;
-    const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
+    const found = await query('SELECT supplier_id, branch_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const result = await query(
       `SELECT p.id, p.name, p.description
@@ -366,7 +367,7 @@ router.put('/:id/permissions', async (req, res) => {
     const found = await query('SELECT supplier_id FROM employees WHERE id = $1', [id]);
     if (found.rows.length === 0) return res.status(404).json({ success: false, message: 'الموظف غير موجود' });
     const supplier_id = found.rows[0].supplier_id;
-    if (!ensureSupplierScope(supplier_id, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
+    if (!ensureEmployeeScope({ supplier_id, branch_id: found.rows[0].branch_id }, req.user)) return res.status(403).json({ success: false, message: 'غير مصرح' });
 
     const validPermissions = normalizedPermissionIds.length
       ? await query('SELECT id FROM permissions WHERE id = ANY($1::int[])', [normalizedPermissionIds])
