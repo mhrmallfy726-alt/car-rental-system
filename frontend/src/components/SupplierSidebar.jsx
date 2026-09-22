@@ -57,7 +57,7 @@ export default function SupplierSidebar() {
 
   const currentLabel = isBranch ? (user?.branch_name || 'فرعك') : (selected?.showroom_name || (selected?.city ? `فرع ${selected.city}` : 'جاري تحميل الفرع'));
 
-  const visibleLinks = isBranch ? supplierLinks.filter(({ to }) => ['/supplier/dashboard', '/supplier/cars', '/supplier/cars/add', '/supplier/reservations'].includes(to)) : supplierLinks;
+  const visibleLinks = isBranch ? supplierLinks.filter(({ to }) => ['/supplier/dashboard', '/supplier/cars', '/supplier/cars/add', '/supplier/reservations', '/supplier/employees', '/supplier/advertisement-request', '/supplier/settings'].includes(to)) : supplierLinks;
 
   const chooseShowroom = async (item) => {
     try {
