@@ -15,7 +15,7 @@ router.get('/options', asyncHandler(async (req, res) => {
     FROM locations l
     LEFT JOIN cars c ON c.location_id = l.id AND c.supplier_id = $1
            WHERE l.supplier_id = $1
-             AND ($2::text IS NULL OR l.id = $2)
+             AND ($2::uuid IS NULL OR l.id = $2::uuid)
              AND COALESCE(l.is_active, TRUE) = TRUE
              AND COALESCE(l.subscription_status, 'active') = 'active'
     GROUP BY l.id
@@ -35,7 +35,7 @@ router.post('/select', asyncHandler(async (req, res) => {
            COUNT(c.id)::int AS car_count
     FROM locations l
     LEFT JOIN cars c ON c.location_id = l.id AND c.supplier_id = $1
-    WHERE l.id = $2 AND l.supplier_id = $1 AND ($3::text IS NULL OR l.id = $3) AND COALESCE(l.is_active, TRUE) = TRUE
+    WHERE l.id = $2 AND l.supplier_id = $1 AND ($3::uuid IS NULL OR l.id = $3::uuid) AND COALESCE(l.is_active, TRUE) = TRUE
     GROUP BY l.id
   `, [req.user.supplier_id || req.user.id, location_id, req.user.account_type === 'branch' ? req.user.branch_id : null]);
 
