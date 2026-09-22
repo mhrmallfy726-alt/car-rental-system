@@ -114,3 +114,11 @@
 .landing-luxury .lux-cta{background:linear-gradient(135deg,#173a52,#003580)}
 .landing-luxury .cta-content h2 span{color:#febb02}
 .landing-luxury .lux-footer{background:#102f43}
+
+/* Final visual alignment: keep branch 19ab075 layout proportions and dark system palette. */
+.landing-luxury > section:first-of-type{min-height:86vh!important}
+.landing-luxury > section:first-of-type > div:last-of-type{padding-top:70px!important;padding-bottom:70px!important}
+.landing-luxury .hero-original-title{font-size:clamp(1.8rem,3.2vw,3rem)!important;line-height:1.28!important;max-width:620px}
+.landing-luxury .hero-original-title span{background:linear-gradient(135deg,#febb02,#ffd96a);-webkit-background-clip:text;background-clip:text}
+.landing-luxury .hero-original-actions{margin-top:22px}
+.landing-luxury > section:first-of-type > div:last-of-type > div{gap:42px!important}
