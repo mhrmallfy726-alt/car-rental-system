@@ -221,11 +221,13 @@ router.get('/:id/verify', protect, asyncHandler(async (req, res, next) => {
   const supplierPending = Number(payment.supplier_pending) || 0;
   const isHeld = supplierPending > 0 && supplierPayable <= 0;
   const supplierAmount = isHeld ? supplierPending : supplierPayable;
+  const commissionRate = Number(payment.metadata?.commission_rate ?? 0);
+  const expectedPending = Number(payment.amount) * Math.max(0, 1 - commissionRate / 100);
   const verified = payment.status === 'paid'
     && payment.provider_reference?.startsWith('SIM-')
     && payment.metadata?.simulated === true
     && (isHeld
-      ? Math.abs(supplierPending - Number(payment.amount)) < 0.01
+      ? Math.abs(supplierPending - expectedPending) < 0.01
         && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + supplierPending)) < 0.01
       : Math.abs(Number(payment.commission) + supplierPayable - Number(payment.amount)) < 0.01
         && Math.abs(Number(payment.ledger_total) - (Number(payment.amount) + Number(payment.commission) + supplierPayable)) < 0.01);
