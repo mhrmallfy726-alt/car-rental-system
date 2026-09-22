@@ -1,289 +1,297 @@
-/* =========================================================
-   LUXURY AUTOMOTIVE EXPERIENCE — LANDING PAGE
-   Additive visual layer: no business logic changes.
-   ========================================================= */
-
-:root{
-  --lux-gold:#d4af37;
-  --lux-gold-2:#f5e6a8;
-  --lux-night:#050b12;
-  --lux-blue:#0b1d2b;
-  --lux-cyan:#5ee7ff;
+/* Luxury landing experience — build-safe visual layer */
+:root {
+  --lux-gold: #d4af37;
+  --lux-gold-soft: #f5e6a8;
+  --lux-night: #050b12;
+  --lux-blue: #0b1d2b;
 }
 
-.landing-luxury{
-  --lux-shadow:0 30px 90px rgba(0,0,0,.22);
-  overflow-x:hidden;
-  scroll-behavior:smooth;
-  background:#fff;
+.landing-luxury {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  background: #fff;
 }
 
-/* ---------- cinematic global atmosphere ---------- */
-.landing-luxury section{
-  isolation:isolate;
-  position:relative;
+.landing-luxury section {
+  position: relative;
+  isolation: isolate;
 }
 
-.landing-luxury section:not(:first-of-type)::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index:0;
+.landing-luxury section > * {
+  position: relative;
+}
+
+/* Hero */
+.landing-luxury section:first-of-type {
+  min-height: 100vh !important;
   background:
-    radial-gradient(circle at 15% 20%,rgba(212,175,55,.055),transparent 25%),
-    radial-gradient(circle at 85% 75%,rgba(0,180,255,.035),transparent 28%);
+    radial-gradient(circle at 75% 35%, rgba(212,175,55,0.14), transparent 24%),
+    radial-gradient(circle at 15% 75%, rgba(0,155,255,0.13), transparent 28%),
+    linear-gradient(135deg, #03080d 0%, #0a1d2b 52%, #07111a 100%) !important;
+  perspective: 1400px;
 }
 
-.landing-luxury section > *{
-  position:relative;
-}
-
-/* ---------- hero ---------- */
-.landing-luxury section:first-of-type{
-  min-height:100svh!important;
+.landing-luxury section:first-of-type::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
   background:
-    radial-gradient(circle at 75% 35%,rgba(212,175,55,.14),transparent 24%),
-    radial-gradient(circle at 15% 75%,rgba(0,155,255,.13),transparent 28%),
-    linear-gradient(135deg,#03080d 0%,#0a1d2b 52%,#07111a 100%)!important;
-  perspective:1400px;
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 70px 70px;
+  opacity: 0.45;
 }
 
-.landing-luxury section:first-of-type::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-  background:
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
-  background-size:70px 70px;
-  mask-image:linear-gradient(to bottom,black,transparent 90%);
-  opacity:.45;
+.landing-luxury section:first-of-type::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 43%,
+    rgba(255,255,255,0.055) 50%,
+    transparent 57%
+  );
+  transform: translateX(-45%) rotate(-5deg);
+  animation: lux-sweep 9s ease-in-out infinite;
 }
 
-.landing-luxury section:first-of-type::after{
-  content:"";
-  position:absolute;
-  inset:-30%;
-  z-index:1;
-  pointer-events:none;
-  background:linear-gradient(115deg,transparent 43%,rgba(255,255,255,.055) 50%,transparent 57%);
-  transform:translateX(-45%) rotate(-5deg);
-  animation:lux-sweep 9s ease-in-out infinite;
+.landing-luxury section:first-of-type > div {
+  position: relative;
+  z-index: 3;
 }
 
-.landing-luxury section:first-of-type > div{
-  position:relative;
-  z-index:3;
+.landing-luxury h1 {
+  letter-spacing: -0.045em !important;
+  text-shadow: 0 18px 60px rgba(0,0,0,0.4);
+  animation: lux-title-in 1s cubic-bezier(0.2,0.8,0.2,1) both;
 }
 
-/* Hero headline */
-.landing-luxury h1{
-  letter-spacing:-.045em!important;
-  text-shadow:0 18px 60px rgba(0,0,0,.4);
-  animation:lux-title-in 1s cubic-bezier(.2,.8,.2,1) both;
+.landing-luxury h1 span {
+  filter: drop-shadow(0 0 22px rgba(212,175,55,0.22));
 }
 
-.landing-luxury h1 span{
-  filter:drop-shadow(0 0 22px rgba(212,175,55,.22));
-}
-
-/* Hero glass card — override the existing inline style */
-.landing-luxury section:first-of-type > div > div > div:last-child > div{
-  position:relative!important;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.18)!important;
-  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.035))!important;
+/* Hero glass card */
+.landing-luxury section:first-of-type > div > div > div:last-child > div {
+  position: relative !important;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.13),
+    rgba(255,255,255,0.035)
+  ) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.15),
-    0 35px 100px rgba(0,0,0,.38),
-    0 0 80px rgba(212,175,55,.08)!important;
-  backdrop-filter:blur(24px) saturate(135%);
-  -webkit-backdrop-filter:blur(24px) saturate(135%);
-  transform-style:preserve-3d;
-  animation:lux-card-float 6s ease-in-out infinite;
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 35px 100px rgba(0,0,0,0.38),
+    0 0 80px rgba(212,175,55,0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+  backdrop-filter: blur(24px) saturate(135%);
+  transform-style: preserve-3d;
+  animation: lux-card-float 6s ease-in-out infinite;
 }
 
-.landing-luxury section:first-of-type > div > div > div:last-child > div::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:linear-gradient(125deg,rgba(255,255,255,.12),transparent 28%,transparent 72%,rgba(212,175,55,.06));
+.landing-luxury section:first-of-type > div > div > div:last-child > div::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    rgba(255,255,255,0.12),
+    transparent 28%,
+    transparent 72%,
+    rgba(212,175,55,0.06)
+  );
 }
 
-.landing-luxury section:first-of-type > div > div > div:last-child > div::after{
-  content:"";
-  position:absolute;
-  width:280px;
-  height:280px;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(212,175,55,.17),transparent 68%);
-  filter:blur(24px);
-  z-index:-1;
-  animation:lux-glow 5s ease-in-out infinite;
+.landing-luxury section:first-of-type > div > div > div:last-child > div::after {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(212,175,55,0.17),
+    transparent 68%
+  );
+  filter: blur(24px);
+  z-index: -1;
+  animation: lux-glow 5s ease-in-out infinite;
 }
 
-/* ---------- premium buttons ---------- */
-.landing-luxury a{
-  will-change:transform;
-}
-
+/* Buttons */
 .landing-luxury section:first-of-type a,
-.landing-luxury section:last-of-type a{
-  overflow:hidden;
-  position:relative;
-  box-shadow:0 12px 35px rgba(0,0,0,.18);
+.landing-luxury section:last-of-type a {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.18);
 }
 
 .landing-luxury section:first-of-type a::before,
-.landing-luxury section:last-of-type a::before{
-  content:"";
-  position:absolute;
-  inset:-80% 35%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
-  transform:rotate(20deg) translateX(-180%);
-  transition:transform .9s ease;
-  pointer-events:none;
+.landing-luxury section:last-of-type a::before {
+  content: "";
+  position: absolute;
+  inset: -80% 35%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.35),
+    transparent
+  );
+  transform: rotate(20deg) translateX(-180%);
+  transition: transform 0.9s ease;
+  pointer-events: none;
 }
 
 .landing-luxury section:first-of-type a:hover::before,
-.landing-luxury section:last-of-type a:hover::before{
-  transform:rotate(20deg) translateX(430%);
+.landing-luxury section:last-of-type a:hover::before {
+  transform: rotate(20deg) translateX(430%);
 }
 
-/* ---------- section titles ---------- */
-.landing-luxury section h2{
-  position:relative;
-  letter-spacing:-.035em;
+/* Section titles */
+.landing-luxury section h2 {
+  position: relative;
+  letter-spacing: -0.035em;
 }
 
-.landing-luxury section h2::after{
-  content:"";
-  display:block;
-  width:76px;
-  height:3px;
-  margin:18px auto 0;
-  border-radius:99px;
-  background:linear-gradient(90deg,transparent,var(--lux-gold),transparent);
-  box-shadow:0 0 24px rgba(212,175,55,.38);
+.landing-luxury section h2::after {
+  content: "";
+  display: block;
+  width: 76px;
+  height: 3px;
+  margin: 18px auto 0;
+  border-radius: 99px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--lux-gold),
+    transparent
+  );
+  box-shadow: 0 0 24px rgba(212,175,55,0.38);
 }
 
-/* ---------- cards ---------- */
-.landing-luxury section[id] [style*="borderRadius: '16px'"],
-.landing-luxury section[id] [style*="borderRadius: '20px'"]{
-  transform-style:preserve-3d;
-  transition:
-    transform .55s cubic-bezier(.2,.8,.2,1)!important,
-    box-shadow .55s ease!important,
-    border-color .4s ease!important;
+/* Generic cards: target real rendered inline styles safely */
+.landing-luxury section[id] > div > div > div {
+  transform-style: preserve-3d;
 }
 
-.landing-luxury section[id] [style*="borderRadius: '16px'"]:hover,
-.landing-luxury section[id] [style*="borderRadius: '20px'"]:hover{
-  transform:translateY(-12px) scale(1.018)!important;
-  box-shadow:0 28px 70px rgba(5,20,35,.15)!important;
+.landing-luxury section[id] > div > div > div > div {
+  transition: transform 0.55s cubic-bezier(0.2,0.8,0.2,1);
 }
 
-.landing-luxury section[id] [style*="borderRadius: '16px'"] > div:first-child{
-  transition:transform .55s cubic-bezier(.2,.8,.2,1);
+/* Stats */
+.landing-luxury section:nth-of-type(2) {
+  background: linear-gradient(
+    90deg,
+    #06101a,
+    #0b1d2b,
+    #06101a
+  ) !important;
+  border-top: 1px solid rgba(212,175,55,0.14);
+  border-bottom: 1px solid rgba(212,175,55,0.12);
 }
 
-.landing-luxury section[id] [style*="borderRadius: '16px'"]:hover > div:first-child{
-  transform:translateZ(18px) scale(1.07) rotate(-3deg);
+/* Footer */
+.landing-luxury footer {
+  position: relative;
+  overflow: hidden;
 }
 
-/* ---------- stats ---------- */
-.landing-luxury section:nth-of-type(2){
-  background:linear-gradient(90deg,#06101a,#0b1d2b,#06101a)!important;
-  border-top:1px solid rgba(212,175,55,.14);
-  border-bottom:1px solid rgba(212,175,55,.12);
+.landing-luxury footer::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--lux-gold),
+    transparent
+  );
+  box-shadow: 0 0 18px rgba(212,175,55,0.35);
 }
 
-.landing-luxury section:nth-of-type(2) > div > div > div{
-  transition:transform .45s ease,text-shadow .45s ease;
-}
-
-.landing-luxury section:nth-of-type(2) > div > div > div:hover{
-  transform:translateY(-5px);
-  text-shadow:0 0 28px rgba(212,175,55,.35);
-}
-
-/* ---------- footer ---------- */
-.landing-luxury footer{
-  position:relative;
-  overflow:hidden;
-}
-
-.landing-luxury footer::before{
-  content:"";
-  position:absolute;
-  left:8%;
-  right:8%;
-  top:0;
-  height:1px;
-  background:linear-gradient(90deg,transparent,var(--lux-gold),transparent);
-  box-shadow:0 0 18px rgba(212,175,55,.35);
-}
-
-/* ---------- motion ---------- */
-@keyframes lux-sweep{
-  0%,55%{transform:translateX(-65%) rotate(-5deg)}
-  75%,100%{transform:translateX(65%) rotate(-5deg)}
-}
-
-@keyframes lux-card-float{
-  0%,100%{transform:translateY(0) rotateX(0deg) rotateY(0deg)}
-  50%{transform:translateY(-14px) rotateX(1.5deg) rotateY(-2deg)}
-}
-
-@keyframes lux-glow{
-  0%,100%{opacity:.35;transform:translate(-50%,-50%) scale(.9)}
-  50%{opacity:.85;transform:translate(-50%,-50%) scale(1.12)}
-}
-
-@keyframes lux-title-in{
-  from{opacity:0;transform:translateY(30px);filter:blur(8px)}
-  to{opacity:1;transform:translateY(0);filter:blur(0)}
-}
-
-/* ---------- mobile ---------- */
-@media(max-width:768px){
-  .landing-luxury section:first-of-type{
-    min-height:auto!important;
-    padding-top:80px;
-    padding-bottom:70px;
+/* Motion */
+@keyframes lux-sweep {
+  0%, 55% {
+    transform: translateX(-65%) rotate(-5deg);
   }
-
-  .landing-luxury section:first-of-type > div > div{
-    gap:35px!important;
-  }
-
-  .landing-luxury h1{
-    letter-spacing:-.025em!important;
-  }
-
-  .landing-luxury section:first-of-type > div > div > div:last-child > div{
-    animation:none;
-  }
-
-  .landing-luxury section[id] [style*="borderRadius: '16px'"]:hover{
-    transform:translateY(-5px)!important;
+  75%, 100% {
+    transform: translateX(65%) rotate(-5deg);
   }
 }
 
-@media(prefers-reduced-motion:reduce){
+@keyframes lux-card-float {
+  0%, 100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotateX(1.5deg) rotateY(-2deg);
+  }
+}
+
+@keyframes lux-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}
+
+@keyframes lux-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-luxury section:first-of-type {
+    min-height: auto !important;
+    padding-top: 80px;
+    padding-bottom: 70px;
+  }
+
+  .landing-luxury section:first-of-type > div > div {
+    gap: 35px !important;
+  }
+
+  .landing-luxury h1 {
+    letter-spacing: -0.025em !important;
+  }
+
+  .landing-luxury section:first-of-type > div > div > div:last-child > div {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
   .landing-luxury *,
   .landing-luxury *::before,
-  .landing-luxury *::after{
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-    scroll-behavior:auto!important;
-    transition-duration:.01ms!important;
+  .landing-luxury *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
