@@ -470,13 +470,27 @@ export default function SupplierRequests() {
 
 
       {selectedRequest.commercial_register ? (
-        <a
-          href={assetUrl(selectedRequest.commercial_register)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          📄 فتح السجل التجاري PDF
-        </a>
+        <div style={{ display: "grid", gap: "10px" }}>
+          <iframe
+            src={assetUrl(selectedRequest.commercial_register)}
+            title="السجل التجاري"
+            style={{
+              width: "100%",
+              minHeight: "420px",
+              border: "1px solid #e5e7eb",
+              borderRadius: "12px",
+              background: "#f8fafc",
+            }}
+          />
+          <a
+            href={assetUrl(selectedRequest.commercial_register)}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#2563eb", fontWeight: 700 }}
+          >
+            📄 فتح السجل التجاري في نافذة مستقلة
+          </a>
+        </div>
       ) : (
         <p style={{ color: "#777" }}>لم يتم رفع السجل التجاري.</p>
       )}
