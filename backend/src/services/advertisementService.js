@@ -355,7 +355,11 @@ const advertisementService  = {
   },
 
   createAdvertisementRequest: async (supplierId, data) => {
-    const car = await query('SELECT id FROM cars WHERE id = $1 AND supplier_id = $2', [data.car_id, supplierId]);
+    const branchId = data.branch_id || null;
+    const car = await query(
+      `SELECT id FROM cars WHERE id = $1 AND supplier_id = $2${branchId ? ' AND location_id = $3' : ''}`,
+      branchId ? [data.car_id, supplierId, branchId] : [data.car_id, supplierId]
+    );
     if (!car.rows.length) throw new Error('السيارة غير موجودة ضمن سيارات المورد');
     if (data.ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
     const placement = data.placement || 'cars';
@@ -412,8 +416,11 @@ const advertisementService  = {
     return result.rows[0];
   },
 
-  getMyAdvertisementRequests: async (supplierId) => {
-    const result = await query(`${REQUEST_SELECT} WHERE r.supplier_id = $1 ORDER BY r.created_at DESC`, [supplierId]);
+  getMyAdvertisementRequests: async (supplierId, branchId = null) => {
+    const result = await query(
+      `${REQUEST_SELECT} WHERE r.supplier_id = $1${branchId ? ' AND c.location_id = $2' : ''} ORDER BY r.created_at DESC`,
+      branchId ? [supplierId, branchId] : [supplierId]
+    );
     return result.rows;
   },
 
