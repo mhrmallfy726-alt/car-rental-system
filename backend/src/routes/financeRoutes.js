@@ -17,7 +17,7 @@ router.get('/settings', asyncHandler(async (req, res) => {
 }));
 
 router.put('/settings', asyncHandler(async (req, res) => {
-  const data = await financeService.updateSettings(req.user.id, req.body);
+  const data = await financeService.updateSettings(req.user.id, req.body, req.app.get('io'));
   res.json({ success: true, data });
 }));
 
