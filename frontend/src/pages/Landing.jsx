@@ -1,759 +1,102 @@
-import { useState, useEffect } from 'react';
-import { Link,useLocation  } from 'react-router-dom';
-import LocationSearch from '../components/LocationPicker';
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence, useScroll, useSpring, useTransform } from 'framer-motion';
+import { ArrowLeft, ArrowUpLeft, Award, BarChart3, Building2, Car, CheckCircle2, ChevronLeft, ChevronRight, CreditCard, Headphones, Search, Shield, Sparkles, Star } from 'lucide-react';
+import heroCar from '../assets/hero.png';
 import '../styles/landing-luxury.css';
 
-import {
-  Car, Shield, Star, Clock, Users, TrendingUp, ChevronRight,
-  CheckCircle2, ArrowLeft, MapPin, CreditCard, Headphones,
-  Sparkles, Building2, DollarSign, BarChart3, Globe, Award,
-  Phone, Mail, Search
-} from 'lucide-react';
-// import MarketingChoice from './marketing/MarketingChoice';
+const cars = [
+  { name: 'BMW M4', type: 'Luxury Performance', price: 120, meta: 'أوتوماتيك • بنزين • 4 مقاعد', accent: '#c99a24' },
+  { name: 'Toyota Camry', type: 'Executive Comfort', price: 65, meta: 'أوتوماتيك • هايبرد • 5 مقاعد', accent: '#2b6f9f' },
+  { name: 'Mercedes C-Class', type: 'Premium Sedan', price: 145, meta: 'أوتوماتيك • بنزين • 5 مقاعد', accent: '#087f68' },
+];
+const dealers = [
+  { city: 'صنعاء', count: '42 معرض', x: 49, y: 38 }, { city: 'تعز', count: '31 معرض', x: 39, y: 64 },
+  { city: 'عدن', count: '27 معرض', x: 62, y: 77 }, { city: 'إب', count: '18 معرض', x: 56, y: 51 }, { city: 'الحديدة', count: '16 معرض', x: 23, y: 48 },
+];
+const testimonials = [
+  { quote: 'الحجز كان واضحًا وسريعًا، والسيارة كانت مطابقة للتفاصيل والصور.', name: 'محمد', role: 'عميل' },
+  { quote: 'أصبحت إدارة سيارات المعرض والحجوزات أسهل بكثير من مكان واحد.', name: 'أحمد', role: 'مالك معرض' },
+  { quote: 'تجربة مرتبة من البحث حتى الاستلام. كل خطوة كانت واضحة.', name: 'سارة', role: 'عميلة' },
+];
+
+function Counter({ value, suffix }) {
+  const [count, setCount] = useState(0); const ref = useRef(null);
+  useEffect(() => {
+    let started = false;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || started) return;
+      started = true; const start = performance.now();
+      const tick = now => { const p = Math.min((now - start) / 1500, 1); setCount(Math.round(value * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick); observer.disconnect();
+    }, { threshold: 0.4 });
+    if (ref.current) observer.observe(ref.current); return () => observer.disconnect();
+  }, [value]);
+  return <span ref={ref}>{count.toLocaleString('en-US')}{suffix}</span>;
+}
+
+function Reveal({ children, className = '' }) {
+  return <motion.div className={className} initial={{ opacity: 0, y: 45 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.18 }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>{children}</motion.div>;
+}
+
+function Tilt({ children, className }) {
+  const [style, setStyle] = useState({});
+  return <div className={className} style={style}
+    onMouseMove={e => { const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5; setStyle({transform:'perspective(900px) rotateX('+(-y*5)+'deg) rotateY('+(x*7)+'deg) translateY(-8px)'}); }}
+    onMouseLeave={() => setStyle({transform:'perspective(900px) rotateX(0deg) rotateY(0deg)'})}>{children}</div>;
+}
+
 export default function Landing() {
-  const locationSearch = useLocation().search;
-  const [scrollY, setScrollY] = useState(0);
-  const [visibleSections, setVisibleSections] = useState({});
-  const sectionElements = {};
+  const [activeCar,setActiveCar]=useState(0), [activeDealer,setActiveDealer]=useState(0), [activeTestimonial,setActiveTestimonial]=useState(0);
+  const {scrollYProgress}=useScroll();
+  const progress=useSpring(scrollYProgress,{stiffness:90,damping:25});
+  const heroY=useTransform(progress,[0,.18],[0,-150]), heroScale=useTransform(progress,[0,.12],[1,.92]), heroOpacity=useTransform(progress,[0,.13],[1,.35]);
+  const carY=useTransform(progress,[0,.16],[0,-55]), lightX=useTransform(progress,[0,.22],['0%','70%']), testimonialX=useTransform(progress,[.66,.98],['0%','-22%']);
 
-  
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  return <main className="landing-luxury">
+    <motion.div className="lux-scroll-progress" style={{scaleX:scrollYProgress}}/>
+    <section className="lux-hero">
+      <motion.div className="hero-light hero-light-one" style={{x:lightX}}/><div className="hero-light hero-light-two"/><div className="hero-grid"/>
+      <div className="lux-container hero-container">
+        <motion.div className="hero-copy" style={{y:heroY,opacity:heroOpacity}}>
+          <motion.div className="hero-eyebrow" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7}}><Sparkles size={15}/> تجربة تأجير سيارات بمستوى مختلف</motion.div>
+          <h1><span className="word-reveal">{['استأجر','السيارة','التي','تناسب','رحلتك'].map((w,i)=><motion.span key={w} initial={{opacity:0,y:30,filter:'blur(8px)'}} animate={{opacity:1,y:0,filter:'blur(0)'}} transition={{delay:.2+i*.075,duration:.65}}>{w}</motion.span>)}</span><motion.span className="hero-gold-line" initial={{opacity:0,x:35}} animate={{opacity:1,x:0}} transition={{delay:.8,duration:.8}}>بسهولة، سرعة، وثقة.</motion.span></h1>
+          <motion.p className="hero-description" initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{delay:1,duration:.75}}>اكتشف سيارات مختارة من معارض موثوقة، قارن العروض، واحجز رحلتك من مكان واحد بتجربة مصممة لتكون بسيطة وفاخرة.</motion.p>
+          <div className="hero-actions"><Link className="lux-btn lux-btn-primary" to="/search">استكشف السيارات <ArrowLeft size={19}/></Link><Link className="lux-btn lux-btn-ghost" to="/marketing">سجّل كمعرض <Building2 size={19}/></Link></div>
+          <div className="hero-trust">{[[Shield,'معارض موثوقة'],[CheckCircle2,'حجز واضح'],[Headphones,'دعم مباشر']].map(([Icon,text],i)=><motion.div key={text} initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{delay:1.3+i*.12}}><Icon size={17}/><span>{text}</span></motion.div>)}</div>
+        </motion.div>
+        <motion.div className="hero-visual" style={{scale:heroScale,y:useTransform(progress,[0,.18],[0,85])}}>
+          <div className="hero-orbit hero-orbit-a"/><div className="hero-orbit hero-orbit-b"/>
+          <motion.div className="hero-car-stage" initial={{opacity:0,scale:.84,x:50,rotateY:-12}} animate={{opacity:1,scale:1,x:0,rotateY:0}} transition={{delay:.35,duration:1.2}}>
+            <div className="car-light-sweep"/><motion.img src={heroCar} alt="سيارة للتأجير" className="hero-car-image" style={{y:carY}}/><div className="car-shadow"/>
+          </motion.div>
+          <motion.div className="floating-spec-card spec-card-top" initial={{opacity:0,x:35}} animate={{opacity:1,x:0}} transition={{delay:1.15}}><span>متاحة الآن</span><strong>BMW M4</strong><small>من $120 / DAY</small></motion.div>
+          <motion.div className="floating-spec-card spec-card-bottom" initial={{opacity:0,x:-35}} animate={{opacity:1,x:0}} transition={{delay:1.3}}><Star size={16} fill="currentColor"/><strong>4.9</strong><span>تقييم العملاء</span></motion.div>
+        </motion.div>
+      </div>
+      <div className="hero-scroll-hint"><span>SCROLL TO EXPLORE</span><motion.div animate={{y:[0,9,0]}} transition={{duration:1.8,repeat:Infinity}}><ChevronRight size={18}/></motion.div></div>
+    </section>
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => ({ ...prev, [entry.target.id]: true }));
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
-    );
-    Object.values(sectionElements).forEach(el => {
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  });
+    <section className="lux-stats"><div className="lux-container stats-grid">{[[25000,'+','سيارة'],[180,'+','معرض'],[12000,'+','عملية حجز'],[98,'%','رضا العملاء']].map(([v,s,l])=><div className="stat-item" key={l}><strong><Counter value={v} suffix={s}/></strong><span>{l}</span></div>)}</div></section>
 
-  const setRef = (id) => (el) => { sectionElements[id] = el; };
+    <section className="lux-section cars-section"><div className="lux-container"><Reveal className="section-heading"><span className="section-kicker">CURATED FLEET</span><h2>السيارة التي تختارها، تصنع بداية الرحلة</h2><p>بطاقات كبيرة بتفاصيل واضحة، مصممة لتشاهد السيارة قبل أن تحجزها.</p></Reveal>
+      <div className="cinematic-cars">{cars.map((car,index)=><Tilt key={car.name} className={'cinematic-car-card '+(activeCar===index?'is-active':'is-dimmed')}><button className="car-card-hit" type="button" aria-label={'عرض '+car.name} onMouseEnter={()=>setActiveCar(index)} onFocus={()=>setActiveCar(index)}/><div className="car-card-glow" style={{'--accent':car.accent}}/><div className="car-card-number">0{index+1}</div><div className="car-card-image"><img src={heroCar} alt={car.name}/></div><div className="car-card-info"><span>{car.type}</span><h3>{car.name}</h3><div className="car-card-divider"/><p>{car.meta}</p><div className="car-card-bottom"><div><small>السعر اليومي</small><strong>{'$'}{car.price}<em> / DAY</em></strong></div><Link to="/search">View Details <ArrowLeft size={16}/></Link></div></div><div className="car-card-specs"><span>★★★★★</span><span>متاح للحجز</span></div></Tilt>)}</div>
+    </div></section>
 
-  const fadeInUp = {
-    opacity: 0,
-    transform: 'translateY(40px)',
-    transition: 'opacity 0.8s ease, transform 0.8s ease',
-  };
-  const fadeInUpVisible = {
-    opacity: 1,
-    transform: 'translateY(0)',
-    transition: 'opacity 0.8s ease, transform 0.8s ease',
-  };
+    <section className="lux-section how-section"><div className="lux-container"><Reveal className="section-heading section-heading-left"><span className="section-kicker">THE JOURNEY</span><h2>كيف تعمل المنصة؟</h2><p>ثلاث مراحل، بدون تعقيد.</p></Reveal>
+      <div className="journey-steps">{[['01',Search,'اختر','ابحث عن السيارة والموقع والتاريخ الذي يناسبك.'],['02',CreditCard,'احجز','قارن العرض، راجع التفاصيل، وأكمل الحجز بثقة.'],['03',Car,'استلم','تواصل مع المعرض واستلم سيارتك في الموعد.']].map(([n,Icon,t,d],i)=><motion.article className="journey-step" key={n} initial={{opacity:0,y:70}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.35}} transition={{delay:i*.14,duration:.75}}><span className="journey-number">{n}</span><div className="journey-icon"><Icon size={27}/></div><div><span className="journey-label">STEP {n}</span><h3>{t}</h3><p>{d}</p></div>{i<2&&<ArrowLeft className="journey-arrow" size={28}/>}</motion.article>)}</div>
+    </div></section>
 
-  return (
-    <div className="landing-luxury" style={{ overflow: 'hidden' }}>
+    <section className="lux-section dealers-section"><div className="lux-container dealer-layout"><Reveal className="dealer-copy"><span className="section-kicker">DEALER NETWORK</span><h2>معارض قريبة من وجهتك</h2><p>شبكة من المعارض تظهر لك بشكل واضح، لتختار العرض والموقع الذي يناسب رحلتك.</p><div className="dealer-list">{dealers.map((d,i)=><button type="button" className={'dealer-list-item '+(activeDealer===i?'active':'')} key={d.city} onClick={()=>setActiveDealer(i)}><span>{d.city}</span><small>{d.count}</small><ChevronLeft size={16}/></button>)}</div></Reveal>
+      <motion.div className="dealer-map" initial={{opacity:0,scale:.94}} whileInView={{opacity:1,scale:1}} viewport={{once:true,amount:.25}} transition={{duration:1}}><div className="map-glow"/><div className="map-surface"><div className="map-label">YEMEN • DEALER NETWORK</div><div className="map-route route-one"/><div className="map-route route-two"/><div className="map-route route-three"/><div className="map-center"><span>YOU</span></div>{dealers.map((d,i)=><button type="button" className={'map-pin '+(activeDealer===i?'active':'')} key={d.city} style={{left:d.x+'%',top:d.y+'%'}} onClick={()=>setActiveDealer(i)}><span/><b>{d.city}</b></button>)}<AnimatePresence mode="wait"><motion.div className="map-info-card" key={dealers[activeDealer].city} initial={{opacity:0,y:12,scale:.96}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-8}}><span>SELECTED DEALER</span><strong>{dealers[activeDealer].city}</strong><small>{dealers[activeDealer].count} • متاحون على المنصة</small></motion.div></AnimatePresence></div></motion.div>
+    </div></section>
 
-      {/* ===== HERO SECTION ===== */}
-      <section
-        style={{
-          position: 'relative',
-          minHeight: '100vh',
-          background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 40%, var(--primary-deep) 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Animated background elements */}
-        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
-          <div style={{
-            position: 'absolute', top: '-20%', right: '-10%', width: '600px', height: '600px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0,108,228,0.15) 0%, transparent 70%)',
-            animation: 'float 8s ease-in-out infinite',
-          }} />
-          <div style={{
-            position: 'absolute', bottom: '-10%', left: '-5%', width: '400px', height: '400px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(254,187,2,0.1) 0%, transparent 70%)',
-            animation: 'float 6s ease-in-out infinite 2s',
-          }} />
-          <div style={{
-            position: 'absolute', top: '30%', left: '30%', width: '300px', height: '300px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(0,128,9,0.08) 0%, transparent 70%)',
-            animation: 'float 10s ease-in-out infinite 4s',
-          }} />
-        </div>
+    <section className="lux-section trust-section"><div className="lux-container"><Reveal className="section-heading"><span className="section-kicker">TRUST BY NUMBERS</span><h2>الثقة تُقاس بالتجربة</h2><p>أرقام متحركة تبدأ من الصفر عندما تدخل إلى القسم.</p></Reveal><div className="trust-grid">{[[25000,'+','سيارة متاحة',Car],[180,'+','معرض موثوق',Building2],[12000,'+','عملية حجز',BarChart3],[98,'%','رضا العملاء',Award]].map(([v,s,l,Icon],i)=><motion.div className="trust-number" key={l} initial={{opacity:0,y:35}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.4}} transition={{delay:i*.1}}><Icon size={20}/><strong><Counter value={v} suffix={s}/></strong><span>{l}</span></motion.div>)}</div></div></section>
 
-        {/* Grid pattern overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }} />
+    <section className="lux-section testimonials-section"><div className="lux-container"><Reveal className="section-heading section-heading-left"><span className="section-kicker">REAL STORIES</span><h2>تجارب تتحرك مع رحلتك</h2></Reveal><div className="testimonial-window"><motion.div className="testimonial-track" style={{x:testimonialX}}>{[...testimonials,...testimonials].map((t,i)=><motion.article className={'testimonial-card '+(i===activeTestimonial?'featured':'')} key={t.name+i} whileHover={{y:-10}} onMouseEnter={()=>setActiveTestimonial(i%testimonials.length)}><div className="testimonial-top"><div className="testimonial-avatar">{t.name.charAt(0)}</div><div><strong>{t.name}</strong><span>{t.role}</span></div><div className="testimonial-stars">{[1,2,3,4,5].map(n=><Star key={n} size={13} fill="currentColor"/>)}</div></div><p>“{t.quote}”</p><div className="testimonial-line"/></motion.article>)}</motion.div></div></div></section>
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '0 20px', width: '100%' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '60px' }}>
-            {/* Text side */}
-            <div style={{ flex: '1 1 500px', textAlign: 'right' }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: '8px',
-                background: 'rgba(254,187,2,0.1)', border: '1px solid rgba(254,187,2,0.3)',
-                borderRadius: '50px', padding: '8px 20px', marginBottom: '24px',
-                color: '#d4af37', fontSize: '0.85rem', fontWeight: '600',
-              }}>
-                <Sparkles size={16} /> المنصة الأولى لتأجير السيارات في اليمن
-              </div>
+    <section className="lux-cta"><div className="cta-noise"/><div className="cta-light cta-light-one"/><div className="lux-container cta-content"><Reveal><span className="section-kicker">YOUR NEXT JOURNEY</span><h2>READY<br/><span>FOR YOUR</span><br/>NEXT JOURNEY?</h2><Link className="lux-btn lux-btn-primary cta-button" to="/search">START NOW <ArrowUpLeft size={18}/></Link></Reveal></div></section>
 
-              <h1 style={{
-                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-                fontWeight: '900',
-                color: 'white',
-                lineHeight: 1.3,
-                marginBottom: '20px',
-              }}>
-                تأجير السيارات<br />
-                <span style={{
-                  background: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}>بكل سهولة وأمان</span>
-              </h1>
-
-              <p style={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '1.15rem',
-                lineHeight: 1.8,
-                marginBottom: '40px',
-                maxWidth: '550px',
-                marginRight: 'auto',
-              }}>
-                نربط بين أفضل موردي السيارات والعملاء في منصة واحدة آمنة وموثوقة.
-                سواء كنت تبحث عن سيارة أو تمتلك أسطول سيارات، نحن هنا لخدمتك.
-              </p>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                {/* <Link
-                  to="/cars"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '10px',
-                    background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
-                    color: 'white', padding: '16px 36px', borderRadius: '12px',
-                    fontSize: '1.1rem', fontWeight: '700',
-                    boxShadow: '0 8px 25px rgba(0,128,9,0.35)',
-                    transition: 'all 0.3s ease',
-                    textDecoration: 'none',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 35px rgba(0,128,9,0.45)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,128,9,0.35)'; }}
-                >
-                  استكشف السيارات <ArrowLeft size={20} />
-                </Link> */}
-
-                <Link
-                  to="/marketing"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '10px',
-                    background: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'white', padding: '16px 36px', borderRadius: '12px',
-                    fontSize: '1.1rem', fontWeight: '700',
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.3s ease',
-                    textDecoration: 'none',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-                >
-                  ابدا رحلتك <Building2 size={20} />
-                </Link>
-              </div>
-
-              {/* Trust badges */}
-              <div style={{ display: 'flex', gap: '30px', marginTop: '50px', flexWrap: 'wrap' }}>
-                {[
-                  { icon: Shield, text: 'دفع آمن' },
-                  { icon: CheckCircle2, text: 'تأكيد فوري' },
-                  { icon: Headphones, text: 'دعم 24/7' },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>
-                    <item.icon size={18} style={{ color: '#d4af37' }} />
-                    {item.text}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Visual side - Floating card */}
-            <div style={{ flex: '1 1 400px', display: 'flex', justifyContent: 'center' }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '24px',
-                padding: '40px',
-                maxWidth: '400px',
-                width: '100%',
-                transform: `translateY(${scrollY * 0.05}px)`,
-              }}>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                  <div style={{
-                    width: '48px', height: '48px', borderRadius: '12px',
-                    background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Car size={24} style={{ color: 'white' }} />
-                  </div>
-                  <div>
-                    <div style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem' }}>سيارة متاحة</div>
-                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>تويوتا كامري 2024</div>
-                  </div>
-                </div>
-
-                <div style={{
-                  background: 'rgba(255,255,255,0.05)',
-                  borderRadius: '12px',
-                  padding: '16px',
-                  marginBottom: '16px',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '12px',
-                }}>
-                  <div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem' }}>السعر اليومي</div>
-                    <div style={{ color: 'white', fontWeight: '800', fontSize: '1.3rem' }}>$45</div>
-                  </div>
-                  <div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem' }}>التقييم</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#d4af37' }}>
-                      <Star size={14} fill="#d4af37" /> 4.9
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['أوتوماتيك / عادي', 'بنزين','هايبرد', 'كهربائيه ', 'بلوتوث','مكيف',' 5 مقاعد',].map((tag, i) => (
-                    <span key={i} style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '2px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                      padding: '6px 12px',
-                      fontSize: '0.75rem',
-                      color: 'rgba(255,255,255,0.7)',
-                    }}>{tag}</span>
-                  ))}
-                </div>
-
-                <div style={{
-                  marginTop: '20px',
-                  padding: '16px',
-                  background: 'linear-gradient(135deg, rgba(0,128,9,0.2), rgba(0,108,228,0.2))',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(0,128,9,0.3)',
-                }}>
-                  <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', marginBottom: '4px' }}>احجز الآن</div>
-                  <div style={{ color: 'white', fontWeight: '700' }}>من <span style={{ color: 'var(--secondary)' }}>$135</span> لـ 3 أيام</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== STATS BAR ===== */}
-      <section style={{ background: 'var(--primary-deep)', padding: '10px 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 1fr))',
-            gap: '10px',
-            textAlign: 'center',
-          }}>
-            {[
-              { num: '100+', label: 'شريك تأجير', icon: Building2 },
-              { num: '50K+', label: 'حجز ناجح', icon: TrendingUp },
-              { num: '500+', label: 'سيارة متاحة', icon: Car },
-              { num: '4.9', label: 'تقييم العملاء', icon: Star },
-            ].map((stat, i) => (
-              <div key={i} style={{ color: 'white' }}>
-                <div style={{ fontSize: '2.2rem', fontWeight: '900', marginBottom: '4px' }}>{stat.num}</div>
-                <div style={{ fontSize: '0.90rem', opacity: 0.7 }}>{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FOR CUSTOMERS SECTION ===== */}
-      <section
-        id="customers"
-        ref={setRef('customers')}
-        style={{
-          padding: '100px 0',
-          background: 'linear-gradient(180deg, #f7fafb 0%, #ffffff 100%)',
-        }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={visibleSections.customers ? fadeInUpVisible : fadeInUp}>
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-          
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
-                احجز سيارتك في لحظات
-              </h2>
-              <p style={{ color: '#64748b', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-                تجربة حجز سلسة ومريحة مع ضمان أفضل الأسعار والخدمات
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-              {[
-                {
-                  icon: Search,
-                  title: 'ابحث وقارن',
-                  desc: 'تصفح مئات السيارات من موردين مختلفين وقارن الأسعار والتقييمات بسهولة',
-                  color: '#173a52',
-                  bg: 'rgba(0,53,128,0.08)',
-                },
-                {
-                  icon: CreditCard,
-                  title: 'ادفع بأمان',
-                  desc: 'دفع إلكتروني آمن ومشفر مع إمكانية حفظ البطاقة للتسريع في المرات القادمة',
-                  color: 'var(--secondary)',
-                  bg: 'rgba(0,128,9,0.08)',
-                },
-                {
-                  icon: CheckCircle2,
-                  title: 'تأكيد فوري',
-                  desc: 'احصل على تأكيد فوري لحجزك مع إمكانية المراسلة المباشرة مع المورد',
-                  color: '#d4af37',
-                  bg: 'rgba(254,187,2,0.15)',
-                },
-                {
-                  icon: Shield,
-                  title: 'حماية كاملة',
-                  desc: 'سياسات إلغاء مرنة وحماية لحقوقك مع إمكانية رفع الشكاوى والنزاعات',
-                  color: '#b42318',
-                  bg: 'rgba(220,53,69,0.08)',
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '32px',
-                    border: '1px solid #eee',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.08)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  <div style={{
-                    width: '56px', height: '56px', borderRadius: '14px',
-                    background: item.bg, display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', marginBottom: '20px',
-                  }}>
-                    <item.icon size={28} style={{ color: item.color }} />
-                  </div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#173a52' }}>{item.title}</h3>
-                  <p style={{ color: '#64748b', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FOR SUPPLIERS SECTION ===== */}
-      <section
-        id="suppliers"
-        ref={setRef('suppliers')}
-        style={{
-          padding: '100px 0',
-          background: 'linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.02) 1px, transparent 1px)',
-          backgroundSize: '30px 30px',
-        }} />
-
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={visibleSections.suppliers ? fadeInUpVisible : fadeInUp}>
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: 'white' }}>
-                أدر أعمالك من مكان واحد
-              </h2>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
-                لوحة تحكم متكاملة لإدارة أسطولك وحجوزاتك وتقييماتك
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-              {[
-                {
-                  icon: BarChart3,
-                  title: 'لوحة تحكم ذكية',
-                  desc: 'إحصائيات مفصلة عن حجوزاتك وإيراداتك مع رسوم بيانية واضحة',
-                  gradient: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
-                },
-                {
-                  icon: DollarSign,
-                  title: 'إدارة الإيرادات',
-                  desc: 'تتبع مدفوعاتك بسهولة مع تقارير مالية شاملة ومحدثة',
-                  gradient: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
-                },
-                {
-                  icon: Globe,
-                  title: 'وصول عالمي',
-                  desc: 'اعرض سياراتك لآلاف العملاء المحتملين في جميع أنحاء المنصة',
-                  gradient: 'linear-gradient(135deg, #173a52, #087f68)',
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '16px',
-                    padding: '32px',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-5px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                >
-                  <div style={{
-                    width: '56px', height: '56px', borderRadius: '14px',
-                    background: item.gradient,
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', marginBottom: '20px',
-                  }}>
-                    <item.icon size={28} style={{ color: 'white' }} />
-                  </div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: 'white' }}>{item.title}</h3>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '50px' }}>
-              <Link
-                to="/supplier-benefits"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '10px',
-                  background: 'linear-gradient(135deg, #d4af37, var(--gold-light))',
-                  color: '#173a52', padding: '16px 40px', borderRadius: '12px',
-                  fontSize: '1.1rem', fontWeight: '800',
-                  boxShadow: '0 8px 25px rgba(254,187,2,0.3)',
-                  transition: 'all 0.3s ease',
-                  textDecoration: 'none',
-                }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 35px rgba(254,187,2,0.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(254,187,2,0.3)'; }}
-              >
-                انضم كمورد الآن <ChevronRight size={20} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== HOW IT WORKS ===== */}
-      <section
-        id="how-it-works"
-        ref={setRef('how-it-works')}
-        style={{ padding: '100px 0', background: 'white' }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={visibleSections['how-it-works'] ? fadeInUpVisible : fadeInUp}>
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
-                كيف تعمل المنصة؟
-              </h2>
-              <p style={{ color: '#64748b', fontSize: '1.1rem' }}>3 خطوات بسيطة للحصول على سيارتك</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '40px' }}>
-              {[
-                {
-                  step: '01',
-                  icon: MapPin,
-                  title: 'حدد موقعك وتواريخك',
-                  desc: 'اختر مدينة الاستلام وفترة التأجير التي تناسبك',
-                  color: '#173a52',
-                },
-                {
-                  step: '02',
-                  icon: Car,
-                  title: 'اختر سيارتك',
-                  desc: 'قارن بين العروض والأسعار واختر الأنسب لك',
-                  color: 'var(--secondary)',
-                },
-                {
-                  step: '03',
-                  icon: CreditCard,
-                  title: 'ادفع وانطلق',
-                  desc: 'أكمل الدفع بأمان واستلم سيارتك في الموعد المحدد',
-                  color: '#d4af37',
-                },
-              ].map((item, i) => (
-                <div key={i} style={{ textAlign: 'center', position: 'relative' }}>
-                  <div style={{
-                    width: '80px', height: '80px', borderRadius: '20px',
-                    background: `${item.color}10`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 24px',
-                    position: 'relative',
-                  }}>
-                    <item.icon size={36} style={{ color: item.color }} />
-                    <span style={{
-                      position: 'absolute', top: '-8px', right: '-8px',
-                      background: item.color,
-                      color: 'white',
-                      width: '28px', height: '28px',
-                      borderRadius: '8px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '0.75rem', fontWeight: '800',
-                    }}>{item.step}</span>
-                  </div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '12px', color: '#173a52' }}>{item.title}</h3>
-                  <p style={{ color: '#64748b', fontSize: '0.95rem' }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== WHY CHOOSE US ===== */}
-      <section
-        id="why-us"
-        ref={setRef('why-us')}
-        style={{ padding: '100px 0', background: '#f7fafb' }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={visibleSections['why-us'] ? fadeInUpVisible : fadeInUp}>
-            <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '16px', color: '#173a52' }}>
-                لماذا تختار منصتنا؟
-              </h2>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
-              gap: '24px',
-            }}>
-              {[
-                {
-                  icon: Award,
-                  title: 'موردون معتمدون',
-                  desc: 'جميع موردي السيارات لدينا تم التحقق منهم واعتمادهم لضمان جودة الخدمة',
-                  color: 'var(--secondary)',
-                },
-                {
-                  icon: Shield,
-                  title: 'تأمين شامل',
-                  desc: 'جميع السيارات مؤمنة بالكامل مع تغطية شاملة لأية حوادث أو أعطال',
-                  color: '#173a52',
-                },
-                {
-                  icon: Clock,
-                  title: 'توافر على مدار الساعة',
-                  desc: 'نظامنا يعمل 24/7 مع إمكانية الحجز في أي وقت ومن أي مكان',
-                  color: '#d4af37',
-                },
-                {
-                  icon: Headphones,
-                  title: 'دعم فوري',
-                  desc: 'فريق دعم محترف متاح لمساعدتك في أي وقت عبر المحادثة المباشرة',
-                  color: '#8e44ad',
-                },
-                {
-                  icon: DollarSign,
-                  title: 'أسعار تنافسية',
-                  desc: 'نضمن لك أفضل الأسعار مع خيارات خصومات وعروض حصرية',
-                  color: '#e67e22',
-                },
-                {
-                  icon: Users,
-                  title: 'مجتمع موثوق',
-                  desc: 'تقييمات حقيقية من عملاء حقيقيين تساعدك على اتخاذ القرار الصحيح',
-                  color: '#087f68',
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '28px',
-                    display: 'flex',
-                    gap: '20px',
-                    alignItems: 'flex-start',
-                    border: '1px solid #eee',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = item.color; e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.06)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#eee'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  <div style={{
-                    width: '48px', height: '48px', borderRadius: '12px',
-                    background: `${item.color}15`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <item.icon size={24} style={{ color: item.color }} />
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '8px', color: '#173a52' }}>{item.title}</h3>
-                    <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: 1.6 }}>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== CTA SECTION ===== */}
-      <section style={{
-        padding: '100px 0',
-        background: 'linear-gradient(135deg, #173a52 0%, #087f68 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: '25px 25px',
-        }} />
-        <div style={{
-          position: 'absolute', top: '-50%', right: '-20%', width: '600px', height: '600px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(254,187,2,0.1) 0%, transparent 70%)',
-        }} />
-
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '800px', margin: '0 auto', padding: '0 20px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '900', color: 'white', marginBottom: '16px' }}>
-            جاهز للبدء؟
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.2rem', marginBottom: '40px', lineHeight: 1.8 }}>
-            سواء كنت تبحث عن سيارة أو تريد إدارة أسطولك، منصتنا هي الخيار الأمثل لك
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
-            <Link
-              to="/search"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '10px',
-                background: 'white', color: '#173a52',
-                padding: '16px 36px', borderRadius: '12px',
-                fontSize: '1.1rem', fontWeight: '800',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-                transition: 'all 0.3s ease',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              تصفح السيارات <ArrowLeft size={20} />
-            </Link>
-            <Link
-              to="/marketing"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '10px',
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                padding: '16px 36px', borderRadius: '12px',
-                fontSize: '1.1rem', fontWeight: '800',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.3s ease',
-                textDecoration: 'none',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
-            >
-              سجّل حسابك <ChevronRight size={20} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FOOTER ===== */}
-      <footer style={{
-        background: 'var(--primary-dark)',
-        padding: '60px 0 30px',
-        color: 'rgba(255,255,255,0.6)',
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px', marginBottom: '40px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '10px',
-                  background: 'linear-gradient(135deg, var(--secondary), var(--teal-bright))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Car size={22} style={{ color: 'white' }} />
-                </div>
-                <span style={{ color: 'white', fontWeight: '800', fontSize: '1.2rem' }}>Rental CR</span>
-              </div>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.8 }}>المنصة الأولى لتأجير السيارات التي تربط الموردين بالعملاء في مكان واحد آمن وموثوق.</p>
-            </div>
-            <div>
-              <h4 style={{ color: 'white', fontWeight: '700', marginBottom: '16px' }}>روابط سريعة</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <Link to="/cars" style={{ fontSize: '0.85rem', transition: 'color 0.3s' }}
-                  onMouseEnter={e => e.currentTarget.style.color = 'white'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-                >تصفح السيارات</Link>
-                <Link to="/register" style={{ fontSize: '0.85rem', transition: 'color 0.3s' }}
-                  onMouseEnter={e => e.currentTarget.style.color = 'white'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.6)'}
-                >سجّل كمورد</Link>
-              </div>
-            </div>
-            <div>
-              <h4 style={{ color: 'white', fontWeight: '700', marginBottom: '16px' }}>تواصل معنا</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                  <Phone size={14} /> support@rentalcr.com
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem' }}>
-                  <Mail size={14} /> info@rentalcr.com
-                </div>
-              </div>
-            </div>
-          </div>
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: '20px',
-            textAlign: 'center',
-            fontSize: '0.8rem',
-          }}>
-            جميع الحقوق محفوظة © {new Date().getFullYear()} Rental CR
-          </div>
-        </div>
-      </footer>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-30px) rotate(5deg); }
-        }
-      `}</style>
-    </div>
-  );
+    <footer className="lux-footer"><div className="lux-container"><div className="footer-top"><div className="footer-brand"><div className="footer-mark"><Car size={21}/></div><strong>CAR RENTAL</strong><p>رحلتك تبدأ من السيارة المناسبة.</p></div><div className="footer-links"><div><span>EXPLORE</span><Link to="/search">Vehicles</Link><Link to="/search">Dealers</Link></div><div><span>COMPANY</span><Link to="/marketing">For Dealers</Link><Link to="/marketing">Support</Link></div><div><span>CONTACT</span><a href="mailto:support@rentalcr.com">support@rentalcr.com</a><a href="mailto:info@rentalcr.com">info@rentalcr.com</a></div></div></div><div className="footer-bottom"><span>CAR RENTAL • 2026</span><span>BUILT FOR THE NEXT JOURNEY</span></div></div></footer>
+  </main>;
 }
