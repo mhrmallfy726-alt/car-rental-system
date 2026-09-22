@@ -25,7 +25,7 @@ export default function SupplierRequests() {
   const [openModal, setOpenModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const API_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
-  const assetUrl = (fileName) => fileName ? `${API_URL}/uploads/${fileName}` : '';
+  // Uploads are stored in Supabase and the backend returns the full public URL.\n  // Keep compatibility with older records that contain only a filename/path.\n  const assetUrl = (fileName) => {\n    if (!fileName) return '';\n    const value = String(fileName).trim();\n    if (/^(https?:\\/\\/|data:|blob:)/i.test(value)) return value;\n    if (value.startsWith('/')) return API_URL + value;\n    return API_URL ? API_URL + '/uploads/' + value : value;\n  };
 
   const loadRequests = async () => {
 
