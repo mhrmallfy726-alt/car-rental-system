@@ -51,7 +51,7 @@ const protect = async (req, res, next) => {
     }
     if (decoded.account_type === 'employee') {
       const result = await query(
-        `SELECT id, supplier_id, full_name, phone_number, email, role, job_role, status
+        `SELECT id, supplier_id, branch_id, full_name, phone_number, email, role, job_role, status
          FROM employees WHERE id = $1 LIMIT 1`,
         [decoded.employee_id || decoded.id]
       );
@@ -61,7 +61,7 @@ const protect = async (req, res, next) => {
       if (normalizedEmployeeStatus !== 'active') return res.status(403).json({ success: false, message: 'حساب الموظف غير فعال.' });
       req.employeeId = String(employee.id);
       req.user = {
-        id: String(employee.id), employee_id: String(employee.id), supplier_id: String(employee.supplier_id),
+        id: String(employee.id), employee_id: String(employee.id), supplier_id: String(employee.supplier_id), branch_id: employee.branch_id ? String(employee.branch_id) : null,
         name: employee.full_name, full_name: employee.full_name, email: employee.email,
         phone: employee.phone_number, role: employee.role, job_role: employee.job_role,
         account_type: 'employee', status: normalizedEmployeeStatus, is_active: true,
