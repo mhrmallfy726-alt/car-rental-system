@@ -31,7 +31,7 @@ export default function BranchSettings() {
       </main>
       <style>{`
         @media(max-width:800px){
-          .branch-settings-main{padding:88px 14px 24px!important}
+          .branch-settings-main{padding:20px 14px 24px!important}
           .branch-settings-header h1{font-size:24px!important;line-height:1.35}
           .branch-settings-grid{grid-template-columns:1fr!important}
           .branch-settings-panel{padding:18px!important}
