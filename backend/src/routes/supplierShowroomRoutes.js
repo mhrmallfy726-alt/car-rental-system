@@ -60,7 +60,7 @@ router.get('/', asyncHandler(async (req, res) => {
                                      'reviewed_at',ss.reviewed_at,'starts_at',ss.starts_at,'expires_at',ss.expires_at)
             FROM showroom_subscriptions ss WHERE ss.showroom_id=l.id ORDER BY ss.created_at DESC LIMIT 1) AS subscription
     FROM locations l LEFT JOIN cars c ON c.location_id=l.id AND c.supplier_id=$1
-    WHERE l.supplier_id=$1 AND ($2::text IS NULL OR l.id=$2) GROUP BY l.id ORDER BY l.is_main DESC, LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
+    WHERE l.supplier_id=$1 AND ($2::uuid IS NULL OR l.id=$2::uuid) GROUP BY l.id ORDER BY l.is_main DESC, LOWER(COALESCE(l.showroom_name,l.city)),l.created_at
   `, [req.user.supplier_id || req.user.id, req.user.account_type === 'branch' ? req.user.branch_id : null]);
   res.json({ success: true, data: result.rows });
 }));
