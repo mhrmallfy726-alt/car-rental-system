@@ -1,0 +1,26 @@
+/* Luxury landing experience — additive layer */
+:root{--lux-gold:#d4af37;--lux-gold-soft:#f4df9b;--lux-ink:#07131f;--lux-blue:#0d2638}
+.landing-luxury{scroll-behavior:smooth}
+.landing-luxury section{isolation:isolate}
+.landing-luxury section:first-of-type{perspective:1200px}
+.landing-luxury section:first-of-type:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.035) 45%,transparent 52%);transform:translateX(-120%);animation:lux-sheen 9s ease-in-out infinite}
+.landing-luxury section:first-of-type>div{z-index:2}
+.landing-luxury h1{letter-spacing:-.035em;text-shadow:0 12px 45px rgba(0,0,0,.25)}
+.landing-luxury section:first-of-type a{position:relative;overflow:hidden;transform:translateZ(0);transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease,background .45s ease!important}
+.landing-luxury section:first-of-type a:before{content:"";position:absolute;inset:-80% 30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:rotate(20deg) translateX(-160%);transition:transform .8s ease}
+.landing-luxury section:first-of-type a:hover:before{transform:rotate(20deg) translateX(420%)}
+.landing-luxury section:first-of-type>div>div>div:last-child>div{animation:lux-card-float 6s ease-in-out infinite}
+.landing-luxury section:first-of-type>div>div>div:last-child>div:after{content:"";position:absolute;inset:10%;border-radius:28px;background:radial-gradient(circle,rgba(212,175,55,.18),transparent 68%);filter:blur(25px);z-index:-1;animation:lux-glow 5s ease-in-out infinite}
+.landing-luxury section[id] h2{letter-spacing:-.025em}
+.landing-luxury section[id] h2:after{content:"";display:block;width:64px;height:3px;margin:18px auto 0;border-radius:99px;background:linear-gradient(90deg,transparent,var(--lux-gold),transparent);box-shadow:0 0 20px rgba(212,175,55,.35)}
+.landing-luxury section[id] [style*="borderRadius: '16px'"]{transition:transform .55s cubic-bezier(.2,.8,.2,1),box-shadow .55s ease,border-color .4s ease!important}
+.landing-luxury section[id] [style*="borderRadius: '16px'"]:hover{transform:translateY(-10px) scale(1.015)!important;box-shadow:0 25px 70px rgba(5,20,35,.13)!important}
+.landing-luxury section[id] [style*="borderRadius: '16px'"]>div:first-child{transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.landing-luxury section[id] [style*="borderRadius: '16px'"]:hover>div:first-child{transform:rotate(-4deg) scale(1.08)}
+.landing-luxury footer{position:relative;overflow:hidden}
+.landing-luxury footer:before{content:"";position:absolute;left:10%;right:10%;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--lux-gold),transparent);opacity:.7}
+@keyframes lux-sheen{0%,58%{transform:translateX(-120%)}72%,100%{transform:translateX(120%)}}
+@keyframes lux-card-float{0%,100%{transform:translateY(0) rotateX(0) rotateY(0)}50%{transform:translateY(-12px) rotateX(1deg) rotateY(-2deg)}}
+@keyframes lux-glow{0%,100%{opacity:.45;transform:scale(.95)}50%{opacity:.85;transform:scale(1.08)}}
+@media (prefers-reduced-motion:reduce){.landing-luxury *,.landing-luxury *:before,.landing-luxury *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+@media (max-width:768px){.landing-luxury section:first-of-type>div>div>div:last-child>div{animation:none}.landing-luxury h1{letter-spacing:-.02em}}
