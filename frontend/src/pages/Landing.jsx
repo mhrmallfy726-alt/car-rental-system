@@ -51,7 +51,7 @@ export default function Landing() {
   const {scrollYProgress}=useScroll();
   const progress=useSpring(scrollYProgress,{stiffness:90,damping:25});
   const heroY=useTransform(progress,[0,.18],[0,-150]), heroScale=useTransform(progress,[0,.12],[1,.92]), heroOpacity=useTransform(progress,[0,.13],[1,.35]);
-  const carY=useTransform(progress,[0,.16],[0,-55]), lightX=useTransform(progress,[0,.22],['0%','70%']), testimonialX=useTransform(progress,[.66,.98],['0%','-22%']);
+  const carY=useTransform(progress,[0,.16],[0,-55]), lightX=useTransform(progress,[0,.22],['0%','70%']), testimonialX=useTransform(progress,[.66,.98],['0%','-22%']), heroVisualY=useTransform(progress,[0,.18],[0,85]);
 
   return <main className="landing-luxury">
     <motion.div className="lux-scroll-progress" style={{scaleX:scrollYProgress}}/>
@@ -65,7 +65,7 @@ export default function Landing() {
           <div className="hero-actions"><Link className="lux-btn lux-btn-primary" to="/search">استكشف السيارات <ArrowLeft size={19}/></Link><Link className="lux-btn lux-btn-ghost" to="/marketing">سجّل كمعرض <Building2 size={19}/></Link></div>
           <div className="hero-trust">{[[Shield,'معارض موثوقة'],[CheckCircle2,'حجز واضح'],[Headphones,'دعم مباشر']].map(([Icon,text],i)=><motion.div key={text} initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{delay:1.3+i*.12}}><Icon size={17}/><span>{text}</span></motion.div>)}</div>
         </motion.div>
-        <motion.div className="hero-visual" style={{scale:heroScale,y:useTransform(progress,[0,.18],[0,85])}}>
+        <motion.div className="hero-visual" style={{scale:heroScale,y:heroVisualY}}>
           <div className="hero-orbit hero-orbit-a"/><div className="hero-orbit hero-orbit-b"/>
           <motion.div className="hero-car-stage" initial={{opacity:0,scale:.84,x:50,rotateY:-12}} animate={{opacity:1,scale:1,x:0,rotateY:0}} transition={{delay:.35,duration:1.2}}>
             <div className="car-light-sweep"/><motion.img src={heroCar} alt="سيارة للتأجير" className="hero-car-image" style={{y:carY}}/><div className="car-shadow"/>
