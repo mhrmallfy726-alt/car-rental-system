@@ -20,7 +20,7 @@ const createAdvertisementCharge = async (client, { advertisementId, supplierId, 
 const getAdvertisementPricing = async () => (await query(`SELECT advertisement_price_per_day, advertisement_price_home_per_day, advertisement_price_cars_per_day, advertisement_price_car_detail_per_day, advertisement_price_all_public_per_day, advertisement_start_time, advertisement_end_time, currency FROM finance_settings WHERE id=1`)).rows[0];
 const getSettings = async () => (await query(`SELECT id,currency,commission_rate,settlement_mode,ad_charge_policy,advertisement_price_per_day,advertisement_price_home_per_day,advertisement_price_cars_per_day,advertisement_price_car_detail_per_day,advertisement_price_all_public_per_day,advertisement_start_time,advertisement_end_time,updated_by,updated_at FROM finance_settings WHERE id=1`)).rows[0];
 
-const updateSettings = async (adminId, data = {}) => {
+const updateSettings = async (adminId, data = {}, io = null) => {
   const currentSettings = await getSettings();
   const previousCommissionRate = Number(currentSettings?.commission_rate ?? 0);
   const currency = assertCurrency(data.currency || DEFAULT_CURRENCY);
@@ -58,7 +58,6 @@ const updateSettings = async (adminId, data = {}) => {
            VALUES ($1,$2,$3,'system','finance','/supplier/finance') RETURNING *`,
           [supplier.id, 'تغيير عمولة المنصة', message]
         );
-        const io = global.__platformIo;
         if (io && notification.rows[0]) io.to(`user_${supplier.id}`).emit('new_notification', notification.rows[0]);
       }));
     }
