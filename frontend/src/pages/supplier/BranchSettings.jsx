@@ -6,17 +6,17 @@ import SupplierSidebar from '../../components/SupplierSidebar';
 export default function BranchSettings() {
   const { user } = useAuthStore();
   return (
-    <div dir="rtl" style={{ display:'flex', minHeight:'100vh', background:'#f4f8f8', color:'#173a52' }}>
+    <div dir="rtl" className="branch-settings-page" style={{ display:'flex', minHeight:'100vh', background:'#f4f8f8', color:'#173a52' }}>
       <SupplierSidebar />
-      <main style={{ flex:1, padding:'32px 24px' }}>
+      <main className="branch-settings-main" style={{ flex:1, padding:'32px 24px' }}>
         <div style={{ maxWidth:900, margin:'0 auto' }}>
-          <header style={{ marginBottom:24 }}>
+          <header className="branch-settings-header" style={{ marginBottom:24 }}>
             <span style={{ color:'#0f766e', fontWeight:900, fontSize:12 }}>إعدادات الفرع</span>
             <h1 style={{ margin:'6px 0', fontSize:30 }}>إعدادات الحساب والفرع</h1>
             <p style={{ margin:0, color:'#71828a' }}>بيانات هذا الحساب مرتبطة بفرع واحد فقط ولا يمكنها تعديل إعدادات المورد الرئيسية.</p>
           </header>
-          <section style={{ background:'#fff', border:'1px solid #e3eeee', borderRadius:18, padding:24, boxShadow:'0 8px 24px rgba(23,58,82,.05)' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:16 }}>
+          <section className="branch-settings-panel" style={{ background:'#fff', border:'1px solid #e3eeee', borderRadius:18, padding:24, boxShadow:'0 8px 24px rgba(23,58,82,.05)' }}>
+            <div className="branch-settings-grid" style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:16 }}>
               <Info icon={Building2} label="اسم الفرع" value={user?.branch_name || 'الفرع الحالي'} />
               <Info icon={ShieldCheck} label="البريد المرتبط بالحساب" value={user?.email || 'غير متوفر'} />
               <Info icon={Building2} label="اسم المسؤول" value={user?.name || 'غير متوفر'} />
@@ -29,7 +29,20 @@ export default function BranchSettings() {
           </section>
         </div>
       </main>
-      <style>{'@media(max-width:800px){main{padding:20px 14px!important}section>div{grid-template-columns:1fr!important}}'}</style>
+      <style>{`
+        @media(max-width:800px){
+          .branch-settings-main{padding:88px 14px 24px!important}
+          .branch-settings-header h1{font-size:24px!important;line-height:1.35}
+          .branch-settings-grid{grid-template-columns:1fr!important}
+          .branch-settings-panel{padding:18px!important}
+        }
+        @media(max-width:540px){
+          .branch-settings-main{padding-inline:10px!important}
+          .branch-settings-header h1{font-size:22px!important}
+          .branch-settings-panel{padding:14px!important;border-radius:15px!important}
+          .branch-settings-panel a{max-width:100%;line-height:1.7}
+        }
+      `}</style>
     </div>
   );
 }
