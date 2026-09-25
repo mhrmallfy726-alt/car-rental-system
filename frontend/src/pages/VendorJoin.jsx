@@ -642,7 +642,12 @@ textTransform: "uppercase",
                     <input
                       type="tel"
                       name="ownerPhone"
-                      placeholder="7xxxxxxxx"\n                      inputMode="numeric"\n                      pattern="7[0-9]{8}"\n                      minLength={9}\n                      maxLength={9}\n                      required
+                      placeholder="7xxxxxxxx"
+                      inputMode="numeric"
+                      pattern="7[0-9]{8}"
+                      minLength={9}
+                      maxLength={9}
+                      required
                       value={formData.ownerPhone}
                       onChange={handleChange}
                       dir="ltr"
