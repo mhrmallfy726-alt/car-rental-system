@@ -406,9 +406,16 @@ const advertisementService  = {
     const placement = data.placement || 'cars';
     const image_url = data.image_url || null;
     const pricing = await financeService.getAdvertisementPricing();
-    const pricePerDay = Number(pricing.advertisement_price_per_day);
+    const basePricePerDay = Number(pricing.advertisement_price_per_day || 0);
+    const placementPrices = {
+      home: Number(pricing.advertisement_price_home_per_day ?? basePricePerDay * 2),
+      cars: Number(pricing.advertisement_price_cars_per_day ?? basePricePerDay),
+      car_detail: Number(pricing.advertisement_price_car_detail_per_day ?? basePricePerDay * 1.5),
+      all_public: Number(pricing.advertisement_price_all_public_per_day ?? basePricePerDay * 2.5),
+    };
     const durationDays = Number(data.duration_days || 7);
     if (!Number.isInteger(durationDays) || durationDays < 1 || durationDays > 365) throw new Error('مدة الإعلان يجب أن تكون بين يوم و365 يومًا');
+    const pricePerDay = Number(placementPrices[placement] || basePricePerDay);
     const totalPrice = pricePerDay * durationDays;
     const startTime = data.start_time || pricing.advertisement_start_time;
     const endTime = data.end_time || pricing.advertisement_end_time;
@@ -442,7 +449,6 @@ const advertisementService  = {
         data.ad_type || 'featured',
         placement,
         image_url,
-        pricePerDay,
         pricePerDay,
         totalPrice,
         durationDays,
