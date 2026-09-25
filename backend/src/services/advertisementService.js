@@ -259,51 +259,47 @@ const advertisementService  = {
       placement = 'cars',
       image_url = null,
       link_url = null,
-      price = 0,
-      duration = 7,
       start_date = null,
       end_date = null,
+      start_time = null,
+      end_time = null,
+      duration_days = 7,
       status = 'draft',
       featured = false,
       is_pinned = false,
-      discount = 0,
-      payment_status = 'pending',
+      payment_status = 'unpaid',
     } = adData;
+
     if (ad_type === 'discount') throw new Error('إعلانات الخصم غير متاحة في النظام');
-    console.log({
-      supplier_id,
-      car_id,
-      title,
-      description,
-      ad_type,
-      placement,
-      image_url,
-    });
-    
+    if (!title || !String(title).trim()) throw new Error('عنوان الإعلان مطلوب');
+
+    const pricing = await financeService.getAdvertisementPricing();
+    const basePricePerDay = Number(pricing?.advertisement_price_per_day || 0);
+    const placementPrices = {
+      home: Number(pricing?.advertisement_price_home_per_day ?? basePricePerDay * 2),
+      cars: Number(pricing?.advertisement_price_cars_per_day ?? basePricePerDay),
+      car_detail: Number(pricing?.advertisement_price_car_detail_per_day ?? basePricePerDay * 1.5),
+      all_public: Number(pricing?.advertisement_price_all_public_per_day ?? basePricePerDay * 2.5),
+    };
+    const normalizedPlacement = placement || 'cars';
+    const pricePerDay = Number(placementPrices[normalizedPlacement] ?? basePricePerDay);
+    const duration = Number(duration_days || 7);
+
+    if (!Number.isInteger(duration) || duration < 1 || duration > 365) {
+      throw new Error('مدة الإعلان يجب أن تكون بين يوم و365 يومًا');
+    }
+    if (!Number.isFinite(pricePerDay) || pricePerDay <= 0) {
+      throw new Error('سعر الإعلان اليومي غير صالح');
+    }
+
+    const totalPrice = pricePerDay * duration;
     const result = await query(
       `INSERT INTO advertisements
-        (
-          supplier_id,
-          car_id,
-          title,
-          description,
-          ad_type,
-          placement,
-          image_url,
-          link_url,
-          price,
-          duration,
-          start_date,
-          end_date,
-          status,
-          featured,
-          is_pinned,
-          discount,
-          payment_status
-        )
+        (supplier_id, car_id, title, description, ad_type, placement, image_url, link_url,
+         price, price_per_day, total_price, duration_days, start_date, end_date,
+         start_time, end_time, status, featured, is_pinned, payment_status)
        VALUES
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-         $12, $13, $14, $15, $16, $17)
+        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
        RETURNING *`,
       [
         supplier_id,
@@ -311,72 +307,88 @@ const advertisementService  = {
         title,
         description,
         ad_type,
-        placement,
+        normalizedPlacement,
         image_url,
         link_url,
-        Number(price || 0),
-        Number(duration || 7),
+        basePricePerDay,
+        pricePerDay,
+        totalPrice,
+        duration,
         start_date || null,
         end_date || null,
+        start_time || pricing.advertisement_start_time || null,
+        end_time || pricing.advertisement_end_time || null,
         status,
-        featured,
-        is_pinned,
-        Number(discount || 0),
-        payment_status,
+        Boolean(featured),
+        Boolean(is_pinned),
+        payment_status || 'unpaid',
       ]
     );
-  
+
     return result.rows[0];
   },
-  
 
   updateAdvertisement: async (id, updateData) => {
     const allowed = [
-      'title',
-      'description',
-      'ad_type',
-      'placement',
-      'image_url',
-      'link_url',
-      'price',
-      'price_per_day',
-      'total_price',
-      'duration_days',
-      'start_date',
-      'end_date',
-      'status',
-      'featured',
-      'is_pinned',
-      'payment_status',
+      'title', 'description', 'ad_type', 'placement', 'image_url', 'link_url',
+      'price', 'price_per_day', 'total_price', 'duration_days',
+      'start_date', 'end_date', 'start_time', 'end_time',
+      'status', 'featured', 'is_pinned', 'payment_status',
     ];
-  
+
     const fields = [];
     const params = [];
-  
+
     allowed.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(updateData, field)) {
         params.push(updateData[field]);
         fields.push(`${field} = $${params.length}`);
       }
     });
-  
-    if (!fields.length) {
-      return advertisementService.getAdvertisementById(id);
+
+    if (Object.prototype.hasOwnProperty.call(updateData, 'placement') ||
+        Object.prototype.hasOwnProperty.call(updateData, 'duration_days')) {
+      const current = await query(
+        'SELECT placement, duration_days FROM advertisements WHERE id = $1',
+        [id]
+      );
+      if (!current.rows.length) return null;
+
+      const placement = updateData.placement || current.rows[0].placement || 'cars';
+      const duration = Number(updateData.duration_days || current.rows[0].duration_days || 1);
+
+      if (!Number.isInteger(duration) || duration < 1 || duration > 365) {
+        throw new Error('مدة الإعلان يجب أن تكون بين يوم و365 يومًا');
+      }
+
+      const pricing = await financeService.getAdvertisementPricing();
+      const base = Number(pricing?.advertisement_price_per_day || 0);
+      const placementPrices = {
+        home: Number(pricing?.advertisement_price_home_per_day ?? base * 2),
+        cars: Number(pricing?.advertisement_price_cars_per_day ?? base),
+        car_detail: Number(pricing?.advertisement_price_car_detail_per_day ?? base * 1.5),
+        all_public: Number(pricing?.advertisement_price_all_public_per_day ?? base * 2.5),
+      };
+      const pricePerDay = Number(placementPrices[placement] ?? base);
+
+      params.push(base, pricePerDay, pricePerDay * duration, duration);
+      fields.push(
+        `price = $${params.length - 3}`,
+        `price_per_day = $${params.length - 2}`,
+        `total_price = $${params.length - 1}`,
+        `duration_days = $${params.length}`
+      );
     }
-  
+
+    if (!fields.length) return advertisementService.getAdvertisementById(id);
+
     params.push(id);
-  
     const result = await query(
-      `UPDATE advertisements
-       SET ${fields.join(', ')}
-       WHERE id = $${params.length}
-       RETURNING *`,
+      `UPDATE advertisements SET ${fields.join(', ')} WHERE id = $${params.length} RETURNING *`,
       params
     );
-  
     return result.rows[0] || null;
   },
-  
 
   deleteAdvertisement: async (id) => {
     const result = await query('DELETE FROM advertisements WHERE id = $1 RETURNING id', [id]);
