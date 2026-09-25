@@ -25,7 +25,8 @@ const INTEGER_FIELDS = new Set(['seats', 'doors', 'year', 'mileage', 'duration_d
 
 const numericPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+([.,][${ARABIC_DIGITS}${LATIN_DIGITS}]+)?$`);
 const integerPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+$`);
-const phonePattern = /^7\d{8}$/;\nconst namePattern = /^[\p{L}][\p{L}\s]{1,79}$/u;
+const phonePattern = /^7\d{8}$/;
+const namePattern = /^[\p{L}][\p{L}\s]{1,79}$/u;
 const vehicleTextPattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,79}$/u;
 const licensePlatePattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,19}$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -57,7 +58,10 @@ export function sanitizeFieldValue(element, value) {
       .replace(new RegExp(`(?!^${sign})-`, 'g'), '')
       .replace(/([.,].*)[.,]/g, '$1');
   }
-  if (kind === 'phone') {\n    const normalized = value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/\\D/g, '').slice(0, 9);\n    return normalized && normalized[0] !== '7' ? '' : normalized;\n  }
+  if (kind === 'phone') {
+    const normalized = value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/\D/g, '').slice(0, 9);
+    return normalized && normalized[0] !== '7' ? '' : normalized;
+  }
   if (kind === 'name') return value.replace(/[^\p{L}\s]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 80);
   if (kind === 'vehicle_text') return value.replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 80);
   if (kind === 'license_plate') return value.replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 20);
