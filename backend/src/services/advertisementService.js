@@ -78,8 +78,8 @@ const REQUEST_SELECT = `
     a.status AS advertisement_status,
     a.payment_status AS advertisement_payment_status
   FROM advertisement_requests r
-  JOIN users supplier ON supplier.id = r.supplier_id
-  JOIN cars c ON c.id = r.car_id
+  LEFT JOIN users supplier ON supplier.id = r.supplier_id
+  LEFT JOIN cars c ON c.id = r.car_id
   LEFT JOIN advertisements a ON a.request_id = r.id
 `;
 
@@ -413,7 +413,24 @@ const advertisementService  = {
       ]
     );
     
-    return result.rows[0];
+    const request = result.rows[0];
+
+    // Notify every active admin after the request has been stored successfully.
+    // The request itself must not depend on a particular admin account existing.
+    await query(
+      `INSERT INTO notifications
+        (user_id, title, message, type, reference_id, reference_type)
+       SELECT id, $1, $2, 'system', $3, 'advertisement_request'
+       FROM users
+       WHERE role = 'admin' AND is_active = TRUE`,
+      [
+        'طلب إعلان جديد',
+        `ورد طلب إعلان جديد من المورد «${supplierId}» بعنوان «${data.title}». يرجى مراجعته من مركز الإعلانات.`,
+        request.id,
+      ]
+    );
+
+    return request;
   },
 
   getMyAdvertisementRequests: async (supplierId, branchId = null) => {
