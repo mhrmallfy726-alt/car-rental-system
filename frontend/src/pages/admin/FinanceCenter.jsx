@@ -40,6 +40,10 @@ export default function FinanceCenter() {
         commission_rate: Number(settings.commission_rate || 0),
         settlement_mode: settings.settlement_mode,
         advertisement_price_per_day: Number(settings.advertisement_price_per_day || 0),
+        advertisement_price_home_per_day: Number(settings.advertisement_price_home_per_day || 0),
+        advertisement_price_cars_per_day: Number(settings.advertisement_price_cars_per_day || 0),
+        advertisement_price_car_detail_per_day: Number(settings.advertisement_price_car_detail_per_day || 0),
+        advertisement_price_all_public_per_day: Number(settings.advertisement_price_all_public_per_day || 0),
         advertisement_start_time: settings.advertisement_start_time,
         advertisement_end_time: settings.advertisement_end_time,
       });
@@ -99,7 +103,7 @@ export default function FinanceCenter() {
       <section className="finance-settings-card">
         <div>
           <h2>إعدادات الإعلانات والدفع</h2>
-          <p>حدد سعر نشر الإعلان لليوم وفترة ظهوره اليومية. تظهر هذه القيم تلقائيًا للمورد.</p>
+          <p>حدد السعر الأساسي وأسعار كل مكان ظهور. تظهر الأسعار تلقائيًا للمورد ويحسب النظام الإجمالي حسب المدة.</p>
         </div>
         {settings && (
           <div className="finance-settings-form">
@@ -118,8 +122,24 @@ export default function FinanceCenter() {
               />
             </label>
             <label>
-              سعر الإعلان لليوم
+              السعر الأساسي لليوم
               <input type="number" min="1" step="0.01" value={settings.advertisement_price_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_per_day: event.target.value })} />
+            </label>
+            <label>
+              الرئيسية — سعر اليوم
+              <input type="number" min="1" step="0.01" value={settings.advertisement_price_home_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_home_per_day: event.target.value })} />
+            </label>
+            <label>
+              قائمة السيارات — سعر اليوم
+              <input type="number" min="1" step="0.01" value={settings.advertisement_price_cars_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_cars_per_day: event.target.value })} />
+            </label>
+            <label>
+              تفاصيل السيارة — سعر اليوم
+              <input type="number" min="1" step="0.01" value={settings.advertisement_price_car_detail_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_car_detail_per_day: event.target.value })} />
+            </label>
+            <label>
+              كل الصفحات العامة — سعر اليوم
+              <input type="number" min="1" step="0.01" value={settings.advertisement_price_all_public_per_day || ''} onChange={(event) => setSettings({ ...settings, advertisement_price_all_public_per_day: event.target.value })} />
             </label>
             <label>
               يبدأ الظهور يوميًا
