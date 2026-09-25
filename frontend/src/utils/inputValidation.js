@@ -25,7 +25,34 @@ const INTEGER_FIELDS = new Set(['seats', 'doors', 'year', 'mileage', 'duration_d
 
 const numericPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+([.,][${ARABIC_DIGITS}${LATIN_DIGITS}]+)?$`);
 const integerPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+$`);
-const phonePattern = new RegExp(`^[+()\\- ${ARABIC_DIGITS}${LATIN_DIGITS}]{7,20}$`);
+const phonePattern = new RegExp(`^7[${LATIN_DIGITS}]{8}const ARABIC_DIGITS = '٠-٩';
+const LATIN_DIGITS = '0-9';
+
+const NAME_FIELDS = new Set([
+  'name',
+  'full_name',
+  'first_name',
+  'last_name',
+  'company_name',
+  'bank_name',
+]);
+const VEHICLE_TEXT_FIELDS = new Set(['make', 'model', 'color']);
+const NON_NEGATIVE_NUMERIC_FIELDS = new Set([
+  'price_per_day',
+  'min_price',
+  'max_price',
+  'seats',
+  'doors',
+  'year',
+  'mileage',
+  'duration_days',
+  'discount_percentage',
+]);
+const INTEGER_FIELDS = new Set(['seats', 'doors', 'year', 'mileage', 'duration_days', 'discount_percentage']);
+
+const numericPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+([.,][${ARABIC_DIGITS}${LATIN_DIGITS}]+)?$`);
+const integerPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+$`);
+);
 const namePattern = /^[\p{L}][\p{L}\s]{1,79}$/u;
 const vehicleTextPattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,79}$/u;
 const licensePlatePattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,19}$/u;
@@ -58,7 +85,7 @@ export function sanitizeFieldValue(element, value) {
       .replace(new RegExp(`(?!^${sign})-`, 'g'), '')
       .replace(/([.,].*)[.,]/g, '$1');
   }
-  if (kind === 'phone') return value.replace(/[^0-9٠-٩+()\- ]/g, '').slice(0, 20);
+  if (kind === 'phone') {\n    const normalized = value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit))).replace(/\\D/g, '').slice(0, 9);\n    return normalized && normalized[0] !== '7' ? '' : normalized;\n  }
   if (kind === 'name') return value.replace(/[^\p{L}\s]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 80);
   if (kind === 'vehicle_text') return value.replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 80);
   if (kind === 'license_plate') return value.replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s{2,}/g, ' ').slice(0, 20);
@@ -84,7 +111,7 @@ export function validateField(element) {
     if (!numericPattern.test(value)) return 'أدخل رقمًا صالحًا فقط';
     if (!['min_price', 'max_price'].includes((element.name || '').toLowerCase()) && value.startsWith('-')) return 'لا يمكن إدخال قيمة سالبة';
   }
-  if (kind === 'phone' && !phonePattern.test(value)) return 'أدخل رقم هاتف صالحًا';
+  if (kind === 'phone' && !phonePattern.test(value)) return 'رقم الهاتف يجب أن يبدأ بـ 7 ويتكون من 9 أرقام بالضبط';
   if (kind === 'name' && !namePattern.test(value)) return 'أدخل نصًا صحيحًا دون أرقام أو رموز خاصة';
   if (kind === 'vehicle_text' && !vehicleTextPattern.test(value)) return 'استخدم حروفًا وأرقامًا ومسافات وشرطة فقط';
   if (kind === 'license_plate' && !licensePlatePattern.test(value)) return 'رقم اللوحة يقبل الحروف والأرقام والمسافات والشرطة فقط';
