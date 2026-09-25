@@ -472,12 +472,13 @@ const advertisementService  = {
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,$10,$11,$12,
                 COALESCE($13::date, CURRENT_DATE),
                 COALESCE($14::date, (COALESCE($13::date, CURRENT_DATE) + (($10::int - 1) * INTERVAL '1 day'))::date),
-                $15,$16,'pending',($6 = 'featured'),false,'unpaid')
+                $15,$16,'pending',$17,false,'unpaid')
         RETURNING *`, [
           request.id, request.supplier_id, request.car_id, request.title, request.description,
           request.ad_type, request.placement || 'cars', request.image_url || null,
           totalPrice, duration, pricePerDay, totalPrice, request.start_date || null,
           request.end_date || null, request.start_time, request.end_time,
+          request.ad_type === 'featured',
         ]);
       await client.query(`UPDATE advertisement_requests SET status='approved', reviewer_id=$1, reviewer_employee_id=$2, reviewer_note=$3, reviewed_at=NOW() WHERE id=$4`, [reviewerId, reviewerEmployeeId, note || null, requestId]);
       await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [request.supplier_id, 'تم اعتماد طلب الإعلان', `تم اعتماد طلب «${request.title}». أكمل الدفع ليبدأ النشر.`, adResult.rows[0].id]);
