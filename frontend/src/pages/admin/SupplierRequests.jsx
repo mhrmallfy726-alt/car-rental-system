@@ -25,7 +25,24 @@ export default function SupplierRequests() {
   const [openModal, setOpenModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const API_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '').replace(/\/api\/?$/, '').replace(/\/$/, '');
-  // Uploads are stored in Supabase and the backend returns the full public URL.\n  // Keep compatibility with older records that contain only a filename/path.\n  const assetUrl = (fileName) => {\n    if (!fileName) return '';\n    const value = String(fileName).trim();\n    if (/^(https?:\\/\\/|data:|blob:)/i.test(value)) return value;\n    if (value.startsWith('/')) return API_URL + value;\n    return API_URL ? API_URL + '/uploads/' + value : value;\n  };
+
+  // ملفات المورد تُحفظ في Supabase Storage، والإصدارات الحديثة تُرجع رابطًا عامًا كاملًا.
+  // نُبقي دعم السجلات القديمة التي تحتوي على مسار/اسم ملف فقط.
+  const assetUrl = (fileName) => {
+    if (!fileName) return '';
+    const value = String(fileName).trim();
+    if (/^(https?:\/\/|data:|blob:)/i.test(value)) return value;
+    if (value.startsWith('/')) return API_URL ? API_URL + value : value;
+    return API_URL ? API_URL + '/uploads/' + value.replace(/^uploads\//i, '') : value;
+  };
+
+  const isPdfAsset = (fileName) => /\.pdf(?:$|[?#])/i.test(String(fileName || '').trim());
+
+  const handleAssetError = (event) => {
+    event.currentTarget.style.display = 'none';
+    const fallback = event.currentTarget.nextElementSibling;
+    if (fallback) fallback.style.display = 'block';
+  };
 
   const loadRequests = async () => {
 
@@ -448,21 +465,27 @@ export default function SupplierRequests() {
 
       <h3>الشعار</h3>
 
-      {selectedRequest.avatar ? <img
-  src={assetUrl(selectedRequest.avatar)}
-  alt="شعار الشركة"
-  onClick={() =>
-    setPreviewImage(assetUrl(selectedRequest.avatar))
-  }
-  style={{
-    width: "120px",
-    height: "120px",
-    objectFit: "cover",
-    borderRadius: "10px",
-    cursor: "pointer",
-    border: "1px solid #ddd",
-  }}
-/> : <p style={{ color: "#777" }}>لم يتم رفع شعار الشركة.</p>}
+      {selectedRequest.avatar ? (
+  <div>
+    <img
+      src={assetUrl(selectedRequest.avatar)}
+      alt="شعار الشركة"
+      onError={handleAssetError}
+      onClick={() => setPreviewImage(assetUrl(selectedRequest.avatar))}
+      style={{
+        width: "120px",
+        height: "120px",
+        objectFit: "cover",
+        borderRadius: "10px",
+        cursor: "pointer",
+        border: "1px solid #ddd",
+      }}
+    />
+    <p style={{ display: "none", color: "#b91c1c", marginTop: "8px" }}>
+      تعذر تحميل الشعار من التخزين.
+    </p>
+  </div>
+) : <p style={{ color: "#777" }}>لم يتم رفع شعار الشركة.</p>}
 
       <hr style={{ margin: "25px 0" }} />
 
@@ -500,22 +523,54 @@ export default function SupplierRequests() {
 
       <h3>هوية المالك</h3>
 
-      {selectedRequest.owner_id ? <img
-  src={assetUrl(selectedRequest.owner_id)}
-  alt="هوية المالك"
-  onClick={() =>
-    setPreviewImage(assetUrl(selectedRequest.owner_id))
-  }
-  style={{
-    width: "120px",
-    height: "120px",
-    objectFit: "cover",
-    borderRadius: "10px",
-    cursor: "pointer",
-    border: "1px solid #ddd",
-  }}
-/> : <p style={{ color: "#777" }}>لم يتم رفع هوية المالك.</p>}
-      <hr style={{ margin: "30px 0" }} />
+      {selectedRequest.owner_id ? (
+  isPdfAsset(selectedRequest.owner_id) ? (
+    <div style={{ display: "grid", gap: "10px" }}>
+      <iframe
+        src={assetUrl(selectedRequest.owner_id)}
+        title="هوية المالك"
+        style={{
+          width: "100%",
+          minHeight: "420px",
+          border: "1px solid #e5e7eb",
+          borderRadius: "12px",
+          background: "#f8fafc",
+        }}
+      />
+      <a
+        href={assetUrl(selectedRequest.owner_id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "#2563eb", fontWeight: 700 }}
+      >
+        📄 فتح هوية المالك في نافذة مستقلة
+      </a>
+    </div>
+  ) : (
+    <div>
+      <img
+        src={assetUrl(selectedRequest.owner_id)}
+        alt="هوية المالك"
+        onError={handleAssetError}
+        onClick={() => setPreviewImage(assetUrl(selectedRequest.owner_id))}
+        style={{
+          width: "280px",
+          maxWidth: "100%",
+          maxHeight: "420px",
+          objectFit: "contain",
+          borderRadius: "10px",
+          cursor: "pointer",
+          border: "1px solid #ddd",
+          background: "#f8fafc",
+        }}
+      />
+      <p style={{ display: "none", color: "#b91c1c", marginTop: "8px" }}>
+        تعذر تحميل هوية المالك من التخزين.
+      </p>
+    </div>
+  )
+) : <p style={{ color: "#777" }}>لم يتم رفع هوية المالك.</p>}
+<hr style={{ margin: "30px 0" }} />
 
       <textarea
         id="rejectReason"
