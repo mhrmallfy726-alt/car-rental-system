@@ -36,7 +36,7 @@ const getPlacementPrice = (pricing, placement) => {
 
 const initialForm = {
   car_id: '', title: '', description: '', ad_type: 'featured', placement: 'cars',
-  requested_budget: '', budget: '', duration_days: 7, start_date: '', end_date: '',
+  duration_days: 7, start_date: '', end_date: '',
 };
 
 const parseDate = (value) => {
@@ -147,7 +147,6 @@ export default function AdvertisementRequest() {
       const formData = new FormData();
       Object.entries({
         ...form,
-        requested_budget: selectedTotalPrice,
         price_per_day: selectedPricePerDay,
         start_time: pricing?.advertisement_start_time || '',
         end_time: pricing?.advertisement_end_time || '',
