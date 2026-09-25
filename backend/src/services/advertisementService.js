@@ -46,7 +46,7 @@
       [
         supplier_id, car_id, title, description, ad_type, normalizedPlacement, image_url, link_url,
         basePricePerDay, pricePerDay, totalPrice, duration,
-        start_date || null, end_date || null, start_time || null, end_time || null,
+        start_date || null, end_date || null, start_time || pricing.advertisement_start_time || null, end_time || pricing.advertisement_end_time || null,
         status, Boolean(featured), Boolean(is_pinned), payment_status || 'unpaid',
       ]
     );
