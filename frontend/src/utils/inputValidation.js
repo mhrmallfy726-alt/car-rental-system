@@ -25,35 +25,7 @@ const INTEGER_FIELDS = new Set(['seats', 'doors', 'year', 'mileage', 'duration_d
 
 const numericPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+([.,][${ARABIC_DIGITS}${LATIN_DIGITS}]+)?$`);
 const integerPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+$`);
-const phonePattern = new RegExp(`^7[${LATIN_DIGITS}]{8}const ARABIC_DIGITS = '٠-٩';
-const LATIN_DIGITS = '0-9';
-
-const NAME_FIELDS = new Set([
-  'name',
-  'full_name',
-  'first_name',
-  'last_name',
-  'company_name',
-  'bank_name',
-]);
-const VEHICLE_TEXT_FIELDS = new Set(['make', 'model', 'color']);
-const NON_NEGATIVE_NUMERIC_FIELDS = new Set([
-  'price_per_day',
-  'min_price',
-  'max_price',
-  'seats',
-  'doors',
-  'year',
-  'mileage',
-  'duration_days',
-  'discount_percentage',
-]);
-const INTEGER_FIELDS = new Set(['seats', 'doors', 'year', 'mileage', 'duration_days', 'discount_percentage']);
-
-const numericPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+([.,][${ARABIC_DIGITS}${LATIN_DIGITS}]+)?$`);
-const integerPattern = new RegExp(`^[${ARABIC_DIGITS}${LATIN_DIGITS}]+$`);
-);
-const namePattern = /^[\p{L}][\p{L}\s]{1,79}$/u;
+const phonePattern = /^7\d{8}$/;\nconst namePattern = /^[\p{L}][\p{L}\s]{1,79}$/u;
 const vehicleTextPattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,79}$/u;
 const licensePlatePattern = /^[\p{L}\p{N}][\p{L}\p{N}\s-]{1,19}$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
