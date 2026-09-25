@@ -54,10 +54,54 @@
   },
 
   updateAdvertisement: async (id, updateData) => {
-//     return await Advertisement.findByIdAndUpdate(id, updateData, { new: true });
-//   },
+    const allowed = [
+      'title', 'description', 'ad_type', 'placement', 'image_url', 'link_url',
+      'price', 'price_per_day', 'total_price', 'duration_days',
+      'start_date', 'end_date', 'start_time', 'end_time',
+      'status', 'featured', 'is_pinned', 'payment_status',
+    ];
 
-//   deleteAdvertisement: async (id) => {
+    const fields = [];
+    const params = [];
+    allowed.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+        params.push(updateData[field]);
+        fields.push(`${field} = $${params.length}`);
+      }
+    });
+
+    // السعر الفعلي والإجمالي لا يأتيان من الواجهة؛ يعاد حسابهما من مكان الظهور والمدة.
+    if (Object.prototype.hasOwnProperty.call(updateData, 'placement') || Object.prototype.hasOwnProperty.call(updateData, 'duration_days')) {
+      const current = await query('SELECT placement, duration_days FROM advertisements WHERE id = $1', [id]);
+      if (!current.rows.length) return null;
+      const placement = updateData.placement || current.rows[0].placement || 'cars';
+      const duration = Number(updateData.duration_days || current.rows[0].duration_days || 1);
+      if (!Number.isInteger(duration) || duration < 1 || duration > 365) throw new Error('مدة الإعلان يجب أن تكون بين يوم و365 يومًا');
+
+      const pricing = await financeService.getAdvertisementPricing();
+      const base = Number(pricing?.advertisement_price_per_day || 0);
+      const placementPrices = {
+        home: Number(pricing?.advertisement_price_home_per_day ?? base * 2),
+        cars: Number(pricing?.advertisement_price_cars_per_day ?? base),
+        car_detail: Number(pricing?.advertisement_price_car_detail_per_day ?? base * 1.5),
+        all_public: Number(pricing?.advertisement_price_all_public_per_day ?? base * 2.5),
+      };
+      const pricePerDay = Number(placementPrices[placement] || base);
+      params.push(base, pricePerDay, pricePerDay * duration, duration);
+      fields.push(`price = $${params.length - 3}`, `price_per_day = $${params.length - 2}`, `total_price = $${params.length - 1}`, `duration_days = $${params.length}`);
+    }
+
+    if (!fields.length) return advertisementService.getAdvertisementById(id);
+
+    params.push(id);
+    const result = await query(
+      `UPDATE advertisements SET ${fields.join(', ')} WHERE id = $${params.length} RETURNING *`,
+      params
+    );
+    return result.rows[0] || null;
+  },
+
+  deleteAdvertisement: async (id) => {
 //     return await Advertisement.findByIdAndDelete(id);
 //   },
 
