@@ -12,15 +12,16 @@ const getSupplierId = (req) => req.user.supplier_id || req.user.id;
 const getBranchId = (req) => req.user.account_type === 'branch' ? req.user.branch_id : null;
 
 async function notifyReservationStaff(reservationId, title, message, io) {
+  // Branch accounts are stored in branch_accounts, not users.
   const result = await query(
-    `SELECT r.supplier_id, ARRAY_REMOVE(ARRAY_AGG(DISTINCT CASE WHEN u.account_type = 'branch' THEN u.id END), NULL) AS branch_manager_ids
+    `SELECT r.supplier_id,
+            ARRAY_REMOVE(ARRAY_AGG(DISTINCT ba.id), NULL) AS branch_manager_ids
        FROM reservations r
        JOIN cars c ON c.id = r.car_id
-       LEFT JOIN users u
-         ON u.account_type = 'branch'
-        AND u.branch_id = c.location_id
-        AND u.supplier_id = r.supplier_id
-        AND COALESCE(u.status, 'active') = 'active'
+       LEFT JOIN branch_accounts ba
+         ON ba.branch_id = c.location_id
+        AND ba.supplier_id = r.supplier_id
+        AND COALESCE(ba.status, 'active') = 'active'
       WHERE r.id = $1
       GROUP BY r.supplier_id`,
     [reservationId]
