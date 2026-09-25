@@ -157,9 +157,11 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     );
     const io = req.app.get('io');
     if (io && notificationResult.rows[0]) io.to(`user_${supplier.supplier_id}`).emit('new_notification', notificationResult.rows[0]);
+    // Branch accounts are stored in branch_accounts, not users.
     const branchManagers = await query(
-      `SELECT id FROM users
-        WHERE account_type = 'branch' AND branch_id = $1 AND supplier_id = $2
+      `SELECT id FROM branch_accounts
+        WHERE branch_id = $1
+          AND supplier_id = $2
           AND COALESCE(status, 'active') = 'active'`,
       [supplier.location_id, supplier.supplier_id]
     );
