@@ -601,7 +601,7 @@ if (employee) {
 // ========================
 const getMe = asyncHandler(async (req, res, next) => {
    const result = await query(
-    'SELECT id, name, email, role, phone, avatar, brand_logo, brand_description, address, iban, bank_name, auto_accept_bookings, is_verified, verification_status, rejection_reason, is_active FROM users WHERE id = $1',
+    'SELECT id, name, email, role, phone, avatar, brand_logo, brand_description, address, iban, bank_name, auto_accept_bookings, notifications_email, notifications_whatsapp, is_verified, verification_status, rejection_reason, is_active FROM users WHERE id = $1',
     [req.user.id]
   );
 
@@ -748,6 +748,26 @@ const updateProfile = asyncHandler(async (req, res, next) => {
   res.json({ success: true, user: result.rows[0] });
 });
 
+const updateNotificationPreferences = asyncHandler(async (req, res, next) => {
+  const { notifications_email, notifications_whatsapp } = req.body;
+  if (typeof notifications_email !== 'boolean' || typeof notifications_whatsapp !== 'boolean') {
+    return next(new AppError('تفضيلات الإشعارات يجب أن تكون مفعلة أو معطلة', 400));
+  }
+
+  const result = await query(
+    `UPDATE users
+        SET notifications_email = $1,
+            notifications_whatsapp = $2,
+            updated_at = NOW()
+      WHERE id = $3
+      RETURNING id, notifications_email, notifications_whatsapp`,
+    [notifications_email, notifications_whatsapp, req.user.id]
+  );
+
+  if (!result.rows.length) return next(new AppError('المستخدم غير موجود', 404));
+  res.json({ success: true, data: result.rows[0] });
+});
+
 const requestPasswordChangeOTP = asyncHandler(async (req, res, next) => {
   const userResult = await query('SELECT id, email, name FROM users WHERE id = $1 LIMIT 1', [req.user.id]);
   const user = userResult.rows[0];
@@ -892,6 +912,7 @@ module.exports = {
   uploadDocs,
   resubmitSupplierDocuments,
   updateProfile,
+  updateNotificationPreferences,
   requestPasswordChangeOTP,
   changePassword,
   uploadBrandLogo,
