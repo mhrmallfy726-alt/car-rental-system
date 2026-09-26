@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { query } = require('../config/database');
 
 const DEFAULT_VERSION = process.env.WHATSAPP_API_VERSION || 'v23.0';
 
@@ -105,7 +106,26 @@ async function sendMessagePayload(payload) {
   }
 }
 
-async function sendTextMessage({ to, body, previewUrl = false }) {
+async function isWhatsAppEnabledForUser(userId) {
+  if (!userId) return true;
+  try {
+    const result = await query(
+      'SELECT COALESCE(notifications_whatsapp, TRUE) AS enabled FROM users WHERE id = $1 LIMIT 1',
+      [userId]
+    );
+    if (!result.rows.length) return true;
+    return result.rows[0].enabled !== false;
+  } catch (error) {
+    // A preference lookup failure must not break reservation/payment flows.
+    console.warn('[whatsapp] preference lookup failed:', error.message);
+    return true;
+  }
+}
+
+async function sendTextMessage({ to, body, previewUrl = false, userId = null }) {
+  if (!(await isWhatsAppEnabledForUser(userId))) {
+    return { sent: false, skipped: true, reason: 'whatsapp_disabled_by_user' };
+  }
   const recipient = normalizePhone(to);
   if (!recipient) {
     return { sent: false, skipped: true, reason: 'missing_phone' };
@@ -167,6 +187,7 @@ async function sendReservationStatusMessage({
   status,
   reservationId,
   reason,
+  userId = null,
 }) {
   const statusLabels = {
     awaiting_pickup: 'تمت الموافقة على الحجز وهو بانتظار الاستلام',
@@ -187,7 +208,7 @@ async function sendReservationStatusMessage({
     .filter(Boolean)
     .join('\n');
 
-  return sendTextMessage({ to, body: message });
+  return sendTextMessage({ to, body: message, userId });
 }
 
 function verifyWebhookSignature(rawBody, signature) {
@@ -232,6 +253,7 @@ module.exports = {
   getStatus,
   sendTextMessage,
   sendTemplateMessage,
+  isWhatsAppEnabledForUser,
   sendReservationStatusMessage,
   verifyWebhookSignature,
   extractWebhookEvents,
