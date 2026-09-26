@@ -59,6 +59,7 @@ async function notifyReservationWhatsApp(reservationId, status, reason = null) {
     if (status === 'pending') {
       await sendTextMessage({
         to: reservation.supplier_phone,
+        userId: reservation.supplier_id,
         body: `لديك طلب حجز جديد للسيارة ${reservation.make} ${reservation.model}. يرجى مراجعة الطلب من لوحة المورد.\nرقم الحجز: ${reservation.id}`,
       });
       return;
@@ -71,6 +72,7 @@ async function notifyReservationWhatsApp(reservationId, status, reason = null) {
       status,
       reservationId: reservation.id,
       reason,
+      userId: reservation.customer_id,
     });
   } catch (error) {
     console.error('WhatsApp reservation notification failed:', error.message);
