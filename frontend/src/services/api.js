@@ -46,6 +46,9 @@ export const authAPI = {
   updateNotificationPreferences: (data) =>
     api.put('/auth/notification-preferences', data),
 
+  updateNotificationPreferences: (data) =>
+    api.put('/auth/notification-preferences', data),
+
   requestPasswordChangeOTP: () =>
     api.post('/auth/change-password/request-otp'),
 
