@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Bell, Building2, CheckCircle2, KeyRound, Lock, Mail, Save, ShieldCheck, Smartphone, User, Upload } from 'lucide-react';
+import { Bell, Building2, CheckCircle2, KeyRound, Lock, Mail, MessageCircle, Save, ShieldCheck, User, Upload } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { authAPI } from '../services/api';
 import { validateStrongPassword } from '../utils/inputValidation';
@@ -33,14 +33,14 @@ export default function UserSettings() {
     name: '', email: '', phone: '', address: '', brand_description: '',
     current_password: '', new_password: '', confirm_password: '', otp: '',
     iban: '', bank_name: '', auto_accept_bookings: false,
-    notifications_email: true, notifications_sms: false,
+    notifications_email: true, notifications_whatsapp: true,
   });
   const [brandLogo, setBrandLogo] = useState(null);
 
   useEffect(() => { fetchMe(); }, [fetchMe]);
   useEffect(() => {
     if (!user) return;
-    setSettings((prev) => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.phone || '', address: user.address || '', brand_description: user.brand_description || '', iban: user.iban || '', bank_name: user.bank_name || '', auto_accept_bookings: user.auto_accept_bookings ?? false }));
+    setSettings((prev) => ({ ...prev, name: user.name || '', email: user.email || '', phone: user.phone || '', address: user.address || '', brand_description: user.brand_description || '', iban: user.iban || '', bank_name: user.bank_name || '', auto_accept_bookings: user.auto_accept_bookings ?? false, notifications_email: user.notifications_email ?? true, notifications_whatsapp: user.notifications_whatsapp ?? true }));
     setBrandLogo(user.brand_logo || null);
   }, [user]);
 
@@ -58,6 +58,27 @@ export default function UserSettings() {
       toast.success('تم حفظ بيانات الحساب بنجاح');
     } catch (error) { toast.error(error.response?.data?.message || 'تعذر حفظ بيانات الحساب'); }
     finally { setLoading(false); }
+  };
+
+  const saveNotificationPreferences = async () => {
+    setLoading(true);
+    try {
+      const response = await authAPI.updateNotificationPreferences({
+        notifications_email: settings.notifications_email,
+        notifications_whatsapp: settings.notifications_whatsapp,
+      });
+      setSettings((prev) => ({
+        ...prev,
+        notifications_email: response.data.data.notifications_email,
+        notifications_whatsapp: response.data.data.notifications_whatsapp,
+      }));
+      await fetchMe();
+      toast.success('تم حفظ تفضيلات الإشعارات');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'تعذر حفظ تفضيلات الإشعارات');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const requestOtp = async () => {
@@ -137,7 +158,7 @@ export default function UserSettings() {
             {activeTab === 'profile' && <Card title="بيانات الحساب" icon={User} subtitle="المعلومات الأساسية المستخدمة للتواصل معك"><form onSubmit={saveProfile} style={{ display: 'grid', gap: 17 }}><div className="user-settings-form-grid" style={grid}><Field label="الاسم الكامل"><input name="name" value={settings.name} onChange={handleChange} required style={inputStyle} /></Field><Field label="رقم الهاتف"><input name="phone" type="tel" value={settings.phone} onChange={handleChange} dir="ltr" style={inputStyle} /></Field></div><Field label="البريد الإلكتروني" hint="يظهر بشكل محمي، ويُستخدم داخليًا لإرسال رموز OTP"><input value={maskEmail(settings.email)} disabled style={{ ...inputStyle, background: '#f5f7f7', color: '#71828a', direction: 'ltr', textAlign: 'left' }} /></Field><Field label="العنوان"><input name="address" value={settings.address} onChange={handleChange} style={inputStyle} /></Field><button disabled={loading} style={primaryButton}><Save size={17} />{loading ? 'جاري الحفظ...' : 'حفظ بيانات الحساب'}</button></form></Card>}
             {activeTab === 'company' && isSupplier && <Card title="هوية الشركة" icon={Building2} subtitle="المعلومات التي تظهر للعملاء عند استعراض سياراتك"><div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f7fbfa', borderRadius: 15, marginBottom: 18 }}><img src={previewUrl || (brandLogo ? (brandLogo.startsWith('http') ? brandLogo : getImageUrl(brandLogo)) : 'https://via.placeholder.com/80?text=Logo')} alt="شعار الشركة" style={{ width: 82, height: 82, borderRadius: 18, objectFit: 'contain', background: '#fff', border: '1px solid #dbe6e8' }} /><div><b>شعار الشركة</b><p style={{ color: '#71828a', fontSize: 12, margin: '5px 0 10px' }}>JPG أو PNG أو WEBP، وبحد أقصى 2 ميجابايت.</p><input id="account-logo" type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseLogo} style={{ display: 'none' }} /><label htmlFor="account-logo" style={secondaryButton}> <Upload size={15} /> اختيار صورة</label>{selectedFile && <button type="button" onClick={uploadLogo} disabled={loading} style={{ ...primaryButton, display: 'inline-flex', marginRight: 8 }}>{loading ? 'جاري الرفع...' : 'حفظ الشعار'}</button>}</div></div><form onSubmit={saveProfile} style={{ display: 'grid', gap: 17 }}><Field label="نبذة عن الشركة"><textarea name="brand_description" value={settings.brand_description} onChange={handleChange} maxLength="1000" rows="5" style={{ ...inputStyle, resize: 'vertical' }} placeholder="اكتب نبذة مختصرة عن خدمات التأجير وفروعك..." /></Field><div style={grid}><Field label="اسم البنك"><input name="bank_name" value={settings.bank_name} onChange={handleChange} style={inputStyle} /></Field><Field label="رقم IBAN"><input name="iban" value={settings.iban} onChange={handleChange} dir="ltr" style={inputStyle} placeholder="SA..." /></Field></div><button disabled={loading} style={primaryButton}><Save size={17} />حفظ هوية الشركة</button></form></Card>}
             {activeTab === 'security' && <Card title="الأمان وكلمة المرور" icon={KeyRound} subtitle="سيتم إرسال رمز تحقق إلى بريدك قبل تنفيذ التغيير"><form onSubmit={changePassword} style={{ display: 'grid', gap: 17 }}><Field label="كلمة المرور الحالية"><input type="password" name="current_password" value={settings.current_password} onChange={handleChange} required style={inputStyle} /></Field><div style={grid}><Field label="كلمة المرور الجديدة" hint="10 أحرف على الأقل: كبير، صغير، رقم ورمز"><input type="password" name="new_password" value={settings.new_password} onChange={handleChange} minLength="10" maxLength="72" required style={inputStyle} /></Field><Field label="تأكيد كلمة المرور"><input type="password" name="confirm_password" value={settings.confirm_password} onChange={handleChange} required style={inputStyle} /></Field></div>{otpSent && <Field label="رمز التحقق OTP" hint="تحقق من بريدك الإلكتروني، الرمز صالح لمدة 10 دقائق"><input name="otp" value={settings.otp} onChange={handleChange} inputMode="numeric" maxLength="6" pattern="[0-9]{6}" required style={{ ...inputStyle, letterSpacing: 6, textAlign: 'center', fontSize: 20 }} /></Field>}<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}><button type="button" onClick={requestOtp} disabled={otpLoading} style={secondaryButton}><Mail size={17} />{otpLoading ? 'جاري إرسال الرمز...' : otpSent ? 'إعادة إرسال OTP' : 'إرسال رمز التحقق'}</button>{otpSent && <button type="submit" disabled={loading} style={primaryButton}><Lock size={17} />{loading ? 'جاري التغيير...' : 'تأكيد تغيير كلمة المرور'}</button>}</div></form></Card>}
-            {activeTab === 'notifications' && <Card title="تفضيلات الإشعارات" icon={Bell} subtitle="حدد القنوات التي تفضل استقبال تنبيهات المنصة عبرها"><div style={{ display: 'grid', gap: 13 }}><Toggle checked={settings.notifications_email} onChange={handleChange} name="notifications_email" icon={Mail} label="إشعارات البريد الإلكتروني" description="الحجوزات والتحديثات المهمة على حسابك." /><Toggle checked={settings.notifications_sms} onChange={handleChange} name="notifications_sms" icon={Smartphone} label="رسائل الجوال" description="التذكير بمواعيد الاستلام والتسليم." /><div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: '#fff9e9', color: '#8a6818', fontSize: 12 }}>يمكنك حفظ هذه التفضيلات عند تفعيل مركز الإشعارات في إعدادات المنصة.</div></div></Card>}
+            {activeTab === 'notifications' && <Card title="تفضيلات الإشعارات" icon={Bell} subtitle="حدد القنوات التي تفضل استقبال تنبيهات المنصة عبرها"><div style={{ display: 'grid', gap: 13 }}><Toggle checked={settings.notifications_email} onChange={handleChange} name="notifications_email" icon={Mail} label="إشعارات البريد الإلكتروني" description="الحجوزات والتحديثات المهمة على حسابك." /><Toggle checked={settings.notifications_whatsapp} onChange={handleChange} name="notifications_whatsapp" icon={MessageCircle} label="إشعارات واتساب" description="تحديثات الحجوزات والتذكير بمواعيد الاستلام والإرجاع عبر واتساب." /><button type="button" onClick={saveNotificationPreferences} disabled={loading} style={primaryButton}><Save size={17} />{loading ? 'جاري الحفظ...' : 'حفظ تفضيلات الإشعارات'}</button><div style={{ marginTop: 8, padding: 14, borderRadius: 12, background: '#fff9e9', color: '#8a6818', fontSize: 12 }}>تُرسل رسائل واتساب إلى رقم الهاتف المرتبط بحسابك. يجب أن يكون الرقم مسجلاً على واتساب، ويجب أن يكون تكامل Meta مفعّلًا في المنصة.</div></div></Card>}
           </section>
         </div>
       </div>
