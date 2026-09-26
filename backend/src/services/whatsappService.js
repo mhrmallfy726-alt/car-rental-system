@@ -144,7 +144,11 @@ async function sendTextMessage({ to, body, previewUrl = false, userId = null }) 
   });
 }
 
-async function sendTemplateMessage({ to, parameters = [], templateName }) {
+async function sendTemplateMessage({ to, parameters = [], templateName, userId = null }) {
+  if (!(await isWhatsAppEnabledForUser(userId))) {
+    return { sent: false, skipped: true, reason: 'whatsapp_disabled_by_user' };
+  }
+
   const recipient = normalizePhone(to);
   const config = getConfig();
 
