@@ -116,9 +116,9 @@ async function isWhatsAppEnabledForUser(userId) {
     if (!result.rows.length) return true;
     return result.rows[0].enabled !== false;
   } catch (error) {
-    // A preference lookup failure must not break reservation/payment flows.
-    console.warn('[whatsapp] preference lookup failed:', error.message);
-    return true;
+    // A preference lookup failure should fail closed for an optional notification channel.
+    console.warn('[whatsapp] preference lookup failed; WhatsApp delivery skipped:', error.message);
+    return false;
   }
 }
 
