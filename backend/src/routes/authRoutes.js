@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, getMe, uploadDocs, resubmitSupplierDocuments, updateProfile, requestPasswordChangeOTP, changePassword, uploadBrandLogo, requestPasswordReset, verifyPasswordReset, resetPassword } = require('../controllers/authController');
+const { register, login, getMe, uploadDocs, resubmitSupplierDocuments, updateProfile, updateNotificationPreferences, requestPasswordChangeOTP, changePassword, uploadBrandLogo, requestPasswordReset, verifyPasswordReset, resetPassword } = require('../controllers/authController');
 const {
   resendOTP,
   verifyOTP
@@ -29,6 +29,7 @@ router.post('/upload-documents', protect, uploadDocuments, uploadDocs);
 // يتحقق الكنترولر من البريد وكلمة المرور عند عدم وجود جلسة، لأن المورد المرفوض لا يحصل على جلسة دخول.
 router.post('/resubmit-supplier-documents', uploadDocuments, resubmitSupplierDocuments);
 router.put('/update-profile', protect, updateProfile);
+router.put('/notification-preferences', protect, updateNotificationPreferences);
 router.post('/change-password/request-otp', protect, requestPasswordChangeOTP);
 router.put('/change-password', protect, changePassword);
 router.post('/upload-brand-logo', protect, uploadAvatar, uploadBrandLogo);
