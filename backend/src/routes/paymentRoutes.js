@@ -176,6 +176,7 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
     if (supplier.supplier_phone) {
       void sendTextMessage({
         to: supplier.supplier_phone,
+        userId: supplier.supplier_id,
         body: `لديك طلب حجز مدفوع للسيارة ${supplier.make} ${supplier.model}. يرجى مراجعة الطلب من لوحة المورد.\\nرقم الحجز: ${reservation_id}`,
       });
     }
