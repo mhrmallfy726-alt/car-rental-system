@@ -36,22 +36,11 @@ async function completeReminder(id, status, details = {}) {
 
 async function getReservationStaffRecipients(reservationId) {
   const result = await query(
-    `SELECT r.supplier_id, c.location_id,
-            ARRAY_REMOVE(ARRAY_AGG(DISTINCT CASE WHEN u.account_type = 'branch' THEN u.id END), NULL) AS branch_manager_ids
-       FROM reservations r
-       JOIN cars c ON c.id = r.car_id
-       LEFT JOIN users u
-         ON u.account_type = 'branch'
-        AND u.branch_id = c.location_id
-        AND u.supplier_id = r.supplier_id
-        AND COALESCE(u.status, 'active') = 'active'
-      WHERE r.id = $1
-      GROUP BY r.supplier_id, c.location_id`,
+    `SELECT supplier_id FROM reservations WHERE id = $1`,
     [reservationId]
   );
-  if (!result.rows.length) return [];
-  const row = result.rows[0];
-  return [...new Set([row.supplier_id, ...(row.branch_manager_ids || [])].map(String))];
+  const supplierId = result.rows[0]?.supplier_id;
+  return supplierId ? [String(supplierId)] : [];
 }
 
 async function notifyReservationStaff(reservationId, title, message, io) {
