@@ -91,7 +91,7 @@ router.post('/advertisement-checkout', protect, asyncHandler(async (req, res, ne
       ['طلب إعلان مدفوع وجاهز للمراجعة', `تم دفع إعلان «${ad.title}» وأصبح جاهزًا لمراجعتك واعتماده.`, ad.request_id]
     );
     await client.query('COMMIT');
-    res.status(201).json({ success: true, data: payment, advertisement_status: 'active' });
+    res.status(201).json({ success: true, data: payment, advertisement_status: 'pending' });
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
