@@ -156,8 +156,25 @@ export default function AdvertisementRequest() {
       }).forEach(([key, value]) => formData.append(key, value ?? ''));
 
       if (imageFile) formData.append('image', imageFile);
-      await advertisementsAPI.createRequest(formData);
-      toast.success('تم إرسال طلب الإعلان للمراجعة');
+      const response = await advertisementsAPI.createRequest(formData);
+      const createdRequest = response.data?.data;
+      if (!createdRequest?.advertisement_id) {
+        throw new Error('تم إنشاء الطلب لكن لم يتم تجهيز الإعلان للدفع');
+      }
+
+      toast.success('تم تجهيز الإعلان. جارٍ الانتقال إلى الدفع...');
+      setPayingId(createdRequest.id);
+      try {
+        await paymentsAPI.advertisementCheckout({
+          advertisement_id: createdRequest.advertisement_id,
+          currency: pricing?.currency || 'YER',
+          payment_method: 'simulation',
+        });
+        toast.success('تم الدفع بنجاح وإرسال الإعلان إلى الإدارة للمراجعة');
+      } finally {
+        setPayingId(null);
+      }
+
       setForm(initialForm);
       setImageFile(null);
       setImagePreview('');
@@ -232,7 +249,7 @@ export default function AdvertisementRequest() {
               </label>
             </div>
             {selectedCar && <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 18, padding: 12, borderRadius: 12, background: '#fbf7ec', color: navy, fontSize: 13 }}><CalendarDays size={17} color={gold} /> سيتم ربط الطلب بـ {selectedCar.make} {selectedCar.model} بسعر الإعلان {selectedPricePerDay.toLocaleString()} {pricing?.currency || 'YER'} لليوم.</div>}
-            <button type="submit" disabled={submitting || loading} style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 22, border: 0, borderRadius: 13, padding: '14px 20px', background: navy, color: '#fff', fontWeight: 900, cursor: submitting ? 'wait' : 'pointer' }}>{submitting ? 'جاري إرسال الطلب...' : 'إرسال طلب الإعلان'} <Send size={17} /></button>
+            <button type="submit" disabled={submitting || loading} style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 22, border: 0, borderRadius: 13, padding: '14px 20px', background: navy, color: '#fff', fontWeight: 900, cursor: submitting ? 'wait' : 'pointer' }}>{submitting ? 'جاري تجهيز الإعلان والدفع...' : 'متابعة إلى الدفع'} <Send size={17} /></button>
           </form>
           <section style={{ background: '#fff', borderRadius: 20, border: '1px solid #e7eaee', boxShadow: '0 14px 36px rgba(23,58,82,0.07)', padding: 22 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}><h2 style={{ margin: 0, color: navy, fontSize: 20 }}>طلباتك السابقة</h2><span style={{ color: gold, fontWeight: 900 }}>{requests.length}</span></div>
