@@ -59,9 +59,9 @@ UPDATE advertisements
 SET price_per_day = COALESCE(
       NULLIF(price_per_day, 0),
       CASE
-        WHEN NULLIF(BTRIM(duration::text), '') ~ '^[0-9]+(\.[0-9]+)?$'
-             AND BTRIM(duration::text)::numeric > 0
-        THEN price / BTRIM(duration::text)::numeric
+        WHEN NULLIF(BTRIM(to_jsonb(advertisements)->>'duration'), '') ~ '^[0-9]+(\.[0-9]+)?$'
+             AND BTRIM(to_jsonb(advertisements)->>'duration')::numeric > 0
+        THEN price / BTRIM(to_jsonb(advertisements)->>'duration')::numeric
         ELSE price
       END
     ),

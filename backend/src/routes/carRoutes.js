@@ -312,7 +312,7 @@ router.post('/:id/images', protect, authorize('supplier'), uploadCarImages, asyn
   const images = [];
   for (let i = 0; i < req.files.length; i++) {
     const isPrimary = i === 0;
-    const imageUrl = req.files[i].path?.startsWith('http')
+    const imageUrl = req.files[i].path?.startsWith('http') || req.files[i].path?.startsWith('/uploads/')
       ? req.files[i].path
       : `/uploads/${path.basename(req.files[i].path)}`;
     const result = await query(

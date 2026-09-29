@@ -38,7 +38,16 @@ async function migrate() {
       const usesConcurrentIndex = /\bCONCURRENTLY\b/i.test(sql);
       try {
         if (!migrationOwnsTransaction && !usesConcurrentIndex) await client.query('BEGIN');
-        await client.query(sql);
+        if (usesConcurrentIndex) {
+          const statements = sql
+            .replace(/^\s*--.*$/gm, '')
+            .split(';')
+            .map((statement) => statement.trim())
+            .filter(Boolean);
+          for (const statement of statements) await client.query(statement);
+        } else {
+          await client.query(sql);
+        }
         await client.query(
           'INSERT INTO schema_migrations (filename) VALUES ($1)',
           [file]

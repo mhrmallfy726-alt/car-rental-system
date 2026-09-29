@@ -6,7 +6,8 @@ const input = (type, name, value = '', required = false) => ({ type, name, value
 assert.equal(fieldKind(input('number', 'price_per_day')), 'number');
 assert.equal(sanitizeFieldValue(input('number', 'price_per_day'), '250abc'), '250');
 assert.equal(sanitizeFieldValue(input('text', 'name'), 'محمد123'), 'محمد');
-assert.equal(sanitizeFieldValue(input('tel', 'phone'), '+96777123ABC'), '+96777123');
+assert.equal(sanitizeFieldValue(input('tel', 'phone'), '77123ABC'), '77123');
+assert.equal(sanitizeFieldValue(input('tel', 'phone'), '+96777123ABC'), '');
 assert.equal(sanitizeFieldValue(input('email', 'email'), ' user @example.com '), 'user@example.com');
 assert.equal(sanitizeFieldValue(input('text', 'license_plate'), 'ABC@123!'), 'ABC123');
 assert.equal(validateField(input('number', 'price_per_day', 'abc')), 'أدخل رقمًا صالحًا فقط');
