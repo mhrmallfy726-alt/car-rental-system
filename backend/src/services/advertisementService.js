@@ -480,7 +480,7 @@ const advertisementService  = {
           $1::uuid,$2::uuid,$3::uuid,$4::varchar,$5::text,$6::varchar,$7::varchar,$8::text,
           $9::numeric,$10::numeric,$11::numeric,$12::integer,
           $13::date,$14::date,$15::time,$16::time,
-          'active',$17::boolean,false,'unpaid'
+          'pending',$17::boolean,false,'unpaid'
         )
         RETURNING *`,
         [
