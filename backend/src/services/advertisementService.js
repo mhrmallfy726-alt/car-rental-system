@@ -308,14 +308,46 @@ const advertisementService  = {
   },
 
   getSupplierCars: async (supplierId) => {
-    const result = await query(
-      `SELECT c.id, c.make, c.model, c.year, c.price_per_day, c.status,
-              (SELECT ci.image_url FROM car_images ci WHERE ci.car_id = c.id ORDER BY ci.is_primary DESC, ci.created_at ASC LIMIT 1) AS primary_image
-       FROM cars c
-       WHERE c.supplier_id = $1 AND c.status <> 'inactive'
-       ORDER BY c.created_at DESC`,
+    // The admin advertisement form normally sends the supplier's user id.
+    // Resolve the canonical supplier id first so this also works when the
+    // selected account is a branch/linked account carrying supplier_id.
+    const ownerResult = await query(
+      `SELECT COALESCE(supplier_id, id) AS canonical_supplier_id
+       FROM users
+       WHERE id = $1
+       LIMIT 1`,
       [supplierId],
     );
+
+    if (!ownerResult.rows.length) return [];
+
+    const canonicalSupplierId = ownerResult.rows[0].canonical_supplier_id;
+
+    const result = await query(
+      `SELECT
+          c.id,
+          c.make,
+          c.model,
+          c.year,
+          c.price_per_day,
+          c.status,
+          c.supplier_id,
+          c.location_id,
+          loc.city AS location_city,
+          loc.showroom_name,
+          (SELECT ci.image_url
+             FROM car_images ci
+            WHERE ci.car_id = c.id
+            ORDER BY ci.is_primary DESC, ci.created_at ASC
+            LIMIT 1) AS primary_image
+       FROM cars c
+       LEFT JOIN locations loc ON loc.id = c.location_id
+       WHERE c.supplier_id = $1
+         AND COALESCE(c.status, 'available') <> 'inactive'
+       ORDER BY c.created_at DESC`,
+      [canonicalSupplierId],
+    );
+
     return result.rows;
   },
 
