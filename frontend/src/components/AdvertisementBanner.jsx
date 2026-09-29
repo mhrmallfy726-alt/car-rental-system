@@ -147,15 +147,90 @@ export default function AdvertisementBanner({ placement = 'home', carId, compact
   const currentAdvertisement = advertisements[activeIndex];
 
   return (
-    <div className="advertisement-modal-backdrop" dir="rtl" role="dialog" aria-modal="true" aria-label="إعلان">
-      <div className="advertisement-modal">
-        <button type="button" className="advertisement-modal-close" onClick={() => setIsOpen(false)} aria-label="إغلاق الإعلان"><X size={20} /></button>
-        <div className="advertisement-modal-label"><Megaphone size={14} /> إعلان</div>
-        <div key={currentAdvertisement.id} className="advertisement-modal-content"><AdvertisementCard advertisement={currentAdvertisement} compact={compact} /></div>
-        {advertisements.length > 1 && <div className="advertisement-modal-controls"><button type="button" aria-label="الإعلان السابق" onClick={() => setActiveIndex((current) => (current - 1 + advertisements.length) % advertisements.length)} style={sliderButtonStyle}><ArrowRight size={17} /></button><span>{activeIndex + 1} / {advertisements.length}</span><button type="button" aria-label="الإعلان التالي" onClick={() => setActiveIndex((current) => (current + 1) % advertisements.length)} style={sliderButtonStyle}><ArrowLeft size={17} /></button></div>}
+    <section
+      className="advertisement-placement"
+      dir="rtl"
+      aria-label="الإعلانات"
+      style={{
+        width: 'min(1180px, calc(100% - 32px))',
+        margin: '20px auto',
+        position: 'relative',
+        zIndex: 1,
+      }}
+    >
+      <div
+        className="advertisement-placement-label"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginBottom: 10,
+          color: '#173a52',
+          fontSize: 13,
+          fontWeight: 800,
+        }}
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <Megaphone size={15} /> إعلانات
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsOpen(false)}
+          aria-label="إخفاء الإعلان"
+          style={{
+            display: 'inline-grid',
+            placeItems: 'center',
+            width: 30,
+            height: 30,
+            border: '1px solid #dfe5e9',
+            borderRadius: 9,
+            background: '#fff',
+            color: '#607080',
+            cursor: 'pointer',
+          }}
+        >
+          <X size={16} />
+        </button>
       </div>
-      <style>{`@keyframes advertisementModalIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
-    </div>
+
+      <div key={currentAdvertisement.id} className="advertisement-placement-content">
+        <AdvertisementCard advertisement={currentAdvertisement} compact={compact} />
+      </div>
+
+      {advertisements.length > 1 && (
+        <div
+          className="advertisement-placement-controls"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            marginTop: 10,
+          }}
+        >
+          <button
+            type="button"
+            aria-label="الإعلان السابق"
+            onClick={() => setActiveIndex((current) => (current - 1 + advertisements.length) % advertisements.length)}
+            style={sliderButtonStyle}
+          >
+            <ArrowRight size={17} />
+          </button>
+          <span style={{ minWidth: 45, textAlign: 'center', color: '#607080', fontSize: 12, fontWeight: 700 }}>
+            {activeIndex + 1} / {advertisements.length}
+          </span>
+          <button
+            type="button"
+            aria-label="الإعلان التالي"
+            onClick={() => setActiveIndex((current) => (current + 1) % advertisements.length)}
+            style={sliderButtonStyle}
+          >
+            <ArrowLeft size={17} />
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 
