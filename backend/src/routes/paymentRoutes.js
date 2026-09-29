@@ -80,9 +80,16 @@ router.post('/advertisement-checkout', protect, asyncHandler(async (req, res, ne
     if (!Number.isFinite(baseAmountYER) || baseAmountYER <= 0) throw new AppError('قيمة الإعلان غير صالحة', 400);
     const totalAmount = convertFromYER(baseAmountYER, currency);
     const payment = await financeService.createAdvertisementCharge(client, { advertisementId: ad.id, supplierId: ad.supplier_id, amount: totalAmount, currency, title: ad.title });
-    await client.query(`UPDATE advertisements SET status='active', payment_status='paid', payment_id=$1, paid_at=NOW() WHERE id=$2`, [payment.id, ad.id]);
+    await client.query(`UPDATE advertisements SET status='pending', payment_status='paid', payment_id=$1, paid_at=NOW() WHERE id=$2`, [payment.id, ad.id]);
     await client.query(`UPDATE advertisement_requests SET payment_status='paid', payment_id=$1 WHERE id=$2`, [payment.id, ad.request_id]);
-    await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [ad.supplier_id, 'تم دفع الإعلان وبدء نشره', `تم دفع إعلان «${ad.title}» وبدأ نشره حسب الوقت المحدد.`, ad.id]);
+    await client.query(`INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type) VALUES ($1,$2,$3,'system',$4,'advertisement')`, [ad.supplier_id, 'تم دفع الإعلان', `تم دفع إعلان «${ad.title}». أصبح الطلب جاهزًا لمراجعة الإدارة.`, ad.id]);
+    await client.query(
+      `INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type)
+       SELECT id, $1, $2, 'system', $3, 'advertisement_request'
+       FROM users
+       WHERE role = 'admin' AND is_active = TRUE`,
+      ['طلب إعلان مدفوع وجاهز للمراجعة', `تم دفع إعلان «${ad.title}» وأصبح جاهزًا لمراجعتك واعتماده.`, ad.request_id]
+    );
     await client.query('COMMIT');
     res.status(201).json({ success: true, data: payment, advertisement_status: 'active' });
   } catch (error) {
