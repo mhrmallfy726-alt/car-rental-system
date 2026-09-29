@@ -417,22 +417,27 @@ const advertisementService  = {
     
     const request = result.rows[0];
 
-    // Notify every active admin after the request has been stored successfully.
-    // The request itself must not depend on a particular admin account existing.
-    await query(
-      `INSERT INTO notifications
-        (user_id, title, message, type, reference_id, reference_type)
-       SELECT id, $1, $2, 'system', $3, 'advertisement_request'
-       FROM users
-       WHERE role = 'admin' AND is_active = TRUE`,
+    // Create the linked advertisement immediately so the supplier can pay before admin review.
+    const adResult = await query(
+      `INSERT INTO advertisements
+        (request_id, supplier_id, car_id, title, description, ad_type, placement, image_url,
+         price, price_per_day, total_price, duration_days, start_date, end_date,
+         start_time, end_time, status, featured, is_pinned, payment_status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'pending',$17,false,'unpaid')
+       RETURNING *`,
       [
-        'طلب إعلان جديد',
-        `ورد طلب إعلان جديد من المورد «${supplierId}» بعنوان «${data.title}». يرجى مراجعته من مركز الإعلانات.`,
-        request.id,
+        request.id, supplierId, data.car_id, data.title, data.description || null,
+        data.ad_type || 'featured', placement, image_url,
+        basePricePerDay, pricePerDay, totalPrice, durationDays,
+        data.start_date || null, data.end_date || null, startTime, endTime,
+        data.ad_type === 'featured',
       ]
     );
 
-    return request;
+    // Admin notification is intentionally sent only after successful payment.
+
+    // The request itself must not depend on a particular admin account existing.
+    return { ...request, advertisement_id: adResult.rows[0].id };
   },
 
   getMyAdvertisementRequests: async (supplierId, branchId = null) => {
@@ -471,27 +476,24 @@ const advertisementService  = {
       const pricing = await financeService.getAdvertisementPricing();
       const basePricePerDay = Number(pricing?.advertisement_price_per_day || pricePerDay);
 
-      const adResult = await client.query(`
-        INSERT INTO advertisements
-          (request_id, supplier_id, car_id, title, description, ad_type, placement, image_url,
-           price, price_per_day, total_price, duration_days, start_date, end_date,
-           start_time, end_time, status, featured, is_pinned, payment_status)
-        VALUES (
-          $1::uuid,$2::uuid,$3::uuid,$4::varchar,$5::text,$6::varchar,$7::varchar,$8::text,
-          $9::numeric,$10::numeric,$11::numeric,$12::integer,
-          $13::date,$14::date,$15::time,$16::time,
-          'pending',$17::boolean,false,'unpaid'
-        )
-        RETURNING *`,
-        [
-          request.id, request.supplier_id, request.car_id, request.title, request.description,
-          request.ad_type, request.placement || 'cars', request.image_url || null,
-          basePricePerDay, pricePerDay, totalPrice, duration,
-          request.start_date || null, request.end_date || null,
-          request.start_time, request.end_time, request.ad_type === 'featured',
-        ]
+      const adResult = await client.query(
+        `SELECT * FROM advertisements WHERE request_id = $1 FOR UPDATE`,
+        [requestId]
       );
-
+      if (!adResult.rows.length) throw new Error('الإعلان المرتبط بالطلب غير موجود، يرجى إعادة إرسال الطلب');
+      const existingAd = adResult.rows[0];
+      if (existingAd.payment_status !== 'paid') {
+        throw new Error('يجب دفع الإعلان قبل موافقة الإدارة');
+      }
+      await client.query(
+        `UPDATE advertisements
+         SET status='active', start_date=$1, end_date=$2, start_time=$3, end_time=$4,
+             featured=$5, updated_at=NOW()
+         WHERE id=$6`,
+        [request.start_date || null, request.end_date || null, request.start_time, request.end_time,
+         request.ad_type === 'featured', existingAd.id]
+      );
+      const updatedAd = await client.query(`SELECT * FROM advertisements WHERE id = $1`, [existingAd.id]);
       await client.query(
         `UPDATE advertisement_requests
          SET status='approved', reviewer_id=$1, reviewer_employee_id=$2,
@@ -502,10 +504,10 @@ const advertisementService  = {
       await client.query(
         `INSERT INTO notifications (user_id,title,message,type,reference_id,reference_type)
          VALUES ($1,$2,$3,'system',$4,'advertisement')`,
-        [request.supplier_id, 'تم اعتماد طلب الإعلان', `تم اعتماد طلب «${request.title}». أكمل الدفع ليبدأ النشر.`, adResult.rows[0].id]
+        [request.supplier_id, 'تم اعتماد طلب الإعلان', `تم اعتماد طلب «${request.title}». أكمل الدفع ليبدأ النشر.`, updatedAd.rows[0].id]
       );
       await client.query('COMMIT');
-      return adResult.rows[0];
+      return updatedAd.rows[0];
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
