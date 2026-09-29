@@ -66,7 +66,7 @@ router.post('/advertisement-checkout', protect, asyncHandler(async (req, res, ne
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const adResult = await client.query(`SELECT a.*, r.supplier_id AS request_supplier_id FROM advertisements a LEFT JOIN advertisement_requests r ON r.id = a.request_id WHERE a.id = $1 FOR UPDATE`, [advertisement_id]);
+    const adResult = await client.query(`SELECT a.*, r.supplier_id AS request_supplier_id FROM advertisements a LEFT JOIN advertisement_requests r ON r.id = a.request_id WHERE a.id = $1 FOR UPDATE OF a`, [advertisement_id]);
     const ad = adResult.rows[0];
     if (!ad) throw new AppError('الإعلان غير موجود', 404);
     if (ad.supplier_id !== req.user.id && req.user.role !== 'admin') throw new AppError('لا تملك صلاحية دفع هذا الإعلان', 403);
